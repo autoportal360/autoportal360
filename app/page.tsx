@@ -1,5 +1,6 @@
 import AdSlot from '@/components/AdSlot'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { formatPriceRange } from '@/lib/utils'
 import type { Brand } from '@/types'
@@ -36,9 +37,21 @@ function BrandCard({ brand, type }: { brand: Brand; type: 'car' | 'bike' | 'scoo
         width: '44px', height: '44px', borderRadius: '10px',
         background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.15)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 900, color: '#00D4FF',
+        overflow: 'hidden', flexShrink: 0, position: 'relative',
       }}>
-        {brand.name.slice(0, 2).toUpperCase()}
+        {brand.logo_url ? (
+          <Image
+            src={brand.logo_url}
+            alt={brand.name}
+            fill
+            sizes="44px"
+            style={{ objectFit: 'contain', padding: '4px' }}
+          />
+        ) : (
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 900, color: '#00D4FF' }}>
+            {brand.name.slice(0, 2).toUpperCase()}
+          </span>
+        )}
       </div>
       <div style={{
         fontSize: '12px', fontWeight: 700, color: '#C0C0C0',
@@ -90,7 +103,8 @@ function Section({ children, alt }: { children: React.ReactNode; alt?: boolean }
 function VehicleCard({ item }: {
   item: {
     brand: string; name: string; price: string;
-    tags: string[]; href: string; icon: string; badge: string
+    tags: string[]; href: string; icon: string; badge: string;
+    thumbnail_url?: string | null
   }
 }) {
   return (
@@ -99,13 +113,24 @@ function VehicleCard({ item }: {
       borderRadius: '14px', overflow: 'hidden', textDecoration: 'none', display: 'block',
     }}>
       <div style={{
-        height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '44px', background: 'linear-gradient(135deg,#0d1f3c,#0a0a0a)', position: 'relative',
+        height: '110px', position: 'relative',
+        background: 'linear-gradient(135deg,#0d1f3c,#0a0a0a)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {item.icon}
+        {item.thumbnail_url ? (
+          <Image
+            src={item.thumbnail_url}
+            alt={`${item.brand} ${item.name}`}
+            fill
+            sizes="(max-width: 600px) 50vw, 200px"
+            style={{ objectFit: 'cover' }}
+          />
+        ) : (
+          <span style={{ fontSize: '44px' }}>{item.icon}</span>
+        )}
         {item.badge && (
           <span style={{
-            position: 'absolute', top: '8px', left: '8px',
+            position: 'absolute', top: '8px', left: '8px', zIndex: 1,
             background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)',
             color: '#00D4FF', fontSize: '9px', fontWeight: 700,
             padding: '2px 8px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif',
