@@ -10,6 +10,8 @@ import ModelSubNav from '../ModelSubNav'
 import PriceCalculator, { type PriceVariant, type PriceCity } from './PriceCalculator'
 import PriceFaq from './PriceFaq'
 
+export const dynamic = 'force-dynamic'
+
 // ─── Local types ──────────────────────────────────────────────────────────────
 
 type VehicleType = 'car' | 'bike' | 'scooter'
@@ -71,29 +73,6 @@ const getBrand = cache(async (slug: string, type: VehicleType): Promise<Brand | 
   return null
 })
 
-// ─── Static generation ────────────────────────────────────────────────────────
-
-export async function generateStaticParams() {
-  const { data: brands } = await supabase.from('brands').select('id, slug, type').eq('is_active', true)
-  if (!brands?.length) return []
-
-  const { data: models } = await supabase.from('models').select('slug, brand_id')
-    .in('brand_id', brands.map(b => b.id)).neq('status', 'discontinued')
-  if (!models?.length) return []
-
-  const brandMap = new Map(brands.map(b => [b.id, b]))
-
-  return models.flatMap(m => {
-    const brand = brandMap.get(m.brand_id)
-    if (!brand) return []
-    const clean = brand.slug.replace(/-bike$/, '').replace(/-scooter$/, '')
-    const brandSlug =
-      brand.type === 'car' ? `${clean}-cars` :
-      brand.type === 'bike' ? `${clean}-bikes` : `${clean}-scooters`
-    return [{ brandSlug, model: m.slug }]
-  })
-}
-
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({
@@ -143,7 +122,7 @@ export default async function PricePage({
   const { data: modelRaw } = await supabase.from('models').select('*')
     .eq('brand_id', brand.id).eq('slug', modelSlug).single()
   if (!modelRaw) notFound()
-  const model = modelRaw as ModelRow
+  const model = modelRaw as unknown as ModelRow
 
   const [{ data: variantsRaw }, { data: citiesRaw }] = await Promise.all([
     supabase.from('variants').select('*, specs(*)').eq('model_id', model.id).order('sort_order'),
@@ -152,8 +131,8 @@ export default async function PricePage({
       .eq('is_featured', true).order('name'),
   ])
 
-  const variants = (variantsRaw ?? []) as VariantRow[]
-  const cities   = (citiesRaw  ?? []) as CityRow[]
+  const variants = (variantsRaw ?? []) as unknown as VariantRow[]
+  const cities   = (citiesRaw  ?? []) as unknown as CityRow[]
 
   const baseVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
   const refCity     = cities.find(c => c.name === 'Chandigarh') ?? cities[0] ?? null

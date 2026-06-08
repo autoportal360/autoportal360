@@ -177,7 +177,7 @@ export default async function ModelPage({
     .from('models').select('*')
     .eq('brand_id', brand.id).eq('slug', modelSlug).single()
   if (!model) notFound()
-  const m = model as ModelRow
+  const m = model as unknown as ModelRow
 
   // Parallel: variants+specs and featured cities with states
   const [{ data: variantsRaw }, { data: citiesRaw }] = await Promise.all([
@@ -185,7 +185,7 @@ export default async function ModelPage({
     supabase.from('cities').select('id, name, states(rto_percentage, handling_charge)').eq('is_featured', true).order('name'),
   ])
 
-  const variants = (variantsRaw ?? []) as VariantRow[]
+  const variants = (variantsRaw ?? []) as unknown as VariantRow[]
   const cities   = (citiesRaw  ?? []) as unknown as CityRow[]
 
   const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null

@@ -9,6 +9,8 @@ import type { Brand } from '@/types'
 import ModelGrid, { type ModelRow } from './ModelGrid'
 import BrandFaq from './BrandFaq'
 
+export const dynamic = 'force-dynamic'
+
 // ─── Slug parsing ─────────────────────────────────────────────────────────────
 
 type VehicleType = 'car' | 'bike' | 'scooter'
@@ -85,29 +87,7 @@ async function getModels(brandId: string, type: VehicleType): Promise<ModelRow[]
     .neq('status', 'discontinued')
     .order('price_min', { ascending: true })
   if (error) { console.error('Error fetching models:', error); return [] }
-  return (data ?? []) as ModelRow[]
-}
-
-// ─── Static generation ────────────────────────────────────────────────────────
-
-export async function generateStaticParams() {
-  const { data } = await supabase
-    .from('brands')
-    .select('slug, type')
-    .eq('is_active', true)
-
-  return (data ?? []).map(b => {
-    // Strip any DB-level type suffix before appending the URL suffix.
-    // e.g. 'honda-scooter' → 'honda' → 'honda-scooters'
-    const cleanSlug = b.slug.replace(/-bike$/, '').replace(/-scooter$/, '')
-    return {
-      brandSlug:
-        b.type === 'car'     ? `${cleanSlug}-cars`     :
-        b.type === 'bike'    ? `${cleanSlug}-bikes`    :
-        b.type === 'scooter' ? `${cleanSlug}-scooters` :
-        cleanSlug,
-    }
-  })
+  return (data ?? []) as unknown as ModelRow[]
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
