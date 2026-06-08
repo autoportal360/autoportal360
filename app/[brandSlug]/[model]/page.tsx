@@ -10,6 +10,8 @@ import ModelSubNav from './ModelSubNav'
 import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalculator'
 import ModelFaq from './ModelFaq'
 
+export const dynamic = 'force-dynamic'
+
 // ─── Local types ──────────────────────────────────────────────────────────────
 
 type VehicleType = 'car' | 'bike' | 'scooter'
@@ -81,33 +83,6 @@ const getBrand = cache(async (slug: string, type: VehicleType): Promise<Brand | 
   }
   return null
 })
-
-// ─── Static generation ────────────────────────────────────────────────────────
-
-export async function generateStaticParams() {
-  const { data: brands } = await supabase
-    .from('brands').select('id, slug, type').eq('is_active', true)
-  if (!brands?.length) return []
-
-  const { data: models } = await supabase
-    .from('models').select('slug, brand_id')
-    .in('brand_id', brands.map(b => b.id))
-    .neq('status', 'discontinued')
-  if (!models?.length) return []
-
-  const brandMap = new Map(brands.map(b => [b.id, b]))
-
-  return models.flatMap(m => {
-    const brand = brandMap.get(m.brand_id)
-    if (!brand) return []
-    const cleanSlug = brand.slug.replace(/-bike$/, '').replace(/-scooter$/, '')
-    const brandSlug =
-      brand.type === 'car'     ? `${cleanSlug}-cars`     :
-      brand.type === 'bike'    ? `${cleanSlug}-bikes`    :
-      brand.type === 'scooter' ? `${cleanSlug}-scooters` : cleanSlug
-    return [{ brandSlug, model: m.slug }]
-  })
-}
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
@@ -211,7 +186,7 @@ export default async function ModelPage({
   ])
 
   const variants = (variantsRaw ?? []) as VariantRow[]
-  const cities   = (citiesRaw  ?? []) as CityRow[]
+  const cities   = (citiesRaw  ?? []) as unknown as CityRow[]
 
   const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
   const primarySpec    = primaryVariant?.specs?.[0] ?? null
