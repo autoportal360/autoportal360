@@ -201,7 +201,7 @@ export default function Footer() {
             Auto<span style={{ color: '#00D4FF' }}>Portal</span>360
           </div>
           <div style={{ fontSize: '12px', color: '#8E99A8' }}>
-            © 2025 AutoPortal360 · Chandigarh, India · All prices ex-showroom unless stated
+            © 2025–2026 AutoPortal360 · Chandigarh, India · All prices ex-showroom unless stated
           </div>
         </div>
 
