@@ -26,10 +26,10 @@ const LOGO_MAP = {
   'mahindra':      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Mahindra_logo.svg/250px-Mahindra_logo.svg.png',
   'kia':           'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Kia_Motors_logo_2010.svg/250px-Kia_Motors_logo_2010.svg.png',
   'toyota':        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carlogo.svg/250px-Toyota_carlogo.svg.png',
-  'mg':            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MG_Motor_logo.svg/250px-MG_Motor_logo.svg.png',
-  'skoda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Skoda_2016.svg/250px-Skoda_2016.svg.png',
+  'mg':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/MG_Motor_2021_logo.svg/250px-MG_Motor_2021_logo.svg.png',
+  'skoda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Skoda_wordmark_rgb_black_a351de07.png/250px-Skoda_wordmark_rgb_black_a351de07.png',
   'volkswagen':    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/250px-Volkswagen_logo_2019.svg.png',
-  'renault':       'https://upload.wikimedia.org/wikipedia/commons/thumb/g/gb/Renault_2021_Text.svg/250px-Renault_2021_Text.svg.png',
+  'renault':       'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Renault_2021_Text.svg/250px-Renault_2021_Text.svg.png',
   'nissan':        'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Nissan_2020_logo.svg/250px-Nissan_2020_logo.svg.png',
   // Bikes & Scooters (key = clean slug without -bike/-scooter)
   'honda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/250px-Honda.svg.png',
