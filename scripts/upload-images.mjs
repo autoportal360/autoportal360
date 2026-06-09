@@ -17,30 +17,14 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-// brand-slug/model-slug → image URL
-// Using picsum.photos seeded placeholders — replace with real aeplcdn.com URLs when
-// you have current paths (the CDN updates image IDs when content refreshes).
-// To find fresh URLs: open any CarDekho model page, right-click the hero image → Copy image address.
+// brand-slug/model-slug → direct Wikimedia Commons image URL (no /thumb/ resize path).
+// Thumbnail resize paths (/thumb/…/320px-…) are hotlink-blocked by Wikimedia.
+// Direct file URLs work. Add more as you find them via the Commons API:
+//   https://en.wikipedia.org/w/api.php?action=query&titles=File:NAME&prop=imageinfo&iiprop=url&format=json
 const IMAGE_MAP = {
-  // Cars
-  'tata/punch':                  'https://picsum.photos/seed/tata-punch/800/500',
-  'tata/nexon':                  'https://picsum.photos/seed/tata-nexon/800/500',
-  'hyundai/creta':               'https://picsum.photos/seed/hyundai-creta/800/500',
-  'maruti-suzuki/swift':         'https://picsum.photos/seed/maruti-swift/800/500',
-  'mahindra/scorpio-n':          'https://picsum.photos/seed/mahindra-scorpio/800/500',
-  // Bikes
-  'royal-enfield/classic-350':   'https://picsum.photos/seed/re-classic-350/800/500',
-  'royal-enfield/bullet-350':    'https://picsum.photos/seed/re-bullet-350/800/500',
-  'bajaj/pulsar-ns200':          'https://picsum.photos/seed/bajaj-ns200/800/500',
-  'bajaj/pulsar-150':            'https://picsum.photos/seed/bajaj-150/800/500',
-  'hero/splendor-plus':          'https://picsum.photos/seed/hero-splendor/800/500',
-  'honda/cb-shine':              'https://picsum.photos/seed/honda-cb-shine/800/500',
-  'ktm/duke-390':                'https://picsum.photos/seed/ktm-390/800/500',
-  // Scooters
-  'honda/activa-6g':             'https://picsum.photos/seed/honda-activa/800/500',
-  'tvs/ntorq-125':               'https://picsum.photos/seed/tvs-ntorq/800/500',
-  'ather/450x':                  'https://picsum.photos/seed/ather-450x/800/500',
-  'ola-electric/s1-pro':         'https://picsum.photos/seed/ola-s1pro/800/500',
+  'tata/punch':                'https://upload.wikimedia.org/wikipedia/commons/1/1e/2021_Tata_Punch_Creative_%28India%29_front_view_01.png',
+  'maruti-suzuki/swift':       'https://upload.wikimedia.org/wikipedia/commons/4/43/Maruti_Suzuki_Swift_4456.JPG',
+  'royal-enfield/classic-350': 'https://upload.wikimedia.org/wikipedia/commons/7/73/Royal_Enfield_Classic_350.jpg',
 }
 
 async function ensureBuckets() {
