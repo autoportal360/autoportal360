@@ -35,9 +35,12 @@ function BrandCard({ brand, type }: { brand: Brand; type: 'car' | 'bike' | 'scoo
     }}>
       <div style={{
         width: '44px', height: '44px', borderRadius: '10px',
-        background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.15)',
+        background: brand.logo_url ? '#FFFFFF' : 'rgba(0,212,255,0.08)',
+        border: '1px solid rgba(0,212,255,0.15)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden', flexShrink: 0, position: 'relative',
+        padding: brand.logo_url ? '6px' : '0',
+        boxSizing: 'border-box',
       }}>
         {brand.logo_url ? (
           <Image
@@ -45,7 +48,7 @@ function BrandCard({ brand, type }: { brand: Brand; type: 'car' | 'bike' | 'scoo
             alt={brand.name}
             fill
             sizes="44px"
-            style={{ objectFit: 'contain', padding: '4px' }}
+            style={{ objectFit: 'contain', padding: '6px' }}
           />
         ) : (
           <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 900, color: '#00D4FF' }}>
@@ -284,8 +287,9 @@ export default async function HomePage() {
 
       {/* ── STATS BAR ── */}
       <div style={{
-        display: 'flex', justifyContent: 'center',
-        borderBottom: '1px solid rgba(0,212,255,0.08)', flexWrap: 'wrap',
+        display: 'flex',
+        borderBottom: '1px solid rgba(0,212,255,0.08)',
+        overflow: 'hidden',
       }}>
         {[
           { num: '320+', lbl: 'Car Models' },
@@ -293,14 +297,14 @@ export default async function HomePage() {
           { num: '120+', lbl: 'Scooters' },
           { num: '60+',  lbl: 'Brands' },
           { num: '48',   lbl: 'Cities' },
-        ].map(s => (
+        ].map((s, i, arr) => (
           <div key={s.lbl} style={{
-            textAlign: 'center', padding: '18px 28px',
-            borderRight: '1px solid rgba(0,212,255,0.08)',
-            flex: 1, maxWidth: '160px',
+            textAlign: 'center', padding: '16px 8px',
+            borderRight: i < arr.length - 1 ? '1px solid rgba(0,212,255,0.08)' : 'none',
+            flex: 1, minWidth: 0,
           }}>
-            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '22px', fontWeight: 900, color: '#00D4FF' }}>{s.num}</div>
-            <div style={{ fontSize: '11px', color: '#8E99A8', marginTop: '2px' }}>{s.lbl}</div>
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '20px', fontWeight: 900, color: '#00D4FF', whiteSpace: 'nowrap' }}>{s.num}</div>
+            <div style={{ fontSize: '10px', color: '#8E99A8', marginTop: '2px', whiteSpace: 'nowrap' }}>{s.lbl}</div>
           </div>
         ))}
       </div>

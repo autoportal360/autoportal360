@@ -17,14 +17,18 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-// brand-slug/model-slug → direct Wikimedia Commons image URL (no /thumb/ resize path).
-// Thumbnail resize paths (/thumb/…/320px-…) are hotlink-blocked by Wikimedia.
-// Direct file URLs work. Add more as you find them via the Commons API:
-//   https://en.wikipedia.org/w/api.php?action=query&titles=File:NAME&prop=imageinfo&iiprop=url&format=json
+// brand-slug/model-slug → Wikimedia Commons 500px thumbnail URL.
+// Wikimedia allows 250px and 500px thumbnails from scripts; direct full-file
+// downloads are rate-limited. All URLs verified 200 OK before adding.
+// To add more: find the file hash via Commons API, then build:
+//   https://upload.wikimedia.org/wikipedia/commons/thumb/{h1}/{h2}/{file}/500px-{file}
 const IMAGE_MAP = {
-  'tata/punch':                'https://upload.wikimedia.org/wikipedia/commons/1/1e/2021_Tata_Punch_Creative_%28India%29_front_view_01.png',
-  'maruti-suzuki/swift':       'https://upload.wikimedia.org/wikipedia/commons/4/43/Maruti_Suzuki_Swift_4456.JPG',
-  'royal-enfield/classic-350': 'https://upload.wikimedia.org/wikipedia/commons/7/73/Royal_Enfield_Classic_350.jpg',
+  'tata/punch':                'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/2021_Tata_Punch_Creative_%28India%29_front_view_01.png/500px-2021_Tata_Punch_Creative_%28India%29_front_view_01.png',
+  'maruti-suzuki/swift':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Maruti_Suzuki_Swift_4456.JPG/500px-Maruti_Suzuki_Swift_4456.JPG',
+  'royal-enfield/classic-350': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Royal_Enfield_Classic_350.jpg/500px-Royal_Enfield_Classic_350.jpg',
+  'hyundai/creta':             'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/2024_Hyundai_Creta_1.5_MPi_SX%28O%29_%28India%29_front_view.png/500px-2024_Hyundai_Creta_1.5_MPi_SX%28O%29_%28India%29_front_view.png',
+  'ktm/duke-390':              'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/KTM_390_Duke_in_Athens_on_11-1-2023.jpg/500px-KTM_390_Duke_in_Athens_on_11-1-2023.jpg',
+  'honda/activa-6g':           'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Honda_Activa_6G.jpg/500px-Honda_Activa_6G.jpg',
 }
 
 async function ensureBuckets() {
@@ -42,9 +46,9 @@ function downloadViaCurl(url) {
   // curl bypasses aeplcdn.com's JA3 TLS fingerprint block that rejects all Node.js clients.
   const tmpFile = join(tmpdir(), `ap360-img-${Date.now()}.jpg`)
   const result = spawnSync('curl', [
-    '-sL',
+    '-sfL',
     '--max-time', '20',
-    '-H', 'Referer: https://www.cardekho.com/',
+    '-H', 'Referer: https://en.wikipedia.org/',
     '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     '-o', tmpFile,
     url,
@@ -124,6 +128,9 @@ async function main() {
       console.log(`✗  ${err.message}`)
       failed++
     }
+
+    // Respect Wikimedia rate limits
+    await new Promise(r => setTimeout(r, 2000))
   }
 
   console.log(`\nDone — ${success} uploaded, ${skipped} skipped, ${failed} failed`)

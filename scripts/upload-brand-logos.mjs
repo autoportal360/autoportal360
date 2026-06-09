@@ -16,18 +16,18 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-// clean brand-slug → direct Wikimedia Commons file URL (raw SVG or JPG, no /thumb/ paths).
-// Wikimedia blocks thumbnail resize hotlinks. Direct file URLs (/wikipedia/commons/{hash}/{file}) work.
-// SVGs are rasterized by sharp (libvips + librsvg). JPGs processed normally.
+// clean brand-slug → Wikimedia Commons 250px PNG thumbnail.
+// Wikimedia allows 250px and 500px from scripts; direct file downloads are rate-limited.
+// SVG logos are served as pre-rendered PNG at the thumbnail endpoint.
 const LOGO_MAP = {
-  'tata':          'https://upload.wikimedia.org/wikipedia/commons/8/8e/Tata_logo.svg',
-  'hyundai':       'https://upload.wikimedia.org/wikipedia/commons/4/44/Hyundai_Motor_Company_logo.svg',
-  'maruti-suzuki': 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Suzuki_logo_2025_%28vertical%29.svg',
-  'mahindra':      'https://upload.wikimedia.org/wikipedia/commons/8/89/Mahindra_logo.svg',
-  'honda':         'https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg',
-  'royal-enfield': 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Royal_Enfield_logo.svg',
-  'ktm':           'https://upload.wikimedia.org/wikipedia/commons/a/a9/KTM-Logo.svg',
-  'ather':         'https://upload.wikimedia.org/wikipedia/commons/d/d1/Ather_New_Logo.jpg',
+  'tata':          'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/250px-Tata_logo.svg.png',
+  'hyundai':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/250px-Hyundai_Motor_Company_logo.svg.png',
+  'maruti-suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Suzuki_logo_2025_%28vertical%29.svg/250px-Suzuki_logo_2025_%28vertical%29.svg.png',
+  'mahindra':      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Mahindra_logo.svg/250px-Mahindra_logo.svg.png',
+  'honda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/250px-Honda.svg.png',
+  'royal-enfield': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Royal_Enfield_logo.svg/250px-Royal_Enfield_logo.svg.png',
+  'ktm':           'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/KTM-Logo.svg/250px-KTM-Logo.svg.png',
+  'ather':         'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Ather_New_Logo.jpg/250px-Ather_New_Logo.jpg',
 }
 
 async function ensureBucket() {
@@ -42,8 +42,9 @@ async function ensureBucket() {
 function downloadViaCurl(url) {
   const tmpFile = join(tmpdir(), `ap360-logo-${Date.now()}.png`)
   const result = spawnSync('curl', [
-    '-sL',
+    '-sfL',
     '--max-time', '20',
+    '-H', 'Referer: https://en.wikipedia.org/',
     '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     '-o', tmpFile,
     url,
@@ -125,6 +126,9 @@ async function main() {
       console.log(`✗  ${err.message}`)
       failed++
     }
+
+    // Respect Wikimedia rate limits
+    await new Promise(r => setTimeout(r, 2000))
   }
 
   console.log(`\nDone — ${success} uploaded, ${skipped} skipped, ${failed} failed`)
