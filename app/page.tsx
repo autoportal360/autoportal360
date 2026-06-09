@@ -102,6 +102,35 @@ function Section({ children, alt }: { children: React.ReactNode; alt?: boolean }
   )
 }
 
+type PopularModelRow = {
+  id: string
+  slug: string
+  name: string
+  price_min: number | null
+  price_max: number | null
+  thumbnail_url: string | null
+  brands: { name: string; slug: string } | null
+}
+
+function modelToCard(
+  m: PopularModelRow,
+  suffix: 'cars' | 'bikes' | 'scooters',
+  icon: string,
+) {
+  const brand = m.brands
+  const brandSlug = (brand?.slug ?? '').replace(/-bike$/, '').replace(/-scooter$/, '')
+  return {
+    brand: brand?.name ?? '',
+    name: m.name,
+    price: m.price_min && m.price_max ? formatPriceRange(m.price_min, m.price_max) : '—',
+    tags: [] as string[],
+    href: `/${brandSlug}-${suffix}/${m.slug}/`,
+    icon,
+    badge: '',
+    thumbnail_url: m.thumbnail_url,
+  }
+}
+
 // Vehicle card (used for popular cars/bikes/scooters)
 function VehicleCard({ item }: {
   item: {
@@ -115,31 +144,36 @@ function VehicleCard({ item }: {
       background: '#111111', border: '1px solid rgba(0,212,255,0.12)',
       borderRadius: '14px', overflow: 'hidden', textDecoration: 'none', display: 'block',
     }}>
-      <div style={{
-        height: '110px', position: 'relative',
-        background: 'linear-gradient(135deg,#0d1f3c,#0a0a0a)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {item.thumbnail_url ? (
+      {item.thumbnail_url ? (
+        <div style={{
+          height: '110px', position: 'relative',
+          overflow: 'hidden', borderRadius: '14px 14px 0 0',
+        }}>
           <Image
             src={item.thumbnail_url}
             alt={`${item.brand} ${item.name}`}
             fill
-            sizes="(max-width: 600px) 50vw, 200px"
+            sizes="200px"
             style={{ objectFit: 'cover' }}
           />
-        ) : (
-          <span style={{ fontSize: '44px' }}>{item.icon}</span>
-        )}
-        {item.badge && (
-          <span style={{
-            position: 'absolute', top: '8px', left: '8px', zIndex: 1,
-            background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)',
-            color: '#00D4FF', fontSize: '9px', fontWeight: 700,
-            padding: '2px 8px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif',
-          }}>{item.badge}</span>
-        )}
-      </div>
+          {item.badge && (
+            <span style={{
+              position: 'absolute', top: '8px', left: '8px', zIndex: 1,
+              background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)',
+              color: '#00D4FF', fontSize: '9px', fontWeight: 700,
+              padding: '2px 8px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif',
+            }}>{item.badge}</span>
+          )}
+        </div>
+      ) : (
+        <div style={{
+          height: '110px', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '44px',
+          background: 'linear-gradient(135deg,#0d1f3c,#0a0a0a)',
+        }}>
+          {item.icon}
+        </div>
+      )}
       <div style={{ padding: '11px 13px 13px' }}>
         <div style={{ fontSize: '10px', color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '2px' }}>{item.brand}</div>
         <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 800, color: '#FFFFFF', marginBottom: '3px' }}>{item.name}</div>
@@ -159,34 +193,19 @@ function VehicleCard({ item }: {
 }
 
 export default async function HomePage() {
-  const [carBrands, bikeBrands, scooterBrands] = await Promise.all([
+  const modelSelect = 'id,slug,name,price_min,price_max,thumbnail_url,brands(name,slug)'
+  const [carBrands, bikeBrands, scooterBrands, carsRaw, bikesRaw, scootersRaw] = await Promise.all([
     getBrands('car'),
     getBrands('bike'),
     getBrands('scooter'),
+    supabase.from('models').select(modelSelect).eq('type', 'car').eq('status', 'active').order('price_min', { ascending: true }).limit(6),
+    supabase.from('models').select(modelSelect).eq('type', 'bike').eq('status', 'active').order('price_min', { ascending: true }).limit(4),
+    supabase.from('models').select(modelSelect).eq('type', 'scooter').eq('status', 'active').order('price_min', { ascending: true }).limit(4),
   ])
 
-  const popularCars = [
-    { brand: 'Maruti Suzuki', name: 'Swift',      price: '₹6.49 – 9.64L',  tags: ['Petrol','CNG'],     href: '/maruti-suzuki-cars/swift/',   icon: '🚗', badge: 'TRENDING' },
-    { brand: 'Tata',          name: 'Nexon',      price: '₹8.10 – 15.50L', tags: ['Petrol','EV'],      href: '/tata-cars/nexon/',            icon: '🚙', badge: 'TOP PICK' },
-    { brand: 'Hyundai',       name: 'Creta',      price: '₹11.11 – 20.45L',tags: ['Petrol','Diesel'],  href: '/hyundai-cars/creta/',         icon: '🛻', badge: '' },
-    { brand: 'Mahindra',      name: 'Scorpio-N',  price: '₹13.86 – 24.54L',tags: ['Diesel','4WD'],     href: '/mahindra-cars/scorpio-n/',    icon: '🚘', badge: '' },
-    { brand: 'Kia',           name: 'Seltos',     price: '₹10.89 – 20.35L',tags: ['Petrol','DCT'],     href: '/kia-cars/seltos/',            icon: '🚘', badge: '' },
-    { brand: 'Tata',          name: 'Tiago EV',   price: '₹8.69 – 12.49L', tags: ['Electric','315km'], href: '/tata-cars/tiago-ev/',         icon: '⚡', badge: 'EV' },
-  ]
-
-  const popularBikes = [
-    { brand: 'Royal Enfield', name: 'Classic 350',   price: '₹1.93 – 2.26L', tags: ['349cc','20.2 bhp'], href: '/royal-enfield-bikes/classic-350/', icon: '🏍️', badge: 'BESTSELLER' },
-    { brand: 'Bajaj',         name: 'Pulsar NS200',  price: '₹1.50 – 1.55L', tags: ['199cc','24.5 bhp'], href: '/bajaj-bikes/pulsar-ns200/',        icon: '🏍️', badge: '' },
-    { brand: 'KTM',           name: 'Duke 390',      price: '₹3.11 – 3.20L', tags: ['373cc','46 bhp'],   href: '/ktm-bikes/duke-390/',              icon: '🏍️', badge: 'SPORTY' },
-    { brand: 'Hero',          name: 'Splendor Plus', price: '₹77K – 83K',    tags: ['97cc','Commuter'],  href: '/hero-bikes/splendor-plus/',        icon: '🏍️', badge: '' },
-  ]
-
-  const popularScooters = [
-    { brand: 'Honda',        name: 'Activa 6G', price: '₹75K – 79K',    tags: ['110cc','OBD2'],     href: '/honda-scooters/activa-6g/',      icon: '🛵', badge: 'BESTSELLER' },
-    { brand: 'TVS',          name: 'NTorq 125', price: '₹88K – 1.01L',  tags: ['125cc','Smart'],    href: '/tvs-scooters/ntorq-125/',        icon: '🛵', badge: '' },
-    { brand: 'Ather',        name: '450X',      price: '₹1.30 – 1.46L', tags: ['Electric','146km'], href: '/ather-scooters/450x/',           icon: '⚡', badge: 'EV' },
-    { brand: 'Ola Electric', name: 'S1 Pro',    price: '₹1.24 – 1.47L', tags: ['Electric','195km'], href: '/ola-electric-scooters/s1-pro/',  icon: '⚡', badge: 'EV' },
-  ]
+  const popularCars     = ((carsRaw.data     ?? []) as unknown as PopularModelRow[]).map(m => modelToCard(m, 'cars',     '🚗'))
+  const popularBikes    = ((bikesRaw.data    ?? []) as unknown as PopularModelRow[]).map(m => modelToCard(m, 'bikes',    '🏍️'))
+  const popularScooters = ((scootersRaw.data ?? []) as unknown as PopularModelRow[]).map(m => modelToCard(m, 'scooters', '🛵'))
 
   return (
     <div>

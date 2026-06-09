@@ -16,17 +16,29 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-// clean brand-slug → Wikimedia Commons 250px PNG thumbnail.
-// Wikimedia allows 250px and 500px from scripts; direct file downloads are rate-limited.
-// SVG logos are served as pre-rendered PNG at the thumbnail endpoint.
+// clean brand-slug (suffix -bike/-scooter stripped) → Wikimedia Commons 250px PNG thumbnail.
+// Keys MUST be the clean slug — the script strips -bike/-scooter before looking up here.
 const LOGO_MAP = {
+  // Cars
   'tata':          'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/250px-Tata_logo.svg.png',
   'hyundai':       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/250px-Hyundai_Motor_Company_logo.svg.png',
   'maruti-suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Suzuki_logo_2025_%28vertical%29.svg/250px-Suzuki_logo_2025_%28vertical%29.svg.png',
   'mahindra':      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Mahindra_logo.svg/250px-Mahindra_logo.svg.png',
+  'kia':           'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Kia_Motors_logo_2010.svg/250px-Kia_Motors_logo_2010.svg.png',
+  'toyota':        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carlogo.svg/250px-Toyota_carlogo.svg.png',
+  'mg':            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MG_Motor_logo.svg/250px-MG_Motor_logo.svg.png',
+  'skoda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Skoda_2016.svg/250px-Skoda_2016.svg.png',
+  'volkswagen':    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/250px-Volkswagen_logo_2019.svg.png',
+  'renault':       'https://upload.wikimedia.org/wikipedia/commons/thumb/g/gb/Renault_2021_Text.svg/250px-Renault_2021_Text.svg.png',
+  'nissan':        'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Nissan_2020_logo.svg/250px-Nissan_2020_logo.svg.png',
+  // Bikes & Scooters (key = clean slug without -bike/-scooter)
   'honda':         'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/250px-Honda.svg.png',
   'royal-enfield': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Royal_Enfield_logo.svg/250px-Royal_Enfield_logo.svg.png',
   'ktm':           'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/KTM-Logo.svg/250px-KTM-Logo.svg.png',
+  'bajaj':         'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Bajaj_Auto_Logo.svg/250px-Bajaj_Auto_Logo.svg.png',
+  'hero':          'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Hero_MotoCorp_Logo.svg/250px-Hero_MotoCorp_Logo.svg.png',
+  'tvs':           'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/TVS_Motor_Company_Logo.svg/250px-TVS_Motor_Company_Logo.svg.png',
+  'yamaha':        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Yamaha_Motor_logo.svg/250px-Yamaha_Motor_logo.svg.png',
   'ather':         'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Ather_New_Logo.jpg/250px-Ather_New_Logo.jpg',
 }
 
