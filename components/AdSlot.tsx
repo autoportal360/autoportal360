@@ -76,16 +76,19 @@ export default function AdSlot({ zone }: AdSlotProps) {
   const [ad, setAd] = useState<AdData>(FALLBACK[zone])
 
   useEffect(() => {
-    const sb = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    sb.from('ad_campaigns')
-      .select('headline,subline,cta_text,destination_url,advertiser,custom_html,ad_type,is_active')
-      .eq('zone', zone)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data || !data.is_active) return
+    let cancelled = false
+    async function loadAd() {
+      try {
+        const sb = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data } = await sb
+          .from('ad_campaigns')
+          .select('headline,subline,cta_text,destination_url,advertiser,custom_html,ad_type,is_active')
+          .eq('zone', zone)
+          .maybeSingle()
+        if (cancelled || !data || !data.is_active) return
         const r = data as Record<string, unknown>
         if (r.ad_type === 'adsense' || r.ad_type === 'custom') {
           setAd(prev => ({ ...prev, adType: r.ad_type as string, customHtml: (r.custom_html as string) ?? null }))
@@ -93,16 +96,20 @@ export default function AdSlot({ zone }: AdSlotProps) {
         }
         setAd(prev => ({
           ...prev,
-          headline:   (r.headline    as string) || prev.headline,
-          subline:    (r.subline     as string) || prev.subline,
-          cta:        (r.cta_text    as string) || prev.cta,
-          href:       (r.destination_url as string) || prev.href,
-          advertiser: (r.advertiser  as string) || prev.advertiser,
-          adType:     (r.ad_type     as string) || prev.adType,
+          headline:   (r.headline         as string) || prev.headline,
+          subline:    (r.subline          as string) || prev.subline,
+          cta:        (r.cta_text         as string) || prev.cta,
+          href:       (r.destination_url  as string) || prev.href,
+          advertiser: (r.advertiser       as string) || prev.advertiser,
+          adType:     (r.ad_type          as string) || prev.adType,
           customHtml: null,
         }))
-      })
-      .catch(() => { /* silently keep fallback */ })
+      } catch {
+        // silently keep fallback
+      }
+    }
+    loadAd()
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zone])
 
