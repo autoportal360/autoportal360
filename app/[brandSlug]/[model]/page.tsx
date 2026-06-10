@@ -9,6 +9,7 @@ import type { Brand, Spec } from '@/types'
 import ModelSubNav from './ModelSubNav'
 import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalculator'
 import ModelFaq from './ModelFaq'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +45,7 @@ type ModelRow = {
   status: 'active' | 'discontinued' | 'upcoming'
   price_min: number | null
   price_max: number | null
+  thumbnail_url: string | null
   overview_html: string | null
   meta_title: string | null
   meta_description: string | null
@@ -244,60 +246,81 @@ export default async function ModelPage({
             border: '1px solid rgba(0,212,255,0.08)',
             borderRadius: '20px', padding: '28px', marginBottom: '36px',
           }}>
-            {/* Badges row */}
-            <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '3px 10px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif' }}>
-                {brand.name}
-              </span>
-              {m.body_type && (
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#8E99A8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
-                  {m.body_type}
-                </span>
-              )}
-              {fuelTypes.map(ft => (
-                <span key={ft} style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', background: ft === 'Electric' ? 'rgba(0,255,128,0.08)' : 'rgba(0,212,255,0.06)', border: `1px solid ${ft === 'Electric' ? 'rgba(0,255,128,0.2)' : 'rgba(0,212,255,0.15)'}`, color: ft === 'Electric' ? '#00FF80' : '#8E99A8' }}>
-                  {ft}
-                </span>
-              ))}
-              {primarySpec?.ncap_rating && (
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)', padding: '3px 10px', borderRadius: '20px' }}>
-                  {primarySpec.ncap_rating} NCAP
-                </span>
-              )}
-            </div>
+            {/* Two-column: text left, image right */}
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', marginBottom: '24px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Badges row */}
+                <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '3px 10px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif' }}>
+                    {brand.name}
+                  </span>
+                  {m.body_type && (
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#8E99A8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
+                      {m.body_type}
+                    </span>
+                  )}
+                  {fuelTypes.map(ft => (
+                    <span key={ft} style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', background: ft === 'Electric' ? 'rgba(0,255,128,0.08)' : 'rgba(0,212,255,0.06)', border: `1px solid ${ft === 'Electric' ? 'rgba(0,255,128,0.2)' : 'rgba(0,212,255,0.15)'}`, color: ft === 'Electric' ? '#00FF80' : '#8E99A8' }}>
+                      {ft}
+                    </span>
+                  ))}
+                  {primarySpec?.ncap_rating && (
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)', padding: '3px 10px', borderRadius: '20px' }}>
+                      {primarySpec.ncap_rating} NCAP
+                    </span>
+                  )}
+                </div>
 
-            {/* H1 */}
-            <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: '#FFFFFF', margin: '0 0 10px', lineHeight: 1.1 }}>
-              {brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span>
-            </h1>
+                {/* H1 */}
+                <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: '#FFFFFF', margin: '0 0 10px', lineHeight: 1.1 }}>
+                  {brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span>
+                </h1>
 
-            {/* Price */}
-            {priceLabel && (
-              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '22px', fontWeight: 900, color: '#00D4FF', marginBottom: '6px' }}>
-                {priceLabel}
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#8E99A8', marginLeft: '8px' }}>ex-showroom</span>
+                {/* Price */}
+                {priceLabel && (
+                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '22px', fontWeight: 900, color: '#00D4FF', marginBottom: '6px' }}>
+                    {priceLabel}
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#8E99A8', marginLeft: '8px' }}>ex-showroom</span>
+                  </div>
+                )}
+
+                {/* On-road estimate */}
+                {heroOnRoad && heroCity && (
+                  <div style={{ fontSize: '13px', color: '#C0C0C0', marginBottom: '20px' }}>
+                    On-road in {heroCity.name}: <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{formatPrice(heroOnRoad.total)}</span>
+                    <span style={{ color: '#8E99A8', marginLeft: '6px' }}>(est. for base variant)</span>
+                  </div>
+                )}
+
+                {/* CTAs */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button style={{ background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Get Offers
+                  </button>
+                  <a href="#on-road" style={{ background: 'rgba(0,212,255,0.08)', color: '#00D4FF', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    On-Road Price
+                  </a>
+                  <Link href="/compare/" style={{ background: 'rgba(255,255,255,0.04)', color: '#C0C0C0', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Compare
+                  </Link>
+                </div>
               </div>
-            )}
 
-            {/* On-road estimate */}
-            {heroOnRoad && heroCity && (
-              <div style={{ fontSize: '13px', color: '#C0C0C0', marginBottom: '20px' }}>
-                On-road in {heroCity.name}: <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{formatPrice(heroOnRoad.total)}</span>
-                <span style={{ color: '#8E99A8', marginLeft: '6px' }}>(est. for base variant)</span>
-              </div>
-            )}
-
-            {/* CTAs */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
-              <button style={{ background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                Get Offers
-              </button>
-              <a href="#on-road" style={{ background: 'rgba(0,212,255,0.08)', color: '#00D4FF', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                On-Road Price
-              </a>
-              <Link href="/compare/" style={{ background: 'rgba(255,255,255,0.04)', color: '#C0C0C0', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                Compare
-              </Link>
+              {/* Hero image */}
+              {m.thumbnail_url && (
+                <div style={{ width: '240px', flexShrink: 0 }}>
+                  <div style={{ position: 'relative', width: '240px', height: '150px', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0,0,0,0.4)' }}>
+                    <Image
+                      src={m.thumbnail_url}
+                      alt={`${brand.name} ${m.name}`}
+                      fill
+                      sizes="240px"
+                      style={{ objectFit: 'cover' }}
+                      priority
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick stats */}
