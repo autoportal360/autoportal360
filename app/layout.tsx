@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Nav from '@/components/Nav'
-import Footer from '@/components/Footer'
+import ConditionalLayout from '@/app/components/ConditionalLayout'
 
 export const metadata: Metadata = {
   title: {
@@ -24,11 +23,7 @@ export default function RootLayout({
         flexDirection: 'column',
         minHeight: '100vh',
       }}>
-        <Nav />
-        <main style={{ flex: 1 }}>
-          {children}
-        </main>
-        <Footer />
+        <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
   )

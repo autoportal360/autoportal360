@@ -29,27 +29,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Not authenticated — standalone shell, no sidebar (login page)
+  // Not authenticated — no sidebar (login page handles its own layout)
   if (!user) {
-    return (
-      <html lang="en">
-        <body style={{ margin: 0, background: '#06142D' }}>
-          {children}
-        </body>
-      </html>
-    )
+    return <>{children}</>
   }
 
   return (
-    <html lang="en">
-      <body style={{
-        margin: 0, background: '#06142D',
-        display: 'flex', minHeight: '100vh',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}>
+    <div style={{
+      background: '#06142D',
+      display: 'flex', minHeight: '100vh',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+    }}>
 
-        {/* ── SIDEBAR ── */}
-        <nav style={{
+      {/* ── SIDEBAR ── */}
+      <nav style={{
           width: '220px', background: '#111111', flexShrink: 0,
           borderRight: '1px solid rgba(0,212,255,0.08)',
           display: 'flex', flexDirection: 'column',
@@ -125,7 +118,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </main>
         </div>
 
-      </body>
-    </html>
+    </div>
   )
 }
