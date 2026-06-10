@@ -1,0 +1,209 @@
+'use client'
+
+import { createBrowserClient } from '@supabase/ssr'
+import { useState, useEffect, useRef, useCallback } from 'react'
+
+// ─── style tokens ──────────────────────────────────────────────────────────────
+
+const INPUT: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'rgba(0,212,255,0.04)',
+  border: '1px solid rgba(0,212,255,0.15)',
+  borderRadius: '10px', padding: '10px 14px',
+  color: '#FFFFFF', fontSize: '14px', outline: 'none',
+  fontFamily: 'system-ui, sans-serif',
+}
+const TEXTAREA: React.CSSProperties = {
+  ...INPUT, resize: 'vertical' as const, lineHeight: '1.6',
+}
+const LABEL: React.CSSProperties = {
+  display: 'block', fontSize: '11px', fontWeight: 700,
+  color: '#8E99A8', marginBottom: '6px',
+  textTransform: 'uppercase', letterSpacing: '0.8px',
+}
+const CARD: React.CSSProperties = {
+  background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)',
+  borderRadius: '16px', padding: '28px', marginBottom: '16px',
+}
+const CARD_TITLE: React.CSSProperties = {
+  fontFamily: 'Montserrat, sans-serif', fontSize: 13,
+  fontWeight: 800, color: '#8E99A8', margin: '0 0 20px',
+  textTransform: 'uppercase', letterSpacing: '1px',
+}
+
+// ─── field defs ────────────────────────────────────────────────────────────────
+
+const FIELDS = [
+  {
+    section: 'Site Identity',
+    items: [
+      { key: 'site_name',            label: 'Site Name',              type: 'text',  placeholder: 'AutoPortal360',                          hint: '' },
+      { key: 'meta_title_template',  label: 'Meta Title Template',    type: 'text',  placeholder: '%s | AutoPortal360',                     hint: 'Use %s for the page-specific title.' },
+      { key: 'default_meta_description', label: 'Default Meta Description', type: 'textarea', placeholder: 'India\'s trusted automotive portal…', hint: 'Used when a page has no custom meta description.' },
+      { key: 'default_og_image_url', label: 'Default OG Image URL',   type: 'url',   placeholder: 'https://autoportal360.com/og-default.jpg', hint: 'Fallback Open Graph image for social sharing.' },
+    ],
+  },
+  {
+    section: 'Analytics & Tracking',
+    items: [
+      { key: 'ga4_id',              label: 'Google Analytics 4 ID',             type: 'text',  placeholder: 'G-XXXXXXXXXX', hint: '' },
+      { key: 'gtm_id',              label: 'Google Tag Manager ID',              type: 'text',  placeholder: 'GTM-XXXXXXX',  hint: '' },
+      { key: 'gsc_verification',    label: 'Search Console Verification Code',   type: 'text',  placeholder: 'abc123xyz',    hint: 'Value of the google-site-verification meta tag.' },
+      { key: 'facebook_pixel_id',   label: 'Facebook Pixel ID',                 type: 'text',  placeholder: '1234567890',   hint: '' },
+    ],
+  },
+  {
+    section: 'Custom Scripts',
+    items: [
+      { key: 'custom_head_scripts', label: 'Custom Head Scripts',  type: 'textarea', placeholder: '<!-- Scripts injected inside <head> -->', hint: 'Injected just before </head>. Use valid HTML/script tags.' },
+      { key: 'custom_body_scripts', label: 'Custom Body Scripts',  type: 'textarea', placeholder: '<!-- Scripts injected after <body>  -->', hint: 'Injected just after <body>. Use for tag managers, chat widgets, etc.' },
+    ],
+  },
+] as const
+
+type Key = (typeof FIELDS)[number]['items'][number]['key']
+
+// ─── main component ────────────────────────────────────────────────────────────
+
+export default function SeoPage() {
+  const sbRef = useRef(createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ))
+  const sb = sbRef.current
+
+  const [settings, setSettings] = useState<Record<string, string>>({})
+  const [loading,  setLoading]  = useState(true)
+  const [saving,   setSaving]   = useState(false)
+  const [toast,    setToast]    = useState<{ msg: string; ok: boolean } | null>(null)
+
+  const showToast = useCallback((msg: string, ok: boolean) => {
+    setToast({ msg, ok })
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  useEffect(() => {
+    sb.from('seo_settings').select('key, value')
+      .then(({ data }) => {
+        const map: Record<string, string> = {}
+        ;(data ?? []).forEach(row => { map[row.key as string] = (row.value as string) ?? '' })
+        setSettings(map)
+        setLoading(false)
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function set(key: string, val: string) {
+    setSettings(s => ({ ...s, [key]: val }))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const rows = Object.entries(settings).map(([key, value]) => ({
+        key, value: value ?? '', updated_at: new Date().toISOString(),
+      }))
+      const { error } = await sb.from('seo_settings')
+        .upsert(rows, { onConflict: 'key' })
+      if (error) throw new Error(error.message)
+      showToast('SEO settings saved!', true)
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Save failed', false)
+    }
+    setSaving(false)
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '80px', color: '#8E99A8', fontSize: 14 }}>
+        Loading…
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ maxWidth: '720px' }}>
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 28, right: 28, zIndex: 9999,
+          background: toast.ok ? 'rgba(0,204,102,0.12)' : 'rgba(255,80,80,0.12)',
+          border: `1px solid ${toast.ok ? 'rgba(0,204,102,0.35)' : 'rgba(255,80,80,0.35)'}`,
+          color: toast.ok ? '#00CC66' : '#FF8080',
+          padding: '14px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 16 }}>{toast.ok ? '✓' : '✗'}</span>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* ── Header ── */}
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{
+          fontFamily: 'Montserrat, sans-serif', fontSize: '26px',
+          fontWeight: 900, color: '#FFFFFF', margin: '0 0 4px',
+        }}>
+          SEO Settings
+        </h1>
+        <p style={{ fontSize: '13px', color: '#8E99A8', margin: 0 }}>
+          Global settings applied across the site
+        </p>
+      </div>
+
+      {/* ── Sections ── */}
+      {FIELDS.map(section => (
+        <div key={section.section} style={CARD}>
+          <p style={CARD_TITLE}>{section.section}</p>
+          {section.items.map(field => (
+            <div key={field.key} style={{ marginBottom: '20px' }}>
+              <label style={LABEL}>{field.label}</label>
+              {field.type === 'textarea' ? (
+                <textarea
+                  value={settings[field.key] ?? ''}
+                  rows={field.key.includes('scripts') ? 8 : 3}
+                  onChange={e => set(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  spellCheck={false}
+                  style={{
+                    ...TEXTAREA,
+                    ...(field.key.includes('scripts')
+                      ? { fontFamily: 'monospace', fontSize: 13 }
+                      : {}),
+                  }}
+                />
+              ) : (
+                <input
+                  type={field.type}
+                  value={settings[field.key] ?? ''}
+                  onChange={e => set(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  style={INPUT}
+                />
+              )}
+              {field.hint && (
+                <p style={{ fontSize: 11, color: '#8E99A8', margin: '5px 0 0' }}>
+                  {field.hint}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* ── Save ── */}
+      <button type="button" onClick={handleSave} disabled={saving} style={{
+        background: saving ? 'rgba(0,212,255,0.35)' : '#00D4FF',
+        color: '#06142D',
+        fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
+        fontSize: 14, padding: '12px 32px',
+        borderRadius: '10px', border: 'none',
+        cursor: saving ? 'not-allowed' : 'pointer',
+      }}>
+        {saving ? 'Saving…' : 'Save Settings'}
+      </button>
+    </div>
+  )
+}

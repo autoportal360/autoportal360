@@ -1,57 +1,124 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+
 interface AdSlotProps {
   zone: 'hero-billboard' | 'mid-feed-1' | 'mid-feed-2' | 'in-feed-native' | 'pre-footer'
 }
 
-const ADS = {
+interface AdData {
+  headline:   string
+  subline:    string
+  cta:        string
+  href:       string
+  advertiser: string
+  bg:         string
+  customHtml: string | null
+  adType:     string
+}
+
+// Hardcoded fallbacks — used until DB loads, and if zone is inactive/missing
+const FALLBACK: Record<string, AdData> = {
   'hero-billboard': {
-    headline: '🛡️ Car Insurance from ₹2,094/year',
-    subline: 'Zero depreciation · Instant policy · Cashless garages across India',
-    cta: 'Get Free Quote →',
-    href: 'https://www.acko.com/?utm_source=autoportal360&utm_medium=hero_banner&utm_campaign=car_insurance',
+    headline:   '🛡️ Car Insurance from ₹2,094/year',
+    subline:    'Zero depreciation · Instant policy · Cashless garages across India',
+    cta:        'Get Free Quote →',
+    href:       'https://www.acko.com/?utm_source=autoportal360&utm_medium=hero_banner&utm_campaign=car_insurance',
     advertiser: 'Acko Insurance',
-    bg: 'linear-gradient(135deg,#0A1F44 0%,#0d3a6e 60%,rgba(0,212,255,0.1) 100%)',
+    bg:         'linear-gradient(135deg,#0A1F44 0%,#0d3a6e 60%,rgba(0,212,255,0.1) 100%)',
+    customHtml: null,
+    adType:     'affiliate',
   },
   'mid-feed-1': {
-    headline: '💰 Compare Car Loans — EMI from ₹1,499/Lakh',
-    subline: 'SBI · HDFC · ICICI · Axis — Best rates in 2 minutes',
-    cta: 'Check EMI →',
-    href: 'https://www.policybazaar.com/motor-insurance/?utm_source=autoportal360&utm_medium=mid_banner_1',
+    headline:   '💰 Compare Car Loans — EMI from ₹1,499/Lakh',
+    subline:    'SBI · HDFC · ICICI · Axis — Best rates in 2 minutes',
+    cta:        'Check EMI →',
+    href:       'https://www.policybazaar.com/motor-insurance/?utm_source=autoportal360&utm_medium=mid_banner_1',
     advertiser: 'Policybazaar',
-    bg: 'linear-gradient(90deg,#06142D,#0A2A5E)',
+    bg:         'linear-gradient(90deg,#06142D,#0A2A5E)',
+    customHtml: null,
+    adType:     'affiliate',
   },
   'mid-feed-2': {
-    headline: '🏍️ Two-Wheeler Loan — No Processing Fee',
-    subline: 'Get bike loan approved in 24 hours · 100+ lender network',
-    cta: 'Apply Now →',
-    href: 'https://www.bankbazaar.com/two-wheeler-loan.html?utm_source=autoportal360&utm_medium=mid_banner_2',
+    headline:   '🏍️ Two-Wheeler Loan — No Processing Fee',
+    subline:    'Get bike loan approved in 24 hours · 100+ lender network',
+    cta:        'Apply Now →',
+    href:       'https://www.bankbazaar.com/two-wheeler-loan.html?utm_source=autoportal360&utm_medium=mid_banner_2',
     advertiser: 'BankBazaar',
-    bg: 'linear-gradient(90deg,#06142D,#0d2550)',
+    bg:         'linear-gradient(90deg,#06142D,#0d2550)',
+    customHtml: null,
+    adType:     'affiliate',
   },
   'in-feed-native': {
-    headline: '⚡ EV Insurance — Designed for Electric',
-    subline: 'Covers battery · Charging damage · Roadside assist',
-    cta: 'Explore →',
-    href: 'https://www.acko.com/electric-car-insurance/?utm_source=autoportal360&utm_medium=in_feed_native',
+    headline:   '⚡ EV Insurance — Designed for Electric',
+    subline:    'Covers battery · Charging damage · Roadside assist',
+    cta:        'Explore →',
+    href:       'https://www.acko.com/electric-car-insurance/?utm_source=autoportal360&utm_medium=in_feed_native',
     advertiser: 'Acko',
-    bg: 'linear-gradient(135deg,#111111,#1a1f2e)',
+    bg:         'linear-gradient(135deg,#111111,#1a1f2e)',
+    customHtml: null,
+    adType:     'affiliate',
   },
   'pre-footer': {
-    headline: '🚗 Get Pre-Approved Car Loan in 2 Minutes',
-    subline: 'No documents needed · Starting 7.9% p.a.',
-    cta: 'Check Eligibility →',
-    href: 'https://www.bankbazaar.com/car-loan.html?utm_source=autoportal360&utm_medium=pre_footer',
+    headline:   '🚗 Get Pre-Approved Car Loan in 2 Minutes',
+    subline:    'No documents needed · Starting 7.9% p.a.',
+    cta:        'Check Eligibility →',
+    href:       'https://www.bankbazaar.com/car-loan.html?utm_source=autoportal360&utm_medium=pre_footer',
     advertiser: 'BankBazaar',
-    bg: 'linear-gradient(90deg,#0A1F44,#06142D)',
+    bg:         'linear-gradient(90deg,#0A1F44,#06142D)',
+    customHtml: null,
+    adType:     'affiliate',
   },
 }
 
 export default function AdSlot({ zone }: AdSlotProps) {
-  const ad = ADS[zone]
+  const [ad, setAd] = useState<AdData>(FALLBACK[zone])
+
+  useEffect(() => {
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    sb.from('ad_campaigns')
+      .select('headline,subline,cta_text,destination_url,advertiser,custom_html,ad_type,is_active')
+      .eq('zone', zone)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data || !data.is_active) return
+        const r = data as Record<string, unknown>
+        if (r.ad_type === 'adsense' || r.ad_type === 'custom') {
+          setAd(prev => ({ ...prev, adType: r.ad_type as string, customHtml: (r.custom_html as string) ?? null }))
+          return
+        }
+        setAd(prev => ({
+          ...prev,
+          headline:   (r.headline    as string) || prev.headline,
+          subline:    (r.subline     as string) || prev.subline,
+          cta:        (r.cta_text    as string) || prev.cta,
+          href:       (r.destination_url as string) || prev.href,
+          advertiser: (r.advertiser  as string) || prev.advertiser,
+          adType:     (r.ad_type     as string) || prev.adType,
+          customHtml: null,
+        }))
+      })
+      .catch(() => { /* silently keep fallback */ })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zone])
+
   if (!ad) return null
 
-  // IN-FEED NATIVE — card style
+  // ── Custom / AdSense HTML ─────────────────────────────────────────────────────
+  if ((ad.adType === 'adsense' || ad.adType === 'custom') && ad.customHtml) {
+    return (
+      <div
+        dangerouslySetInnerHTML={{ __html: ad.customHtml }}
+        style={{ width: '100%' }}
+      />
+    )
+  }
+
+  // ── IN-FEED NATIVE — card style ───────────────────────────────────────────────
   if (zone === 'in-feed-native') {
     return (
       <a
@@ -108,7 +175,7 @@ export default function AdSlot({ zone }: AdSlotProps) {
     )
   }
 
-  // HERO BILLBOARD — full width tall banner
+  // ── HERO BILLBOARD — full-width tall banner ───────────────────────────────────
   if (zone === 'hero-billboard') {
     return (
       <a
@@ -156,7 +223,7 @@ export default function AdSlot({ zone }: AdSlotProps) {
     )
   }
 
-  // LEADERBOARD STRIP — mid-feed-1, mid-feed-2, pre-footer
+  // ── LEADERBOARD STRIP — mid-feed-1, mid-feed-2, pre-footer ───────────────────
   return (
     <a
       href={ad.href}
