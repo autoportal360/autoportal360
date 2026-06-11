@@ -50,6 +50,7 @@ export default function ModelSubNav({
       background: '#06142D',
       borderBottom: '1px solid rgba(0,212,255,0.15)',
       overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch',
     }}>
       <div style={{ display: 'flex', minWidth: 'max-content' }}>
         {tabs.map(tab => {

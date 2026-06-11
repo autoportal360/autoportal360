@@ -232,10 +232,10 @@ export default async function ModelPage({
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 24px 0', display: 'flex', gap: '28px', alignItems: 'flex-start' }}>
+      <div className="model-layout" style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 24px 0' }}>
 
         {/* ── MAIN COLUMN ── */}
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main style={{ minWidth: 0 }}>
 
           {/* BREADCRUMB */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8E99A8', marginBottom: '28px', flexWrap: 'wrap' }}>
@@ -499,7 +499,7 @@ export default async function ModelPage({
         </main>
 
         {/* ── SIDEBAR ── */}
-        <aside style={{ width: '300px', flexShrink: 0, position: 'sticky', top: '58px' }}>
+        <aside style={{ position: 'sticky', top: '58px' }}>
 
           {/* On-Road Calculator */}
           <div id="on-road">
