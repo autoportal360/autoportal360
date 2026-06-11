@@ -26,7 +26,6 @@ type VariantRow = {
   ex_showroom_price: number
   is_popular: boolean
   sort_order: number
-  specs: Spec[]
 }
 
 type CityRow = {
@@ -127,9 +126,6 @@ export async function generateMetadata({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function specVal(value: number | string | null, unit = ''): string {
-  return value !== null && value !== undefined ? `${value}${unit}` : '—'
-}
 
 const RIVALS: Record<VehicleType, { name: string; href: string }[]> = {
   car: [
@@ -181,9 +177,9 @@ export default async function ModelPage({
   if (!model) notFound()
   const m = model as unknown as ModelRow
 
-  // Parallel: variants+specs and featured cities with states
+  // Parallel: variants and featured cities
   const [{ data: variantsRaw }, { data: citiesRaw }] = await Promise.all([
-    supabase.from('variants').select('*, specs(*)').eq('model_id', m.id).order('sort_order'),
+    supabase.from('variants').select('*').eq('model_id', m.id).order('sort_order'),
     supabase.from('cities').select('id, name, states(rto_percentage, handling_charge)').eq('is_featured', true).order('name'),
   ])
 
@@ -191,7 +187,17 @@ export default async function ModelPage({
   const cities   = (citiesRaw  ?? []) as unknown as CityRow[]
 
   const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
-  const primarySpec    = primaryVariant?.specs?.[0] ?? null
+
+  // Direct specs fetch — more reliable than PostgREST embedded join without FK
+  let specsByVariantId: Record<string, Spec> = {}
+  if (variants.length > 0) {
+    const { data: allSpecsRaw } = await supabase
+      .from('specs').select('*').in('variant_id', variants.map(v => v.id))
+    specsByVariantId = Object.fromEntries(
+      ((allSpecsRaw ?? []) as Spec[]).map(s => [s.variant_id, s])
+    )
+  }
+  const specsData = primaryVariant ? (specsByVariantId[primaryVariant.id] ?? null) : null
 
   // Hero on-road estimate for Chandigarh (or first featured city)
   const heroCity   = cities.find(c => c.name === 'Chandigarh') ?? cities[0] ?? null
@@ -264,9 +270,9 @@ export default async function ModelPage({
                       {ft}
                     </span>
                   ))}
-                  {primarySpec?.ncap_rating && (
+                  {specsData?.ncap_rating && (
                     <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)', padding: '3px 10px', borderRadius: '20px' }}>
-                      {primarySpec.ncap_rating} NCAP
+                      {specsData.ncap_rating} NCAP
                     </span>
                   )}
                 </div>
@@ -326,10 +332,10 @@ export default async function ModelPage({
             {/* Quick stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
               {[
-                { label: 'Mileage',   value: primarySpec?.mileage_arai ? `${primarySpec.mileage_arai} km/l` : '—' },
-                { label: 'Power',     value: primarySpec?.power_bhp ? `${primarySpec.power_bhp} bhp` : '—' },
-                { label: 'Engine',    value: primarySpec?.engine_cc ? `${primarySpec.engine_cc} cc` : '—' },
-                { label: 'NCAP',      value: primarySpec?.ncap_rating ?? '—' },
+                { label: 'Mileage',   value: specsData?.mileage_arai ? `${specsData.mileage_arai} km/l` : '—' },
+                { label: 'Power',     value: specsData?.power_bhp ? `${specsData.power_bhp} bhp` : '—' },
+                { label: 'Engine',    value: specsData?.engine_cc ? `${specsData.engine_cc} cc` : '—' },
+                { label: 'NCAP',      value: specsData?.ncap_rating ?? '—' },
               ].map(stat => (
                 <div key={stat.label} style={{ background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
                   <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '16px', fontWeight: 900, color: '#00D4FF', marginBottom: '4px' }}>
@@ -344,32 +350,38 @@ export default async function ModelPage({
           {/* ── OVERVIEW ── */}
           <section id="overview" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
             <h2 style={SECTION_TITLE}>Key <span style={{ color: '#00D4FF' }}>Specifications</span></h2>
-            <p style={SECTION_SUB}>{primaryVariant ? `${primaryVariant.name} · base variant` : 'Specifications'}</p>
+            <p style={SECTION_SUB}>{primaryVariant ? `${primaryVariant.name} · popular variant` : 'Specifications'}</p>
 
-            {primarySpec ? (
-              <div style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '16px', overflow: 'hidden' }}>
-                {[
-                  { label: 'Engine',           value: specVal(primarySpec.engine_cc, ' cc')   },
-                  { label: 'Power',            value: specVal(primarySpec.power_bhp, ' bhp')  },
-                  { label: 'Torque',           value: specVal(primarySpec.torque_nm, ' Nm')   },
-                  { label: 'Mileage (ARAI)',   value: specVal(primarySpec.mileage_arai, ' km/l') },
-                  { label: 'Fuel Tank',        value: specVal(primarySpec.fuel_tank_l, ' L')  },
-                  { label: 'Seating',          value: specVal(primarySpec.seating)             },
-                  { label: 'Boot Space',       value: specVal(primarySpec.boot_space_l, ' L')  },
-                  { label: 'Ground Clearance', value: specVal(primarySpec.ground_clearance_mm, ' mm') },
-                  { label: 'Kerb Weight',      value: specVal(primarySpec.kerb_weight_kg, ' kg') },
-                  { label: 'NCAP Rating',      value: primarySpec.ncap_rating ?? '—'           },
-                ].map((row, i) => (
-                  <div key={row.label} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '13px 20px',
-                    background: i % 2 === 0 ? 'transparent' : 'rgba(0,212,255,0.03)',
-                    borderBottom: i < 9 ? '1px solid rgba(0,212,255,0.06)' : 'none',
-                  }}>
-                    <span style={{ fontSize: '13px', color: '#8E99A8' }}>{row.label}</span>
-                    <span style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: 700, fontFamily: 'Montserrat, sans-serif' }}>{row.value}</span>
-                  </div>
-                ))}
+            {specsData ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '12px' }}>
+                {([
+                  { icon: '⚙️', label: 'Engine',           value: specsData.engine_cc ? `${specsData.engine_cc} cc` : null },
+                  { icon: '⚡', label: 'Power',             value: specsData.power_bhp ? `${specsData.power_bhp} bhp` : null },
+                  { icon: '🔄', label: 'Torque',            value: specsData.torque_nm ? `${specsData.torque_nm} Nm` : null },
+                  { icon: '⛽', label: 'Mileage (ARAI)',    value: specsData.mileage_arai ? `${specsData.mileage_arai} km/l` : null },
+                  { icon: '🪣', label: 'Fuel Tank',         value: specsData.fuel_tank_l ? `${specsData.fuel_tank_l} L` : null },
+                  { icon: '💺', label: 'Seating',           value: specsData.seating ? `${specsData.seating} persons` : null },
+                  { icon: '🧳', label: 'Boot Space',        value: specsData.boot_space_l ? `${specsData.boot_space_l} L` : null },
+                  { icon: '↕️', label: 'Ground Clearance', value: specsData.ground_clearance_mm ? `${specsData.ground_clearance_mm} mm` : null },
+                  { icon: '📐', label: 'Dimensions',        value: specsData.length_mm && specsData.width_mm && specsData.height_mm ? `${specsData.length_mm}×${specsData.width_mm}×${specsData.height_mm} mm` : null },
+                  { icon: '↔️', label: 'Wheelbase',         value: specsData.wheelbase_mm ? `${specsData.wheelbase_mm} mm` : null },
+                  { icon: '⚖️', label: 'Kerb Weight',       value: specsData.kerb_weight_kg ? `${specsData.kerb_weight_kg} kg` : null },
+                  { icon: '🔘', label: 'Tyre Size',         value: specsData.tyre_size || null },
+                  { icon: '🛡️', label: 'NCAP Rating',       value: specsData.ncap_rating || null },
+                ] as { icon: string; label: string; value: string | null }[])
+                  .filter(item => item.value !== null)
+                  .map(item => (
+                    <div key={item.label} style={{
+                      background: '#0A1F44',
+                      border: '1px solid rgba(0,212,255,0.1)',
+                      borderRadius: '14px',
+                      padding: '16px 18px',
+                    }}>
+                      <div style={{ fontSize: '22px', marginBottom: '8px' }}>{item.icon}</div>
+                      <div style={{ fontSize: '11px', color: '#8E99A8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{item.label}</div>
+                      <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 800, color: '#FFFFFF' }}>{item.value}</div>
+                    </div>
+                  ))}
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '48px', color: '#8E99A8', fontSize: '14px', background: '#0A1F44', borderRadius: '16px', border: '1px solid rgba(0,212,255,0.08)' }}>
@@ -429,16 +441,16 @@ export default async function ModelPage({
             <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Mileage</span></h2>
             <p style={SECTION_SUB}>ARAI-certified fuel efficiency · variant wise</p>
 
-            {variants.filter(v => v.specs?.[0]?.mileage_arai).length === 0 ? (
+            {variants.filter(v => specsByVariantId[v.id]?.mileage_arai).length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: '#8E99A8', fontSize: '14px', background: '#0A1F44', borderRadius: '16px', border: '1px solid rgba(0,212,255,0.08)' }}>
                 Mileage data not yet available
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
-                {variants.filter(v => v.specs?.[0]?.mileage_arai).map(v => (
+                {variants.filter(v => specsByVariantId[v.id]?.mileage_arai).map(v => (
                   <div key={v.id} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '14px', padding: '18px 20px' }}>
                     <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '28px', fontWeight: 900, color: '#00D4FF', marginBottom: '4px' }}>
-                      {v.specs[0].mileage_arai}
+                      {specsByVariantId[v.id].mileage_arai}
                       <span style={{ fontSize: '14px', fontWeight: 600, color: '#8E99A8', marginLeft: '4px' }}>km/l</span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 600, marginBottom: '2px' }}>{v.name}</div>
@@ -475,8 +487,8 @@ export default async function ModelPage({
               vehicleLabel={vehicleLabel}
               priceMin={m.price_min}
               variantCount={variants.length}
-              mileage={primarySpec?.mileage_arai ?? null}
-              engineCc={primarySpec?.engine_cc ?? null}
+              mileage={specsData?.mileage_arai ?? null}
+              engineCc={specsData?.engine_cc ?? null}
             />
           </section>
 
