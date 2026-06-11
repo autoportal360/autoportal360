@@ -8,6 +8,8 @@ export default function Footer() {
       borderTop: '1px solid rgba(0,212,255,0.1)',
       padding: '36px 24px 24px',
       marginTop: 'auto',
+      overflowX: 'hidden',
+      boxSizing: 'border-box',
     }}>
       <div style={{
         maxWidth: '1100px',
@@ -17,7 +19,7 @@ export default function Footer() {
         {/* TOP GRID */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
           gap: '24px',
           marginBottom: '28px',
         }}>
