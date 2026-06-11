@@ -35,7 +35,12 @@ interface Lead {
   email: string
   city: string
   model_slug: string
+  brand_name?: string | null
+  model_name?: string | null
+  variant_name?: string | null
+  source_page?: string | null
   source_url?: string | null
+  message?: string | null
   status: Status
   created_at?: string
 }
@@ -90,12 +95,15 @@ export default function LeadsPage() {
   }
 
   function exportCsv() {
-    const headers = ['Name', 'Phone', 'Email', 'City', 'Model', 'Status', 'Date', 'Source URL']
+    const headers = ['Name', 'Phone', 'Email', 'City', 'Brand', 'Model', 'Variant', 'Status', 'Date', 'Source Page']
     const rows = filtered.map(l => [
-      l.name, l.phone, l.email, l.city, l.model_slug,
+      l.name, l.phone, l.email, l.city,
+      l.brand_name ?? '',
+      l.model_name ?? l.model_slug ?? '',
+      l.variant_name ?? '',
       l.status,
       l.created_at ? new Date(l.created_at).toLocaleDateString('en-IN') : '',
-      l.source_url ?? '',
+      l.source_page ?? l.source_url ?? '',
     ])
     const csv = [headers, ...rows]
       .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
@@ -225,7 +233,8 @@ export default function LeadsPage() {
                 <th style={TH}>Phone</th>
                 <th style={TH}>Email</th>
                 <th style={TH}>City</th>
-                <th style={TH}>Model</th>
+                <th style={TH}>Brand / Model</th>
+                <th style={TH}>Variant</th>
                 <th style={TH}>Date</th>
                 <th style={TH}>Status</th>
                 <th style={TH}>Actions</th>
@@ -255,7 +264,13 @@ export default function LeadsPage() {
                       <td style={{ ...TD, fontFamily: 'monospace' }}>{lead.phone}</td>
                       <td style={{ ...TD, fontSize: 12 }}>{lead.email}</td>
                       <td style={TD}>{lead.city}</td>
-                      <td style={{ ...TD, fontFamily: 'monospace', fontSize: 12 }}>{lead.model_slug}</td>
+                      <td style={{ ...TD, fontSize: 12 }}>
+                        {lead.brand_name && lead.model_name
+                          ? <><span style={{ color: '#FFFFFF', fontWeight: 600 }}>{lead.brand_name}</span>{' '}{lead.model_name}</>
+                          : <span style={{ fontFamily: 'monospace' }}>{lead.model_slug ?? '—'}</span>
+                        }
+                      </td>
+                      <td style={{ ...TD, fontSize: 12, color: '#8E99A8' }}>{lead.variant_name || '—'}</td>
                       <td style={{ ...TD, fontSize: 12, whiteSpace: 'nowrap' }}>
                         {lead.created_at
                           ? new Date(lead.created_at).toLocaleDateString('en-IN')
@@ -301,22 +316,25 @@ export default function LeadsPage() {
                         background: 'rgba(0,212,255,0.015)',
                         borderBottom: '1px solid rgba(0,212,255,0.1)',
                       }}>
-                        <td colSpan={8} style={{ padding: '16px 24px' }}>
+                        <td colSpan={9} style={{ padding: '16px 24px' }}>
                           <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                             gap: '16px',
                           }}>
-                            {[
-                              ['Full Name',  lead.name],
-                              ['Phone',      lead.phone],
-                              ['Email',      lead.email],
-                              ['City',       lead.city],
-                              ['Model Slug', lead.model_slug],
-                              ['Lead ID',    lead.id],
-                              ...(lead.source_url ? [['Source URL', lead.source_url] as [string,string]] : []),
-                              ...(lead.created_at ? [['Submitted',  new Date(lead.created_at).toLocaleString('en-IN')] as [string,string]] : []),
-                            ].map(([label, val]) => (
+                            {([
+                              ['Full Name',    lead.name],
+                              ['Phone',        lead.phone],
+                              ['Email',        lead.email],
+                              ['City',         lead.city],
+                              ['Brand',        lead.brand_name ?? '—'],
+                              ['Model',        lead.model_name ?? lead.model_slug ?? '—'],
+                              ['Variant',      lead.variant_name ?? '—'],
+                              ['Message',      lead.message ?? '—'],
+                              ['Source Page',  lead.source_page ?? lead.source_url ?? '—'],
+                              ['Lead ID',      lead.id],
+                              ...(lead.created_at ? [['Submitted', new Date(lead.created_at).toLocaleString('en-IN')] as [string,string]] : []),
+                            ] as [string,string][]).map(([label, val]) => (
                               <div key={label}>
                                 <div style={{
                                   fontSize: 10, color: '#8E99A8',
@@ -328,7 +346,7 @@ export default function LeadsPage() {
                                 <div style={{
                                   fontSize: 12, color: '#C0C0C0',
                                   wordBreak: 'break-all',
-                                  fontFamily: label === 'Model Slug' || label === 'Lead ID' || label === 'Source URL'
+                                  fontFamily: label === 'Lead ID' || label === 'Source Page'
                                     ? 'monospace' : 'inherit',
                                 }}>
                                   {val || '—'}

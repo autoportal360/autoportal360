@@ -9,6 +9,7 @@ import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from './ModelSubNav'
 import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalculator'
+import GetOffersButton from './GetOffersButton'
 import ModelFaq from './ModelFaq'
 import Image from 'next/image'
 
@@ -302,9 +303,16 @@ export default async function ModelPage({
 
                 {/* CTAs */}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <button style={{ background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <GetOffersButton
+                    modelId={m.id}
+                    modelName={m.name}
+                    brandName={brand.name}
+                    modelSlug={modelSlug}
+                    variants={calcVariants}
+                    style={{ background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
                     Get Offers
-                  </button>
+                  </GetOffersButton>
                   <a href="#on-road" style={{ background: 'rgba(0,212,255,0.08)', color: '#00D4FF', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                     On-Road Price
                   </a>
@@ -554,13 +562,16 @@ export default async function ModelPage({
             <div style={{ fontSize: '12px', color: '#C0C0C0', marginBottom: '16px', lineHeight: 1.5 }}>
               Exchange bonus · Corporate discount · Free accessories
             </div>
-            <button style={{
-              width: '100%', background: '#00D4FF', color: '#06142D',
-              fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px',
-              padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-            }}>
+            <GetOffersButton
+              modelId={m.id}
+              modelName={m.name}
+              brandName={brand.name}
+              modelSlug={modelSlug}
+              variants={calcVariants}
+              style={{ width: '100%', background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}
+            >
               Get Best Price →
-            </button>
+            </GetOffersButton>
           </div>
 
         </aside>
