@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { formatPriceRange } from '@/lib/utils'
 import { getCanonicalUrl } from '@/lib/seo'
+import HeroSlider, { type HeroSlide } from '@/components/HeroSlider'
 import type { Brand } from '@/types'
 
 export const metadata: Metadata = {
@@ -207,9 +208,117 @@ function VehicleCard({ item }: {
   )
 }
 
+// ─── Slider data fetch ─────────────────────────────────────────────────────────
+
+type SliderModelRow = {
+  name: string; slug: string; type: 'car' | 'bike' | 'scooter'
+  thumbnail_url: string | null; price_min: number | null; price_max: number | null
+  brands: { name: string; slug: string; type: string } | null
+  variants: { fuel_type: string | null }[]
+}
+
+type SliderSlideRow = {
+  type: 'auto' | 'oem'; is_active: boolean
+  start_date: string | null; end_date: string | null
+  oem_advertiser: string | null; oem_banner_url: string | null
+  oem_destination_url: string | null; oem_impression_pixel: string | null
+  oem_click_tracking_url: string | null; oem_headline: string | null
+  oem_subline: string | null; oem_cta_text: string | null
+  models: SliderModelRow | null
+}
+
+async function getSlides(): Promise<HeroSlide[]> {
+  const today = new Date().toISOString().split('T')[0]
+
+  const { data: dbSlides, error } = await supabase
+    .from('slider_slides')
+    .select(`
+      type, is_active, start_date, end_date,
+      oem_advertiser, oem_banner_url, oem_destination_url,
+      oem_impression_pixel, oem_click_tracking_url,
+      oem_headline, oem_subline, oem_cta_text,
+      models(name, slug, type, thumbnail_url, price_min, price_max,
+        brands(name, slug, type),
+        variants(fuel_type)
+      )
+    `)
+    .eq('is_active', true)
+    .order('sort_order')
+
+  const active = error ? [] : ((dbSlides ?? []) as unknown as SliderSlideRow[]).filter(s => {
+    if (s.start_date && s.start_date > today) return false
+    if (s.end_date && s.end_date < today) return false
+    return true
+  })
+
+  if (active.length > 0) {
+    return active.map((s): HeroSlide => {
+      if (s.type === 'oem') {
+        return {
+          type: 'oem',
+          advertiser: s.oem_advertiser,
+          bannerUrl: s.oem_banner_url ?? '',
+          destinationUrl: s.oem_destination_url,
+          impressionPixel: s.oem_impression_pixel,
+          clickTrackingUrl: s.oem_click_tracking_url,
+          headline: s.oem_headline,
+          subline: s.oem_subline,
+          ctaText: s.oem_cta_text,
+        }
+      }
+      const m = s.models
+      if (!m) return { type: 'oem', advertiser: null, bannerUrl: '', destinationUrl: null, impressionPixel: null, clickTrackingUrl: null, headline: null, subline: null, ctaText: null }
+      const brand = m.brands as { name: string; slug: string; type: string } | null
+      const suffix = m.type === 'car' ? 'cars' : m.type === 'bike' ? 'bikes' : 'scooters'
+      const cleanBrandSlug = (brand?.slug ?? '').replace(/-bike$/, '').replace(/-scooter$/, '')
+      return {
+        type: 'auto',
+        brandName: brand?.name ?? '',
+        brandSlug: cleanBrandSlug,
+        brandType: m.type,
+        modelName: m.name,
+        modelSlug: m.slug,
+        priceMin: m.price_min,
+        priceMax: m.price_max,
+        fuelTypes: [...new Set((m.variants ?? []).map(v => v.fuel_type).filter((f): f is string => !!f))],
+        thumbnail: m.thumbnail_url,
+      } as HeroSlide
+    })
+  }
+
+  // Fallback: top 5 premium active models
+  const { data: topModels } = await supabase
+    .from('models')
+    .select('name, slug, type, thumbnail_url, price_min, price_max, brands(name, slug, type), variants(fuel_type)')
+    .eq('status', 'active')
+    .not('price_min', 'is', null)
+    .order('price_min', { ascending: false })
+    .limit(5)
+
+  return ((topModels ?? []) as unknown as SliderModelRow[]).map((m): HeroSlide => {
+    const brand = m.brands as { name: string; slug: string; type: string } | null
+    const cleanBrandSlug = (brand?.slug ?? '').replace(/-bike$/, '').replace(/-scooter$/, '')
+    return {
+      type: 'auto',
+      brandName: brand?.name ?? '',
+      brandSlug: cleanBrandSlug,
+      brandType: m.type,
+      modelName: m.name,
+      modelSlug: m.slug,
+      priceMin: m.price_min,
+      priceMax: m.price_max,
+      fuelTypes: [...new Set((m.variants ?? []).map(v => v.fuel_type).filter((f): f is string => !!f))],
+      thumbnail: m.thumbnail_url,
+    }
+  })
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
   const modelSelect = 'id,slug,name,price_min,price_max,thumbnail_url,brands(name,slug)'
-  const [carBrands, bikeBrands, scooterBrands, carsRaw, bikesRaw, scootersRaw] = await Promise.all([
+  const [slides, carBrands, bikeBrands, scooterBrands, carsRaw, bikesRaw, scootersRaw] = await Promise.all([
+    getSlides(),
     getBrands('car'),
     getBrands('bike'),
     getBrands('scooter'),
@@ -228,46 +337,17 @@ export default async function HomePage() {
       {/* ZONE 1 — HERO BILLBOARD */}
       <AdSlot zone="hero-billboard" />
 
-      {/* ── HERO ── */}
+      {/* ── HERO SLIDER ── */}
+      <HeroSlider slides={slides} />
+
+      {/* ── SEARCH BAR ── */}
       <section style={{
-        padding: '52px 24px 44px', textAlign: 'center',
-        background: 'linear-gradient(180deg,rgba(0,212,255,0.05) 0%,transparent 60%)',
+        padding: '16px 24px',
+        background: '#0A1F44',
         borderBottom: '1px solid rgba(0,212,255,0.08)',
       }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)',
-          color: '#00D4FF', fontSize: '10px', fontWeight: 700,
-          padding: '4px 14px', borderRadius: '20px', marginBottom: '18px',
-          letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'Montserrat, sans-serif',
-        }}>
-          🇮🇳 Cars · Bikes · Scooters — All in One Place
-        </div>
-
-        <h1 style={{
-          fontFamily: 'Montserrat, sans-serif', fontSize: '44px', fontWeight: 900,
-          lineHeight: 1.05, letterSpacing: '-1.5px', marginBottom: '12px', color: '#FFFFFF',
-        }}>
-          Research Smarter.<br />
-          <span style={{ color: '#00D4FF' }}>Drive Better.</span>
-        </h1>
-
-        <p style={{
-          color: '#C0C0C0', fontSize: '16px', maxWidth: '460px',
-          margin: '0 auto 28px', lineHeight: 1.7,
-        }}>
-          Specs, prices, reviews and comparisons for every car, bike and scooter
-          in India — unbiased, always updated.
-        </p>
-
-        {/* SEARCH BOX */}
-        <div style={{
-          maxWidth: '660px', margin: '0 auto',
-          background: '#0A1F44', border: '1px solid rgba(0,212,255,0.2)',
-          borderRadius: '16px', padding: '16px',
-        }}>
-          {/* TABS — visual only, interactive version built later as client component */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '14px', flexWrap: 'wrap' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', flexWrap: 'wrap' }}>
             {[
               { label: '🚗 Cars',      active: true },
               { label: '🏍️ Bikes',    active: false },
@@ -284,8 +364,6 @@ export default async function HomePage() {
               }}>{tab.label}</div>
             ))}
           </div>
-
-          {/* SEARCH ROW */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <select style={{
               flex: 1, minWidth: '140px',

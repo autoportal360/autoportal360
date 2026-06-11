@@ -4,13 +4,14 @@ import Link from 'next/link'
 import LogoutButton from './LogoutButton'
 
 const NAV = [
-  { href: '/admin',        label: 'Dashboard', icon: '◼' },
-  { href: '/admin/brands', label: 'Brands',    icon: '🏷' },
-  { href: '/admin/models', label: 'Models',    icon: '🚗' },
-  { href: '/admin/leads',  label: 'Leads',     icon: '📋' },
-  { href: '/admin/ads',    label: 'Ads',       icon: '📢' },
-  { href: '/admin/seo',    label: 'SEO',       icon: '🔍' },
-  { href: '/admin/blog',   label: 'Blog',      icon: '✍' },
+  { href: '/admin',          label: 'Dashboard', icon: '◼' },
+  { href: '/admin/brands',   label: 'Brands',    icon: '🏷' },
+  { href: '/admin/models',   label: 'Models',    icon: '🚗' },
+  { href: '/admin/slider',   label: 'Slider',    icon: '🎞️' },
+  { href: '/admin/leads',    label: 'Leads',     icon: '📋' },
+  { href: '/admin/ads',      label: 'Ads',       icon: '📢' },
+  { href: '/admin/seo',      label: 'SEO',       icon: '🔍' },
+  { href: '/admin/blog',     label: 'Blog',      icon: '✍' },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
