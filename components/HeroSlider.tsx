@@ -471,21 +471,36 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         ))}
       </div>
 
-      {/* Prev / Next arrows */}
-      {total > 1 && (
+      {/* Desktop side arrows — hidden on mobile */}
+      {total > 1 && !isMobile && (
         <>
           <Arrow dir="left" onClick={prev} />
           <Arrow dir="right" onClick={next} />
         </>
       )}
 
-      {/* Dot indicators */}
+      {/* Bottom bar: ← • • • → on mobile, just dots on desktop */}
       {total > 1 && (
         <div style={{
-          position: 'absolute', bottom: 12, left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex', gap: 5, zIndex: 20,
+          position: 'absolute', bottom: 12, left: 0, right: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 6, zIndex: 20,
         }}>
+          {/* Mobile prev arrow */}
+          {isMobile && (
+            <button
+              onClick={prev}
+              aria-label="Previous slide"
+              style={{
+                background: 'rgba(6,20,45,0.65)', border: '1px solid rgba(0,212,255,0.25)',
+                color: '#FFFFFF', width: 26, height: 26, borderRadius: '50%',
+                cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}
+            >‹</button>
+          )}
+
+          {/* Dots */}
           {slides.map((_, i) => (
             <button
               key={i}
@@ -499,6 +514,20 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               }}
             />
           ))}
+
+          {/* Mobile next arrow */}
+          {isMobile && (
+            <button
+              onClick={next}
+              aria-label="Next slide"
+              style={{
+                background: 'rgba(6,20,45,0.65)', border: '1px solid rgba(0,212,255,0.25)',
+                color: '#FFFFFF', width: 26, height: 26, borderRadius: '50%',
+                cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}
+            >›</button>
+          )}
         </div>
       )}
     </div>
