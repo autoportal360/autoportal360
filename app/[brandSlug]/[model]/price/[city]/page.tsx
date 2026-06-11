@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { calculateOnRoad, formatPrice, formatPriceRange } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../../ModelSubNav'
 import PriceFaq from '../PriceFaq'
@@ -92,10 +93,11 @@ export async function generateMetadata({
   return {
     title: `${brand.name} ${model.name} On-Road Price in ${city.name} 2026 | AutoPortal360`,
     description: `${brand.name} ${model.name} on-road price in ${city.name}${model.price_min ? ` starts at ${formatPrice(model.price_min)}` : ''}. Full breakdown: ex-showroom, RTO, insurance, handling & FastTag.`,
-    alternates: { canonical: `/${brandSlug}/${modelSlug}/price/${citySlug}/` },
+    alternates: { canonical: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/${citySlug}/`) },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
       title: `${brand.name} ${model.name} On-Road Price in ${city.name} 2026`,
-      url: `https://autoportal360.com/${brandSlug}/${modelSlug}/price/${citySlug}/`,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/${citySlug}/`),
       type: 'website',
     },
   }

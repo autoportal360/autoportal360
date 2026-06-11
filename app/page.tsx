@@ -1,9 +1,24 @@
+import type { Metadata } from 'next'
 import AdSlot from '@/components/AdSlot'
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { formatPriceRange } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand } from '@/types'
+
+export const metadata: Metadata = {
+  title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
+  description: 'Research, compare and buy new cars, bikes and scooters in India. Specs, prices, mileage and on-road cost for every model — unbiased, always updated.',
+  alternates: { canonical: getCanonicalUrl('/') },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  openGraph: {
+    title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
+    description: 'Specs, prices and on-road cost for every car, bike and scooter in India.',
+    url: getCanonicalUrl('/'),
+    type: 'website',
+  },
+}
 
 // Fetch brands by type
 async function getBrands(type: 'car' | 'bike' | 'scooter'): Promise<Brand[]> {

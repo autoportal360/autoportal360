@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { formatPriceRange, formatPrice, calculateOnRoad } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from './ModelSubNav'
 import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalculator'
@@ -115,10 +116,11 @@ export async function generateMetadata({
       ?? `${brand.name} ${model.name} Price, Specs, Mileage 2026 | AutoPortal360`,
     description: model.meta_description
       ?? `${brand.name} ${model.name} price in India${priceStr}. Compare variants, specs, and mileage. Get on-road price in your city.`,
-    alternates: { canonical },
+    alternates: { canonical: getCanonicalUrl(canonical) },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
       title: `${brand.name} ${model.name} — Price, Specs & Mileage 2026`,
-      url: `https://autoportal360.com${canonical}`,
+      url: getCanonicalUrl(canonical),
       type: 'website',
     },
   }

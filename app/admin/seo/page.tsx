@@ -193,6 +193,53 @@ export default function SeoPage() {
         </div>
       ))}
 
+      {/* ── Sitemap ── */}
+      <div style={CARD}>
+        <p style={CARD_TITLE}>Sitemap</p>
+        <p style={{ fontSize: 13, color: '#C0C0C0', margin: '0 0 16px', lineHeight: 1.7 }}>
+          The sitemap is auto-generated and revalidates every hour. It includes all active brands,
+          models, price pages, specs pages and featured city pages.
+        </p>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <a
+            href="/sitemap.xml"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.25)',
+              color: '#00D4FF', fontSize: 13, fontWeight: 700,
+              padding: '9px 18px', borderRadius: 8, textDecoration: 'none',
+              fontFamily: 'Montserrat, sans-serif',
+            }}
+          >
+            View sitemap.xml →
+          </a>
+          <p style={{ fontSize: 11, color: '#8E99A8', margin: 0 }}>
+            To force-refresh: redeploy on Vercel or wait for the 1-hour cache to expire.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Page Indexing ── */}
+      <div style={CARD}>
+        <p style={CARD_TITLE}>Page Indexing Control</p>
+        <div style={{ marginBottom: 20 }}>
+          <label style={LABEL}>Noindex Paths (one per line)</label>
+          <textarea
+            value={(settings['noindex_paths'] ?? '').replace(/,/g, '\n')}
+            rows={6}
+            onChange={e => set('noindex_paths', e.target.value.split('\n').map(s => s.trim()).filter(Boolean).join(','))}
+            placeholder={'/test-page\n/draft-model\n/internal-tools'}
+            spellCheck={false}
+            style={{ ...TEXTAREA, fontFamily: 'monospace', fontSize: 13 }}
+          />
+          <p style={{ fontSize: 11, color: '#8E99A8', margin: '5px 0 0' }}>
+            Pages listed here will have a noindex tag. Enter one URL path per line, e.g. /test-page
+          </p>
+        </div>
+      </div>
+
       {/* ── Save ── */}
       <button type="button" onClick={handleSave} disabled={saving} style={{
         background: saving ? 'rgba(0,212,255,0.35)' : '#00D4FF',

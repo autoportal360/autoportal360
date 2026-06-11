@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { formatPriceRange, formatPrice } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand } from '@/types'
 import ModelGrid, { type ModelRow } from './ModelGrid'
 import BrandFaq from './BrandFaq'
@@ -113,11 +114,12 @@ export async function generateMetadata({
   return {
     title: `${brand.name} ${parsed.vehicleLabel} Price in India 2026 — All Models${priceStr}`,
     description: `Browse all ${brand.name} ${parsed.vehicleLabel.toLowerCase()} in India. Compare prices, specs, mileage and on-road cost in your city.`,
-    alternates: { canonical: `/${brandSlug}/` },
+    alternates: { canonical: getCanonicalUrl(`/${brandSlug}/`) },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
       title: `${brand.name} ${parsed.vehicleLabel} in India 2026 — Prices & Specs`,
       description: `All ${brand.name} models · Compare variants · On-road price in your city`,
-      url: `https://autoportal360.com/${brandSlug}/`,
+      url: getCanonicalUrl(`/${brandSlug}/`),
       type: 'website',
     },
   }

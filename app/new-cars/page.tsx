@@ -5,17 +5,19 @@ import AdSlot from '@/components/AdSlot'
 import type { Brand } from '@/types'
 import BrandGrid from './BrandGrid'
 import FaqAccordion from './FaqAccordion'
+import { getCanonicalUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
   title: 'New Cars in India 2026 — All Brands, Prices & Specs',
   description:
     'Browse every new car brand and model available in India. Compare ex-showroom prices, on-road costs, mileage, safety ratings and variant specs. Updated June 2026.',
-  alternates: { canonical: '/new-cars/' },
+  alternates: { canonical: getCanonicalUrl('/new-cars/') },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   openGraph: {
     title: 'New Cars in India 2026 — All Brands, Prices & Specs',
     description:
       'Compare every new car brand in India — prices, specs, mileage and on-road cost in your city.',
-    url: 'https://autoportal360.com/new-cars/',
+    url: getCanonicalUrl('/new-cars/'),
     type: 'website',
   },
 }

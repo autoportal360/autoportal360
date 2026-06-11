@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { calculateOnRoad, formatPrice, formatPriceRange } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../ModelSubNav'
 import PriceCalculator, { type PriceVariant, type PriceCity } from './PriceCalculator'
@@ -94,10 +95,11 @@ export async function generateMetadata({
   return {
     title: `${brand.name} ${model.name} Price in India, On-Road Price 2026 | AutoPortal360`,
     description: `${brand.name} ${model.name} on-road price in India${model.price_min ? ` starts at ${formatPrice(model.price_min)}` : ''}. Compare ex-showroom price, RTO, insurance, and total on-road price across all major cities.`,
-    alternates: { canonical: `/${brandSlug}/${modelSlug}/price/` },
+    alternates: { canonical: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/`) },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
       title: `${brand.name} ${model.name} Price in India 2026 — On-Road Calculator`,
-      url: `https://autoportal360.com/${brandSlug}/${modelSlug}/price/`,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/`),
       type: 'website',
     },
   }

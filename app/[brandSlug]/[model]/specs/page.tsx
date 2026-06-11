@@ -5,6 +5,7 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { formatPrice, formatPriceRange } from '@/lib/utils'
+import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../ModelSubNav'
 
@@ -87,10 +88,11 @@ export async function generateMetadata({
   return {
     title: `${brand.name} ${model.name} Specs, Engine, Mileage 2026 | AutoPortal360`,
     description: `Complete specifications of ${brand.name} ${model.name} — engine displacement, power, torque, mileage, dimensions, ground clearance and more. Compare all variants.`,
-    alternates: { canonical },
+    alternates: { canonical: getCanonicalUrl(canonical) },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
       title: `${brand.name} ${model.name} Full Specifications 2026`,
-      url: `https://autoportal360.com${canonical}`,
+      url: getCanonicalUrl(canonical),
       type: 'website',
     },
   }
