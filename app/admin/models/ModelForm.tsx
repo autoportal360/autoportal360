@@ -1220,6 +1220,50 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
                       }}>
                         {saving ? 'Saving…' : specId ? 'Update Specs' : 'Save Specs'}
                       </button>
+
+                      {specId && (
+                        <div style={{
+                          marginTop: 28,
+                          background: '#06142D',
+                          border: '1px solid rgba(0,212,255,0.18)',
+                          borderRadius: 12,
+                          padding: '18px 20px',
+                        }}>
+                          <p style={{
+                            margin: '0 0 14px',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: '0.9px',
+                            textTransform: 'uppercase',
+                            color: '#00D4FF',
+                          }}>Specs Preview</p>
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                            gap: '10px 16px',
+                          }}>
+                            {([
+                              ['Engine',          spec.engine_cc      ? `${spec.engine_cc} cc`        : null],
+                              ['Power',           spec.power_bhp      ? `${spec.power_bhp} bhp`       : null],
+                              ['Torque',          spec.torque_nm      ? `${spec.torque_nm} Nm`        : null],
+                              ['Mileage (ARAI)',  spec.mileage_arai   ? `${spec.mileage_arai} kmpl`   : null],
+                              ['Fuel Tank',       spec.fuel_tank_l    ? `${spec.fuel_tank_l} L`       : null],
+                              ['Seating',         spec.seating        ? `${spec.seating} persons`     : null],
+                              ['Boot Space',      spec.boot_space_l   ? `${spec.boot_space_l} L`      : null],
+                              ['Ground Clearance',spec.ground_clearance_mm ? `${spec.ground_clearance_mm} mm` : null],
+                              ['Dimensions',      (spec.length_mm && spec.width_mm && spec.height_mm)
+                                ? `${spec.length_mm} × ${spec.width_mm} × ${spec.height_mm} mm` : null],
+                              ['Tyres',           spec.tyre_size      || null],
+                              ['NCAP Rating',     spec.ncap_rating    || null],
+                            ] as [string, string | null][]).filter(([, v]) => v !== null).map(([label, value]) => (
+                              <div key={label}>
+                                <div style={{ fontSize: 10, color: '#8E99A8', marginBottom: 2, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+                                <div style={{ fontSize: 13, color: '#E8F4FD', fontWeight: 600 }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )
                 )}
