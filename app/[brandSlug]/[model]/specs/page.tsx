@@ -10,6 +10,8 @@ import { getPageSeo } from '@/lib/page-seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../ModelSubNav'
 import EditSeoButton from '@/components/EditSeoButton'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -231,10 +233,37 @@ export default async function SpecsPage({
     },
   ]
 
+  const specsCrumbs = [
+    { name: 'Home', url: getCanonicalUrl('/') },
+    { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
+    { name: brand.name, url: getCanonicalUrl(`/${brandSlug}/`) },
+    { name: m.name, url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/`) },
+    { name: 'Specifications', url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/specs/`) },
+  ]
+  const specsFaqItems = faqs.map(f => ({ question: f.q, answer: f.a }))
+  const specsAutoSchemas = [
+    vehicleProductSchema({
+      name: m.name,
+      brand: brand.name,
+      description: `Complete specifications of ${brand.name} ${m.name}${primarySpec?.engine_cc ? ` — ${primarySpec.engine_cc}cc engine` : ''}${primarySpec?.mileage_arai ? `, ${primarySpec.mileage_arai} km/l mileage` : ''}. Compare all variants.`,
+      imageUrl: m.thumbnail_url,
+      priceMin: m.price_min ?? 0,
+      priceMax: m.price_max ?? m.price_min ?? 0,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/specs/`),
+      modelYear: 2026,
+      bodyType: m.body_type,
+      fuelType: primaryVariant?.fuel_type,
+    }),
+    breadcrumbSchema(specsCrumbs),
+    faqSchema(specsFaqItems),
+  ]
+
   return (
     <>
-      {seo?.schema_jsonld && (
+      {seo?.schema_jsonld ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      ) : (
+        <SchemaMarkup schemas={specsAutoSchemas} />
       )}
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />

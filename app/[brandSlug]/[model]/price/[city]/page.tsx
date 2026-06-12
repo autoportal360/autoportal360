@@ -11,6 +11,8 @@ import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../../ModelSubNav'
 import PriceFaq from '../PriceFaq'
 import EditSeoButton from '@/components/EditSeoButton'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -161,10 +163,58 @@ export default async function CityPricePage({
   }
   const SUB: React.CSSProperties = { fontSize: '13px', color: '#8E99A8', margin: '0 0 20px' }
 
+  const cityCrumbs = [
+    { name: 'Home', url: getCanonicalUrl('/') },
+    { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
+    { name: brand.name, url: getCanonicalUrl(`/${brandSlug}/`) },
+    { name: model.name, url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/`) },
+    { name: 'Price', url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/`) },
+    { name: city.name, url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/${citySlug}/`) },
+  ]
+  const cityFaqItems = [
+    {
+      question: `What is the on-road price of ${brand.name} ${model.name} in ${city.name}?`,
+      answer: baseOnRoad && baseVariant
+        ? `The on-road price of ${brand.name} ${model.name} in ${city.name} is approximately ${formatPrice(baseOnRoad.total)} for the ${baseVariant.name} variant. This includes ex-showroom ${formatPrice(baseOnRoad.ex_showroom)}, RTO (${rtoRate}%) ${formatPrice(baseOnRoad.rto)}, insurance ${formatPrice(baseOnRoad.insurance)}, handling ${formatPrice(baseOnRoad.handling)}, and FASTag ${formatPrice(baseOnRoad.fastag)}.`
+        : `Use the price calculator above to get the on-road price of ${brand.name} ${model.name} in ${city.name}.`,
+    },
+    {
+      question: `What is the RTO charge for ${brand.name} ${model.name} in ${city.name}?`,
+      answer: `The Road Tax (RTO) for ${brand.name} ${model.name} in ${city.name} (${stateName}) is ${rtoRate}% of the ex-showroom price.${baseOnRoad && baseVariant ? ` For the ${baseVariant.name} variant, the RTO charge is ${formatPrice(baseOnRoad.rto)}.` : ''}`,
+    },
+    {
+      question: `Is the on-road price of ${brand.name} ${model.name} the same across all cities in ${stateName}?`,
+      answer: `Within ${stateName}, the RTO rate of ${rtoRate}% applies uniformly. Dealer handling charges may vary slightly. The ex-showroom price is the same across India.`,
+    },
+  ]
+  const cityAutoSchemas = [
+    vehicleProductSchema({
+      name: model.name,
+      brand: brand.name,
+      description: `${brand.name} ${model.name} on-road price in ${city.name}${baseOnRoad ? ` — ${formatPrice(baseOnRoad.total)}` : ''}. Includes ${stateName} RTO ${rtoRate}%, insurance, and handling.`,
+      priceMin: model.price_min ?? 0,
+      priceMax: model.price_max ?? model.price_min ?? 0,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/${citySlug}/`),
+      modelYear: 2026,
+      ...(baseOnRoad ? {
+        offerOverride: {
+          '@type': 'Offer',
+          price: baseOnRoad.total / 100000,
+          priceCurrency: 'INR',
+          eligibleRegion: { '@type': 'Place', name: city.name },
+        },
+      } : {}),
+    }),
+    breadcrumbSchema(cityCrumbs),
+    faqSchema(cityFaqItems),
+  ]
+
   return (
     <>
-      {seo?.schema_jsonld && (
+      {seo?.schema_jsonld ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      ) : (
+        <SchemaMarkup schemas={cityAutoSchemas} />
       )}
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 

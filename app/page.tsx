@@ -7,6 +7,8 @@ import { formatPriceRange } from '@/lib/utils'
 import { getCanonicalUrl } from '@/lib/seo'
 import HeroSlider, { type HeroSlide } from '@/components/HeroSlider'
 import type { Brand } from '@/types'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { websiteSchema, organizationSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
   title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
@@ -333,6 +335,7 @@ export default async function HomePage() {
 
   return (
     <div>
+      <SchemaMarkup schemas={[websiteSchema(), organizationSchema()]} />
 
       {/* ZONE 1 — HERO BILLBOARD */}
       <AdSlot zone="hero-billboard" />

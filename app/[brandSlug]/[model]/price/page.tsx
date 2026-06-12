@@ -6,10 +6,13 @@ import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { calculateOnRoad, formatPrice, formatPriceRange } from '@/lib/utils'
 import { getCanonicalUrl } from '@/lib/seo'
+import { getPageSeo } from '@/lib/page-seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../ModelSubNav'
 import PriceCalculator, { type PriceVariant, type PriceCity } from './PriceCalculator'
 import PriceFaq from './PriceFaq'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,11 +129,14 @@ export default async function PricePage({
   if (!modelRaw) notFound()
   const model = modelRaw as unknown as ModelRow
 
-  const [{ data: variantsRaw }, { data: citiesRaw }] = await Promise.all([
+  const pageKey = `price-${brandSlug}-${modelSlug}`
+
+  const [{ data: variantsRaw }, { data: citiesRaw }, seo] = await Promise.all([
     supabase.from('variants').select('*, specs(*)').eq('model_id', model.id).order('sort_order'),
     supabase.from('cities')
       .select('id, name, slug, states(name, rto_percentage, handling_charge)')
       .eq('is_featured', true).order('name'),
+    getPageSeo(pageKey),
   ])
 
   const variants = (variantsRaw ?? []) as unknown as VariantRow[]
@@ -163,8 +169,53 @@ export default async function PricePage({
   }
   const SUB: React.CSSProperties = { fontSize: '13px', color: '#8E99A8', margin: '0 0 20px' }
 
+  const priceCrumbs = [
+    { name: 'Home', url: getCanonicalUrl('/') },
+    { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
+    { name: brand.name, url: getCanonicalUrl(`/${brandSlug}/`) },
+    { name: model.name, url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/`) },
+    { name: 'Price', url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/`) },
+  ]
+  const priceFaqItems = [
+    {
+      question: `What is the on-road price of ${brand.name} ${model.name}?`,
+      answer: refOnRoad
+        ? `The ${brand.name} ${model.name} on-road price in ${refCityName} starts at approximately ${formatPrice(refOnRoad.total)} for the ${baseVariant?.name ?? 'base'} variant, including ex-showroom price, RTO registration, insurance, and handling charges.`
+        : `The on-road price of ${brand.name} ${model.name} varies by city. Use the calculator above to get the exact price in your city.`,
+    },
+    {
+      question: `What is the ex-showroom price of ${brand.name} ${model.name}?`,
+      answer: priceLabel
+        ? `The ${brand.name} ${model.name} is priced ${priceLabel} (ex-showroom India) depending on the variant.`
+        : `Please check the variants table above for the latest ${brand.name} ${model.name} ex-showroom prices.`,
+    },
+    {
+      question: `What charges are included in the on-road price of ${brand.name} ${model.name}?`,
+      answer: `The on-road price of ${brand.name} ${model.name} includes: ex-showroom price + RTO registration charges (varies by state, typically 6–15%) + comprehensive insurance (~3.5% of ex-showroom) + dealer handling charges + FASTag (₹500). For vehicles above ₹10 Lakh, 1% TCS also applies.`,
+    },
+  ]
+  const priceAutoSchemas = [
+    vehicleProductSchema({
+      name: model.name,
+      brand: brand.name,
+      description: `${brand.name} ${model.name} on-road price in India${priceLabel ? ` — ${priceLabel}` : ''}. Compare ex-showroom price, RTO, insurance across all major cities.`,
+      priceMin: model.price_min ?? 0,
+      priceMax: model.price_max ?? model.price_min ?? 0,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/`),
+      modelYear: 2026,
+      bodyType: model.body_type,
+    }),
+    breadcrumbSchema(priceCrumbs),
+    faqSchema(priceFaqItems),
+  ]
+
   return (
     <>
+      {seo?.schema_jsonld ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      ) : (
+        <SchemaMarkup schemas={priceAutoSchemas} />
+      )}
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 24px 0' }}>

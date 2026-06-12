@@ -11,6 +11,8 @@ import ModelGrid, { type ModelRow } from './ModelGrid'
 import BrandFaq from './BrandFaq'
 import { getPageSeo } from '@/lib/page-seo'
 import EditSeoButton from '@/components/EditSeoButton'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { breadcrumbSchema, faqSchema } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -168,10 +170,40 @@ export default async function BrandVehiclePage({
     ? `From ${formatPrice(brand.price_min)}`
     : null
 
+  const brandCrumbs = [
+    { name: 'Home', url: getCanonicalUrl('/') },
+    { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
+    { name: `${brand.name} ${vehicleLabel}`, url: getCanonicalUrl(`/${brandSlug}/`) },
+  ]
+  const brandFaqItems = [
+    {
+      question: `How many ${brand.name} ${vehicleLabel.toLowerCase()} are available in India in 2026?`,
+      answer: `${brand.name} offers ${models.length} ${vehicleLabel.toLowerCase()} in India as of 2026.${models.length > 0 ? ` The lineup includes ${models.slice(0, 3).map(m => m.name).join(', ')}${models.length > 3 ? ' and more' : ''}.` : ''}`,
+    },
+    {
+      question: `What is the price of ${brand.name} ${vehicleLabel.toLowerCase()} in India?`,
+      answer: priceLabel
+        ? `${brand.name} ${vehicleLabel.toLowerCase()} are priced ${priceLabel} (ex-showroom India). On-road price varies by city based on local RTO charges.`
+        : `${brand.name} ${vehicleLabel.toLowerCase()} pricing varies by model. Visit each model page for the latest prices.`,
+    },
+    {
+      question: `Is ${brand.name} a reliable brand in India?`,
+      answer: `${brand.name} is a well-established automotive brand${brand.country ? ` from ${brand.country}` : ''}${brand.founded_year ? `, founded in ${brand.founded_year}` : ''}. They offer ${vehicleLabel.toLowerCase()} with good after-sales service networks across India.`,
+    },
+  ]
+  const brandOrgSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: brand.name,
+    url: getCanonicalUrl(`/${brandSlug}/`),
+  }
+
   return (
     <div>
-      {seo?.schema_jsonld && (
+      {seo?.schema_jsonld ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      ) : (
+        <SchemaMarkup schemas={[breadcrumbSchema(brandCrumbs), brandOrgSchema, faqSchema(brandFaqItems)]} />
       )}
 
       {/* AD ZONE 1 — HERO BILLBOARD */}

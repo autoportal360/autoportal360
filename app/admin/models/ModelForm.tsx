@@ -1631,7 +1631,7 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
 
             <Field
               label="Custom Schema JSON-LD"
-              hint="Leave empty to use auto-generated schema. Paste valid JSON-LD only."
+              hint="Leave empty to use auto-generated Vehicle schema. Only fill if you need custom schema for this model."
             >
               <textarea
                 value={seo.schema_json} rows={10}

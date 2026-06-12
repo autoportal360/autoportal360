@@ -14,6 +14,8 @@ import ModelFaq from './ModelFaq'
 import Image from 'next/image'
 import { getPageSeo } from '@/lib/page-seo'
 import EditSeoButton from '@/components/EditSeoButton'
+import SchemaMarkup from '@/components/SchemaMarkup'
+import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -234,10 +236,51 @@ export default async function ModelPage({
 
   const rivals = RIVALS[vehicleType]
 
+  const modelCrumbs = [
+    { name: 'Home', url: getCanonicalUrl('/') },
+    { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
+    { name: brand.name, url: getCanonicalUrl(`/${brandSlug}/`) },
+    { name: m.name, url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/`) },
+  ]
+  const modelFaqItems = [
+    {
+      question: `What is the price of ${brand.name} ${m.name} in India?`,
+      answer: priceLabel
+        ? `The ${brand.name} ${m.name} is priced ${priceLabel} (ex-showroom India). It is available in ${variants.length} variant${variants.length !== 1 ? 's' : ''}.`
+        : `Please visit the price page for the latest ${brand.name} ${m.name} pricing.`,
+    },
+    ...(specsData?.mileage_arai ? [{
+      question: `What is the mileage of ${brand.name} ${m.name}?`,
+      answer: `The ${brand.name} ${m.name} delivers an ARAI-certified mileage of ${specsData.mileage_arai} km/l for the ${primaryVariant?.name ?? 'base'} variant.`,
+    }] : []),
+    {
+      question: `How many variants does ${brand.name} ${m.name} have?`,
+      answer: `The ${brand.name} ${m.name} is available in ${variants.length} variant${variants.length !== 1 ? 's' : ''}${variants.length > 0 ? `: ${variants.slice(0, 4).map(v => v.name).join(', ')}${variants.length > 4 ? ' and more' : ''}` : ''}.`,
+    },
+  ]
+  const autoSchemas = [
+    vehicleProductSchema({
+      name: m.name,
+      brand: brand.name,
+      description: `${brand.name} ${m.name} price in India${priceLabel ? ` ${priceLabel}` : ''}. Compare variants, specs and on-road price in your city.`,
+      imageUrl: m.thumbnail_url,
+      priceMin: m.price_min ?? 0,
+      priceMax: m.price_max ?? m.price_min ?? 0,
+      url: getCanonicalUrl(`/${brandSlug}/${modelSlug}/`),
+      modelYear: 2026,
+      bodyType: m.body_type,
+      fuelType: primaryVariant?.fuel_type,
+    }),
+    breadcrumbSchema(modelCrumbs),
+    faqSchema(modelFaqItems),
+  ]
+
   return (
     <>
-      {seo?.schema_jsonld && (
+      {seo?.schema_jsonld ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      ) : (
+        <SchemaMarkup schemas={autoSchemas} />
       )}
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
