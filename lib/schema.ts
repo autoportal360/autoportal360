@@ -84,7 +84,7 @@ export function vehicleProductSchema({
 }) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'Vehicle',
+    '@type': ['Vehicle', 'Product'],
     name: `${brand} ${name}`,
     brand: { '@type': 'Brand', name: brand },
     description,

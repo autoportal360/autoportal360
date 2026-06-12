@@ -334,8 +334,9 @@ export default async function HomePage() {
   const popularScooters = ((scootersRaw.data ?? []) as unknown as PopularModelRow[]).map(m => modelToCard(m, 'scooters', '🛵'))
 
   return (
-    <div>
+    <>
       <SchemaMarkup schemas={[websiteSchema(), organizationSchema()]} />
+      <div>
 
       {/* ZONE 1 — HERO BILLBOARD */}
       <AdSlot zone="hero-billboard" />
@@ -569,6 +570,7 @@ export default async function HomePage() {
         </div>
       </Section>
 
-    </div>
+      </div>
+    </>
   )
 }
