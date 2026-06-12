@@ -18,30 +18,41 @@ export async function POST(req: NextRequest) {
   const name  = String(body.name  ?? '').trim()
   const phone = String(body.phone ?? '').trim()
 
-  if (!name)                       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-  if (!/^\d{10}$/.test(phone))     return NextResponse.json({ error: 'Valid 10-digit phone number required' }, { status: 400 })
+  if (!name)                   return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+  if (!/^\d{10}$/.test(phone)) return NextResponse.json({ error: 'Valid 10-digit phone number required' }, { status: 400 })
 
-  const { error } = await getSupabase()
-    .from('leads')
-    .insert({
-      name,
-      phone,
-      email:        String(body.email        ?? '').trim() || null,
-      city:         String(body.city         ?? '').trim() || null,
-      model_slug:   String(body.model_slug   ?? '').trim() || null,
-      model_id:     body.model_id   ? String(body.model_id)   : null,
-      brand_name:   body.brand_name ? String(body.brand_name) : null,
-      model_name:   body.model_name ? String(body.model_name) : null,
-      variant_name: body.variant_name ? String(body.variant_name) : null,
-      message:      body.message    ? String(body.message)    : null,
-      source_page:  body.source_page ? String(body.source_page) : null,
-      status:       'new',
-    })
-
-  if (error) {
-    console.error('Lead insert error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  const payload: Record<string, unknown> = {
+    name,
+    phone,
+    email:      String(body.email      ?? '').trim() || null,
+    city:       String(body.city       ?? '').trim() || null,
+    model_slug: String(body.model_slug ?? '').trim() || null,
+    status:     'new',
   }
 
-  return NextResponse.json({ success: true })
+  // Optional enrichment columns — only added once migration has been run.
+  // If the column does not yet exist Supabase will return a clear error.
+  if (body.model_id)     payload.model_id     = String(body.model_id)
+  if (body.brand_name)   payload.brand_name   = String(body.brand_name)
+  if (body.model_name)   payload.model_name   = String(body.model_name)
+  if (body.variant_name) payload.variant_name = String(body.variant_name)
+  if (body.message)      payload.message      = String(body.message)
+  if (body.source_page)  payload.source_page  = String(body.source_page)
+
+  try {
+    const { data, error } = await getSupabase()
+      .from('leads')
+      .insert(payload)
+      .select()
+
+    if (error) {
+      console.error('Supabase insert error:', JSON.stringify(error, null, 2))
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data })
+  } catch (err) {
+    console.error('Leads API unexpected error:', err)
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
 }
