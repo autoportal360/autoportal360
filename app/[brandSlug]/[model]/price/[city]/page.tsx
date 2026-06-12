@@ -6,9 +6,11 @@ import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { calculateOnRoad, formatPrice, formatPriceRange } from '@/lib/utils'
 import { getCanonicalUrl } from '@/lib/seo'
+import { getPageSeo } from '@/lib/page-seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../../ModelSubNav'
 import PriceFaq from '../PriceFaq'
+import EditSeoButton from '@/components/EditSeoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,9 +92,12 @@ export async function generateMetadata({
   ])
   if (!model || !city) return { title: 'Not Found' }
 
+  const pageKey = `city-${brandSlug}-${modelSlug}-${citySlug}`
+  const seo = await getPageSeo(pageKey)
+
   return {
-    title: `${brand.name} ${model.name} On-Road Price in ${city.name} 2026 | AutoPortal360`,
-    description: `${brand.name} ${model.name} on-road price in ${city.name}${model.price_min ? ` starts at ${formatPrice(model.price_min)}` : ''}. Full breakdown: ex-showroom, RTO, insurance, handling & FastTag.`,
+    title: seo?.meta_title ?? `${brand.name} ${model.name} On-Road Price in ${city.name} 2026 | AutoPortal360`,
+    description: seo?.meta_description ?? `${brand.name} ${model.name} on-road price in ${city.name}${model.price_min ? ` starts at ${formatPrice(model.price_min)}` : ''}. Full breakdown: ex-showroom, RTO, insurance, handling & FastTag.`,
     alternates: { canonical: getCanonicalUrl(`/${brandSlug}/${modelSlug}/price/${citySlug}/`) },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
@@ -119,9 +124,12 @@ export default async function CityPricePage({
   const brand = await getBrand(brandName, vehicleType)
   if (!brand) notFound()
 
-  const [{ data: modelRaw }, { data: cityRaw }, ] = await Promise.all([
+  const pageKey = `city-${brandSlug}-${modelSlug}-${citySlug}`
+
+  const [{ data: modelRaw }, { data: cityRaw }, seo] = await Promise.all([
     supabase.from('models').select('*').eq('brand_id', brand.id).eq('slug', modelSlug).single(),
     supabase.from('cities').select('id, name, slug, states(name, rto_percentage, handling_charge)').eq('slug', citySlug).single(),
+    getPageSeo(pageKey),
   ])
   if (!modelRaw) notFound()
   if (!cityRaw) notFound()
@@ -155,6 +163,9 @@ export default async function CityPricePage({
 
   return (
     <>
+      {seo?.schema_jsonld && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      )}
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 24px 0' }}>
@@ -179,9 +190,11 @@ export default async function CityPricePage({
           fontFamily: 'Montserrat, sans-serif', fontSize: '28px', fontWeight: 900,
           letterSpacing: '-0.8px', color: '#FFFFFF', margin: '0 0 6px', lineHeight: 1.15,
         }}>
-          {brand.name} {model.name}{' '}
-          <span style={{ color: '#00D4FF' }}>On-Road Price in {city.name} 2026</span>
+          {seo?.h1 ? seo.h1 : <>{brand.name} {model.name}{' '}<span style={{ color: '#00D4FF' }}>On-Road Price in {city.name} 2026</span></>}
         </h1>
+        {seo?.intro_text && (
+          <p style={{ fontSize: '14px', color: '#C0C0C0', margin: '0 0 12px', lineHeight: 1.7 }}>{seo.intro_text}</p>
+        )}
         {priceLabel && (
           <p style={{ fontSize: '15px', color: '#8E99A8', margin: '0 0 28px' }}>
             Ex-showroom: <span style={{ color: '#00D4FF', fontWeight: 700 }}>{priceLabel}</span>
@@ -303,11 +316,31 @@ export default async function CityPricePage({
           <AdSlot zone="mid-feed-1" />
         </div>
 
+        {/* ── SEO CONTENT (from page_seo) ── */}
+        {seo?.seo_content && (
+          <section
+            style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.9, marginBottom: '48px' }}
+            dangerouslySetInnerHTML={{ __html: seo.seo_content }}
+          />
+        )}
+
         {/* ── FAQ ── */}
         <section style={{ marginBottom: '48px' }}>
           <h2 style={H2}>Frequently Asked <span style={{ color: '#00D4FF' }}>Questions</span></h2>
           <p style={SUB}>{brand.name} {model.name} price in {city.name}</p>
-          {city.states && baseVariant ? (
+          {seo?.faqs && seo.faqs.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {seo.faqs.map((faq, i) => (
+                <details key={i} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <summary style={{ padding: '16px 20px', fontSize: '14px', fontWeight: 700, color: '#FFFFFF', fontFamily: 'Montserrat, sans-serif', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {faq.q}
+                    <span style={{ color: '#00D4FF', fontSize: '18px', flexShrink: 0, marginLeft: '12px' }}>+</span>
+                  </summary>
+                  <div style={{ padding: '0 20px 16px', fontSize: '13px', color: '#C0C0C0', lineHeight: 1.7 }}>{faq.a}</div>
+                </details>
+              ))}
+            </div>
+          ) : city.states && baseVariant ? (
             <PriceFaq
               mode="city"
               brandName={brand.name}
@@ -328,6 +361,7 @@ export default async function CityPricePage({
       </div>
 
       <div style={{ height: '48px' }} />
+      <EditSeoButton pageKey={pageKey} existingId={seo?.id} />
     </>
   )
 }

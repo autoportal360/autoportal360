@@ -12,6 +12,8 @@ import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalcu
 import GetOffersButton from './GetOffersButton'
 import ModelFaq from './ModelFaq'
 import Image from 'next/image'
+import { getPageSeo } from '@/lib/page-seo'
+import EditSeoButton from '@/components/EditSeoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,11 +113,12 @@ export async function generateMetadata({
 
   const priceStr = model.price_min ? ` starts at ${formatPrice(model.price_min)}` : ''
   const canonical = `/${brandSlug}/${modelSlug}/`
+  const pageSeo = await getPageSeo(`model-${brandSlug}-${modelSlug}`)
 
   return {
-    title: model.meta_title
+    title: pageSeo?.meta_title ?? model.meta_title
       ?? `${brand.name} ${model.name} Price, Specs, Mileage 2026 | AutoPortal360`,
-    description: model.meta_description
+    description: pageSeo?.meta_description ?? model.meta_description
       ?? `${brand.name} ${model.name} price in India${priceStr}. Compare variants, specs, and mileage. Get on-road price in your city.`,
     alternates: { canonical: getCanonicalUrl(canonical) },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
@@ -180,10 +183,13 @@ export default async function ModelPage({
   if (!model) notFound()
   const m = model as unknown as ModelRow
 
-  // Parallel: variants and featured cities
-  const [{ data: variantsRaw }, { data: citiesRaw }] = await Promise.all([
+  const pageKey = `model-${brandSlug}-${modelSlug}`
+
+  // Parallel: variants, featured cities, page SEO
+  const [{ data: variantsRaw }, { data: citiesRaw }, seo] = await Promise.all([
     supabase.from('variants').select('*').eq('model_id', m.id).order('sort_order'),
     supabase.from('cities').select('id, name, states(rto_percentage, handling_charge)').eq('is_featured', true).order('name'),
+    getPageSeo(pageKey),
   ])
 
   const variants = (variantsRaw ?? []) as unknown as VariantRow[]
@@ -230,6 +236,9 @@ export default async function ModelPage({
 
   return (
     <>
+      {seo?.schema_jsonld && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      )}
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
@@ -282,8 +291,11 @@ export default async function ModelPage({
 
                 {/* H1 */}
                 <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: '#FFFFFF', margin: '0 0 10px', lineHeight: 1.1 }}>
-                  {brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span>
+                  {seo?.h1 ? seo.h1 : <>{brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span></>}
                 </h1>
+                {seo?.intro_text && (
+                  <p style={{ fontSize: '14px', color: '#C0C0C0', margin: '0 0 10px', lineHeight: 1.7 }}>{seo.intro_text}</p>
+                )}
 
                 {/* Price */}
                 {priceLabel && (
@@ -487,19 +499,41 @@ export default async function ModelPage({
             <AdSlot zone="mid-feed-1" />
           </div>
 
+          {/* ── SEO CONTENT ── */}
+          {seo?.seo_content && (
+            <section
+              style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.9, marginBottom: '48px' }}
+              dangerouslySetInnerHTML={{ __html: seo.seo_content }}
+            />
+          )}
+
           {/* ── FAQs ── */}
           <section id="faqs" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
             <h2 style={SECTION_TITLE}>Frequently Asked <span style={{ color: '#00D4FF' }}>Questions</span></h2>
             <p style={SECTION_SUB}>Common questions about {brand.name} {m.name}</p>
-            <ModelFaq
-              brandName={brand.name}
-              modelName={m.name}
-              vehicleLabel={vehicleLabel}
-              priceMin={m.price_min}
-              variantCount={variants.length}
-              mileage={specsData?.mileage_arai ?? null}
-              engineCc={specsData?.engine_cc ?? null}
-            />
+            {seo?.faqs && seo.faqs.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {seo.faqs.map((faq, i) => (
+                  <details key={i} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+                    <summary style={{ padding: '16px 20px', fontSize: '14px', fontWeight: 700, color: '#FFFFFF', fontFamily: 'Montserrat, sans-serif', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      {faq.q}
+                      <span style={{ color: '#00D4FF', fontSize: '18px', flexShrink: 0, marginLeft: '12px' }}>+</span>
+                    </summary>
+                    <div style={{ padding: '0 20px 16px', fontSize: '13px', color: '#C0C0C0', lineHeight: 1.7 }}>{faq.a}</div>
+                  </details>
+                ))}
+              </div>
+            ) : (
+              <ModelFaq
+                brandName={brand.name}
+                modelName={m.name}
+                vehicleLabel={vehicleLabel}
+                priceMin={m.price_min}
+                variantCount={variants.length}
+                mileage={specsData?.mileage_arai ?? null}
+                engineCc={specsData?.engine_cc ?? null}
+              />
+            )}
           </section>
 
           <AdSlot zone="pre-footer" />
@@ -579,6 +613,7 @@ export default async function ModelPage({
 
       {/* bottom padding */}
       <div style={{ height: '48px' }} />
+      <EditSeoButton pageKey={pageKey} existingId={seo?.id} />
     </>
   )
 }

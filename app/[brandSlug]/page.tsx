@@ -9,6 +9,8 @@ import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand } from '@/types'
 import ModelGrid, { type ModelRow } from './ModelGrid'
 import BrandFaq from './BrandFaq'
+import { getPageSeo } from '@/lib/page-seo'
+import EditSeoButton from '@/components/EditSeoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,9 +113,12 @@ export async function generateMetadata({
     ? ` · From ${formatPrice(brand.price_min)}`
     : ''
 
+  const pageKey = `brand-${brandSlug}`
+  const seo = await getPageSeo(pageKey)
+
   return {
-    title: `${brand.name} ${parsed.vehicleLabel} Price in India 2026 — All Models${priceStr}`,
-    description: `Browse all ${brand.name} ${parsed.vehicleLabel.toLowerCase()} in India. Compare prices, specs, mileage and on-road cost in your city.`,
+    title: seo?.meta_title ?? `${brand.name} ${parsed.vehicleLabel} Price in India 2026 — All Models${priceStr}`,
+    description: seo?.meta_description ?? `Browse all ${brand.name} ${parsed.vehicleLabel.toLowerCase()} in India. Compare prices, specs, mileage and on-road cost in your city.`,
     alternates: { canonical: getCanonicalUrl(`/${brandSlug}/`) },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
@@ -141,7 +146,11 @@ export default async function BrandVehiclePage({
   const brand = await getBrand(brandName, vehicleType)
   if (!brand) notFound()
 
-  const models = await getModels(brand.id, vehicleType)
+  const pageKey = `brand-${brandSlug}`
+  const [models, seo] = await Promise.all([
+    getModels(brand.id, vehicleType),
+    getPageSeo(pageKey),
+  ])
 
   const compareModels = models.filter(m => m.status === 'active').slice(0, 4)
   const comparisons: { a: string; b: string; href: string }[] = []
@@ -161,6 +170,9 @@ export default async function BrandVehiclePage({
 
   return (
     <div>
+      {seo?.schema_jsonld && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      )}
 
       {/* AD ZONE 1 — HERO BILLBOARD */}
       <AdSlot zone="hero-billboard" />
@@ -201,7 +213,7 @@ export default async function BrandVehiclePage({
                 fontFamily: 'Montserrat, sans-serif', fontSize: '28px', fontWeight: 900,
                 letterSpacing: '-0.8px', color: '#FFFFFF', margin: 0,
               }}>
-                {brand.name} <span style={{ color: '#00D4FF' }}>{vehicleLabel}</span>
+                {seo?.h1 ? seo.h1 : <>{brand.name} <span style={{ color: '#00D4FF' }}>{vehicleLabel}</span></>}
               </h1>
               {brand.country && (
                 <span style={{
@@ -345,36 +357,43 @@ export default async function BrandVehiclePage({
           }}>
             About <span style={{ color: '#00D4FF' }}>{brand.name} {vehicleLabel}</span> in India
           </h2>
-          <div style={{
-            color: '#C0C0C0', fontSize: '14px',
-            lineHeight: 1.9, display: 'flex', flexDirection: 'column', gap: '14px',
-          }}>
-            <p style={{ margin: 0 }}>
-              {brand.name} is one of the leading {vehicleLabel.toLowerCase()} brands available in India
-              {brand.country ? `, headquartered in ${brand.country}` : ''}.
-              {brand.founded_year ? ` Founded in ${brand.founded_year}, the brand` : ' The brand'} offers a
-              comprehensive lineup of{' '}
-              {models.length > 0
-                ? `${models.length} model${models.length > 1 ? 's' : ''} including ` +
-                  models.slice(0, 3).map(m => m.name).join(', ') +
-                  (models.length > 3 ? ' and more' : '')
-                : 'models'}.
-            </p>
-            <p style={{ margin: 0 }}>
-              {priceLabel
-                ? `${brand.name} ${vehicleLabel.toLowerCase()} in India are priced ${priceLabel} (ex-showroom). `
-                : ''}
-              Prices vary by city — on-road costs include RTO registration fees
-              (8–15% depending on state), comprehensive insurance, and handling charges.
-              Use the Price tab on each model card to calculate the exact on-road price in your city.
-            </p>
-            <p style={{ margin: 0 }}>
-              When choosing a {brand.name} {vehicleLabel.slice(0, -1).toLowerCase()}, compare the
-              variant-wise feature list and check the safety rating for your shortlisted model.
-              The Specs page for each model gives you ARAI-certified mileage, engine displacement,
-              power output, and ground clearance — everything you need before visiting a showroom.
-            </p>
-          </div>
+          {seo?.seo_content ? (
+            <div
+              style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.9 }}
+              dangerouslySetInnerHTML={{ __html: seo.seo_content }}
+            />
+          ) : (
+            <div style={{
+              color: '#C0C0C0', fontSize: '14px',
+              lineHeight: 1.9, display: 'flex', flexDirection: 'column', gap: '14px',
+            }}>
+              <p style={{ margin: 0 }}>
+                {brand.name} is one of the leading {vehicleLabel.toLowerCase()} brands available in India
+                {brand.country ? `, headquartered in ${brand.country}` : ''}.
+                {brand.founded_year ? ` Founded in ${brand.founded_year}, the brand` : ' The brand'} offers a
+                comprehensive lineup of{' '}
+                {models.length > 0
+                  ? `${models.length} model${models.length > 1 ? 's' : ''} including ` +
+                    models.slice(0, 3).map(m => m.name).join(', ') +
+                    (models.length > 3 ? ' and more' : '')
+                  : 'models'}.
+              </p>
+              <p style={{ margin: 0 }}>
+                {priceLabel
+                  ? `${brand.name} ${vehicleLabel.toLowerCase()} in India are priced ${priceLabel} (ex-showroom). `
+                  : ''}
+                Prices vary by city — on-road costs include RTO registration fees
+                (8–15% depending on state), comprehensive insurance, and handling charges.
+                Use the Price tab on each model card to calculate the exact on-road price in your city.
+              </p>
+              <p style={{ margin: 0 }}>
+                When choosing a {brand.name} {vehicleLabel.slice(0, -1).toLowerCase()}, compare the
+                variant-wise feature list and check the safety rating for your shortlisted model.
+                The Specs page for each model gives you ARAI-certified mileage, engine displacement,
+                power output, and ground clearance — everything you need before visiting a showroom.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* ── FAQ ── */}
@@ -388,7 +407,21 @@ export default async function BrandVehiclePage({
           <p style={{ fontSize: '13px', color: '#8E99A8', marginBottom: '24px' }}>
             Common questions about {brand.name} {vehicleLabel.toLowerCase()} in India
           </p>
-          <BrandFaq brandName={brand.name} vehicleLabel={vehicleLabel} />
+          {seo?.faqs && seo.faqs.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {seo.faqs.map((faq, i) => (
+                <details key={i} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <summary style={{ padding: '16px 20px', fontSize: '14px', fontWeight: 700, color: '#FFFFFF', fontFamily: 'Montserrat, sans-serif', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {faq.q}
+                    <span style={{ color: '#00D4FF', fontSize: '18px', flexShrink: 0, marginLeft: '12px' }}>+</span>
+                  </summary>
+                  <div style={{ padding: '0 20px 16px', fontSize: '13px', color: '#C0C0C0', lineHeight: 1.7 }}>{faq.a}</div>
+                </details>
+              ))}
+            </div>
+          ) : (
+            <BrandFaq brandName={brand.name} vehicleLabel={vehicleLabel} />
+          )}
         </section>
 
       </div>
@@ -396,6 +429,7 @@ export default async function BrandVehiclePage({
       {/* AD ZONE 3 — PRE-FOOTER */}
       <AdSlot zone="pre-footer" />
 
+      <EditSeoButton pageKey={pageKey} existingId={seo?.id} />
     </div>
   )
 }

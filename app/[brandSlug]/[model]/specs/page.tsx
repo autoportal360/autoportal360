@@ -6,8 +6,10 @@ import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import { formatPrice, formatPriceRange } from '@/lib/utils'
 import { getCanonicalUrl } from '@/lib/seo'
+import { getPageSeo } from '@/lib/page-seo'
 import type { Brand, Spec } from '@/types'
 import ModelSubNav from '../ModelSubNav'
+import EditSeoButton from '@/components/EditSeoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,10 +86,13 @@ export async function generateMetadata({
     .from('models').select('name').eq('brand_id', brand.id).eq('slug', modelSlug).single()
   if (!model) return { title: 'Not Found' }
 
+  const pageKey = `specs-${brandSlug}-${modelSlug}`
+  const seo = await getPageSeo(pageKey)
+
   const canonical = `/${brandSlug}/${modelSlug}/specs/`
   return {
-    title: `${brand.name} ${model.name} Specs, Engine, Mileage 2026 | AutoPortal360`,
-    description: `Complete specifications of ${brand.name} ${model.name} — engine displacement, power, torque, mileage, dimensions, ground clearance and more. Compare all variants.`,
+    title: seo?.meta_title ?? `${brand.name} ${model.name} Specs, Engine, Mileage 2026 | AutoPortal360`,
+    description: seo?.meta_description ?? `Complete specifications of ${brand.name} ${model.name} — engine displacement, power, torque, mileage, dimensions, ground clearance and more. Compare all variants.`,
     alternates: { canonical: getCanonicalUrl(canonical) },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
     openGraph: {
@@ -169,7 +174,12 @@ export default async function SpecsPage({
     )
   }
 
-  const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
+  const pageKey = `specs-${brandSlug}-${modelSlug}`
+  const [primaryVariantRaw, seo] = await Promise.all([
+    Promise.resolve(variants.find(v => v.is_popular) ?? variants[0] ?? null),
+    getPageSeo(pageKey),
+  ])
+  const primaryVariant = primaryVariantRaw
   const primarySpec    = primaryVariant ? (specsByVariantId[primaryVariant.id] ?? null) : null
 
   // Only show variants that have specs
@@ -223,6 +233,9 @@ export default async function SpecsPage({
 
   return (
     <>
+      {seo?.schema_jsonld && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: seo.schema_jsonld }} />
+      )}
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
@@ -244,9 +257,11 @@ export default async function SpecsPage({
         {/* H1 */}
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.8px', color: '#FFFFFF', margin: '0 0 6px', lineHeight: 1.2 }}>
-            {brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span>{' '}
-            <span style={{ color: '#C0C0C0', fontWeight: 700 }}>Specifications</span>
+            {seo?.h1 ? seo.h1 : <>{brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span>{' '}<span style={{ color: '#C0C0C0', fontWeight: 700 }}>Specifications</span></>}
           </h1>
+          {seo?.intro_text && (
+            <p style={{ fontSize: '14px', color: '#C0C0C0', margin: '0 0 8px', lineHeight: 1.7 }}>{seo.intro_text}</p>
+          )}
           <p style={{ fontSize: '13px', color: '#8E99A8', margin: 0 }}>
             {m.body_type && `${m.body_type} · `}
             {priceLabel && `${priceLabel} · `}
@@ -359,12 +374,20 @@ export default async function SpecsPage({
           <AdSlot zone="mid-feed-1" />
         </div>
 
+        {/* SEO CONTENT */}
+        {seo?.seo_content && (
+          <section
+            style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.9, marginBottom: '48px' }}
+            dangerouslySetInnerHTML={{ __html: seo.seo_content }}
+          />
+        )}
+
         {/* FAQ */}
         <section style={{ marginBottom: '48px' }}>
           <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Specs FAQ</span></h2>
           <p style={SECTION_SUB}>Common specification questions</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {faqs.map((faq, i) => (
+            {(seo?.faqs && seo.faqs.length > 0 ? seo.faqs : faqs).map((faq, i) => (
               <details key={i} style={{
                 background: '#0A1F44',
                 border: '1px solid rgba(0,212,255,0.1)',
@@ -393,6 +416,7 @@ export default async function SpecsPage({
 
       </div>
       <div style={{ height: '48px' }} />
+      <EditSeoButton pageKey={pageKey} existingId={seo?.id} />
     </>
   )
 }
