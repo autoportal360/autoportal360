@@ -46,10 +46,10 @@ const FIELDS = [
   {
     section: 'Analytics & Tracking',
     items: [
-      { key: 'ga4_id',              label: 'Google Analytics 4 ID',             type: 'text',  placeholder: 'G-XXXXXXXXXX', hint: '' },
-      { key: 'gtm_id',              label: 'Google Tag Manager ID',              type: 'text',  placeholder: 'GTM-XXXXXXX',  hint: '' },
-      { key: 'gsc_verification',    label: 'Search Console Verification Code',   type: 'text',  placeholder: 'abc123xyz',    hint: 'Value of the google-site-verification meta tag.' },
-      { key: 'facebook_pixel_id',   label: 'Facebook Pixel ID',                 type: 'text',  placeholder: '1234567890',   hint: '' },
+      { key: 'ga4_id',              label: 'Google Analytics 4 ID',             type: 'text',  placeholder: 'G-XXXXXXXXXX', hint: 'Format: G-XXXXXXXXXX. Find in GA4 → Admin → Data Streams → Measurement ID.' },
+      { key: 'gtm_id',              label: 'Google Tag Manager ID',              type: 'text',  placeholder: 'GTM-XXXXXXX',  hint: 'Format: GTM-XXXXXXX. Find in GTM → Admin → Container ID.' },
+      { key: 'gsc_verification',    label: 'Search Console Verification Code',   type: 'text',  placeholder: 'abc123xyz_def456', hint: "Paste only the content value from the <meta name='google-site-verification'> tag. Example: abc123xyz_def456" },
+      { key: 'facebook_pixel_id',   label: 'Facebook Pixel ID',                 type: 'text',  placeholder: '123456789012345', hint: 'Format: 15-digit number. Find in Meta Business Manager → Events Manager.' },
     ],
   },
   {
