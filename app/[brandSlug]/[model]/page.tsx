@@ -400,18 +400,23 @@ export default async function ModelPage({
               {/* Hero image */}
               <div style={{ width: '280px', flexShrink: 0 }}>
                 {m.thumbnail_url ? (
-                  <div style={{ position: 'relative', width: '100%', height: '200px', borderRadius: '16px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                  <div style={{
+                    position: 'relative', width: '100%', height: '220px',
+                    borderRadius: '16px', overflow: 'hidden',
+                    background: 'rgba(0,212,255,0.04)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
                     <Image
                       src={m.thumbnail_url}
                       alt={`${brand.name} ${m.name}`}
                       fill
-                      sizes="300px"
-                      style={{ objectFit: 'contain' }}
+                      sizes="(max-width: 768px) 100vw, 300px"
+                      style={{ objectFit: 'contain', padding: '12px' }}
                       priority
                     />
                   </div>
                 ) : (
-                  <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '90px' }}>
+                  <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '90px' }}>
                     {vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'}
                   </div>
                 )}
