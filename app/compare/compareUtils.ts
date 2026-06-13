@@ -141,14 +141,15 @@ async function enrichModel(row: RawModel, targetVariantSlug?: string | null): Pr
 // Load vehicles from SEO slugs. Supports:
 //   'tata-punch'                        → exact model match, popular variant
 //   'tata-punch-accomplished-mt'        → prefix match 'tata-punch', variant 'accomplished-mt'
+// Uses 3 batched queries total regardless of how many vehicles are compared.
 export async function loadVehiclesFromSlugs(combinedSlugs: string[]): Promise<(LoadedVehicle | null)[]> {
+  // QUERY 1: all models
   const { data: allModels } = await supabase
     .from('models')
     .select('id, name, slug, price_min, price_max, thumbnail_url, brands!inner(id, name, slug, type)')
     .neq('status', 'discontinued')
 
   if (!allModels) return combinedSlugs.map(() => null)
-
   const rows = allModels as unknown as RawModel[]
 
   // Sort longest combined-slug first so greedy prefix matching works correctly
@@ -156,30 +157,94 @@ export async function loadVehiclesFromSlugs(combinedSlugs: string[]): Promise<(L
     (`${b.brands.slug}-${b.slug}`).length - (`${a.brands.slug}-${a.slug}`).length
   )
 
-  const results = await Promise.all(
-    combinedSlugs.map(async combined => {
-      // 1. Exact model match
-      let row = rows.find(m => `${m.brands.slug}-${m.slug}` === combined)
-      let variantSlug: string | null = null
-
-      // 2. Prefix match: brand-model-<variant-slug>
-      if (!row) {
-        for (const r of sortedRows) {
-          const prefix = `${r.brands.slug}-${r.slug}-`
-          if (combined.startsWith(prefix)) {
-            row = r
-            variantSlug = combined.slice(prefix.length) || null
-            break
-          }
-        }
+  // Match each slug to a model row + optional variant slug
+  const matches = combinedSlugs.map(combined => {
+    let row = rows.find(m => `${m.brands.slug}-${m.slug}` === combined)
+    let variantSlug: string | null = null
+    if (!row) {
+      for (const r of sortedRows) {
+        const prefix = `${r.brands.slug}-${r.slug}-`
+        if (combined.startsWith(prefix)) { row = r; variantSlug = combined.slice(prefix.length) || null; break }
       }
+    }
+    return { row: row ?? null, variantSlug }
+  })
 
-      if (!row) return null
-      return enrichModel(row, variantSlug)
-    })
-  )
+  const matchedModelIds = [...new Set(matches.filter(m => m.row).map(m => m.row!.id))]
+  if (!matchedModelIds.length) return combinedSlugs.map(() => null)
 
-  return results
+  // QUERY 2: all variants for matched models in one batch
+  type VRow = { id: string; name: string; ex_showroom_price: number; fuel_type: string | null; transmission: string | null; is_popular: boolean; sort_order: number; model_id: string }
+  const { data: allVariantsRaw } = await supabase
+    .from('variants')
+    .select('id, name, ex_showroom_price, fuel_type, transmission, is_popular, sort_order, model_id')
+    .in('model_id', matchedModelIds)
+    .order('sort_order')
+  const allVariants = (allVariantsRaw ?? []) as VRow[]
+
+  const variantsByModel = new Map<string, VRow[]>()
+  for (const id of matchedModelIds) variantsByModel.set(id, [])
+  for (const v of allVariants) variantsByModel.get(v.model_id)?.push(v)
+
+  // Resolve the selected variant ID per slug match
+  const selectedVariantIds = matches.map(({ row, variantSlug }) => {
+    if (!row) return null
+    const variants = variantsByModel.get(row.id) ?? []
+    if (variantSlug) {
+      return variants.find(v => variantToSlug(v.name) === variantSlug)?.id
+        ?? variants.find(v => v.is_popular)?.id
+        ?? variants[0]?.id
+        ?? null
+    }
+    return variants.find(v => v.is_popular)?.id ?? variants[0]?.id ?? null
+  })
+
+  // QUERY 3: specs for all selected variants in one batch
+  const specIds = [...new Set(selectedVariantIds.filter(Boolean))] as string[]
+  const specsMap = new Map<string, Spec>()
+  if (specIds.length) {
+    const { data: allSpecs } = await supabase.from('specs').select('*').in('variant_id', specIds)
+    for (const s of (allSpecs ?? []) as Spec[]) specsMap.set(s.variant_id, s)
+  }
+
+  // Assemble a LoadedVehicle per slug
+  return matches.map(({ row, variantSlug }, i) => {
+    if (!row) return null
+    const brand = row.brands
+    const brandType = brand.type as VehicleType
+    const variants = variantsByModel.get(row.id) ?? []
+    const popular = variants.find(v => v.is_popular) ?? variants[0] ?? null
+    const top     = variants.length > 1 ? variants[variants.length - 1] : null
+
+    let selected = popular
+    if (variantSlug) {
+      const matched = variants.find(v => variantToSlug(v.name) === variantSlug)
+      if (matched) selected = matched
+    }
+
+    const selId = selectedVariantIds[i]
+    return {
+      modelId:             row.id,
+      modelName:           row.name,
+      modelSlug:           row.slug,
+      brandSlug:           brand.slug,
+      brandPageSlug:       getBrandPageSlug(brand.slug, brandType),
+      brandName:           brand.name,
+      vehicleType:         brandType,
+      price_min:           row.price_min,
+      price_max:           row.price_max,
+      thumbnail_url:       row.thumbnail_url,
+      selectedVariantSlug: variantSlug,
+      popularVariant: selected ? {
+        name:              selected.name,
+        ex_showroom_price: selected.ex_showroom_price,
+        fuel_type:         selected.fuel_type,
+        transmission:      selected.transmission,
+      } : null,
+      topVariant: top ? { name: top.name, ex_showroom_price: top.ex_showroom_price } : null,
+      specs: selId ? (specsMap.get(selId) ?? null) : null,
+    }
+  })
 }
 
 // Load a single vehicle by brand slug + model slug (used in CompareClient after brand/model selection)

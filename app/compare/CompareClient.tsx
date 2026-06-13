@@ -10,7 +10,7 @@ import {
   type VehicleType,
   type LoadedVehicle,
   buildTypedComparisonPath,
-  loadVehicleByBrandModel,
+  getBrandPageSlug,
   loadVehiclesFromSlugs,
   variantToSlug,
   POPULAR_COMPARISONS_BY_TYPE,
@@ -19,8 +19,8 @@ import {
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type BrandOption   = { id: string; name: string; slug: string; logo_url: string | null }
-type ModelOption   = { id: string; name: string; slug: string; price_min: number | null; thumbnail_url: string | null }
-type VariantOption = { id: string; name: string; ex_showroom_price: number; fuel_type: string | null; transmission: string | null }
+type VariantOption = { id: string; name: string; ex_showroom_price: number; fuel_type: string | null; transmission: string | null; is_popular?: boolean; sort_order?: number }
+type ModelOption   = { id: string; name: string; slug: string; price_min: number | null; thumbnail_url: string | null; variants?: VariantOption[] }
 
 // ─── sticky comparison bar ────────────────────────────────────────────────────
 
@@ -171,14 +171,13 @@ function VehicleSelector({ slot, vehicle, vehicleType, onLoad, onClear }: {
   slot: number; vehicle: LoadedVehicle | null; vehicleType: VehicleType
   onLoad: (v: LoadedVehicle) => void; onClear: () => void
 }) {
-  const [brands,          setBrands]          = useState<BrandOption[]>([])
-  const [brand,           setBrand]           = useState<BrandOption | null>(null)
-  const [models,          setModels]          = useState<ModelOption[]>([])
-  const [modelsLoading,   setModelsLoading]   = useState(false)
-  const [variants,        setVariants]        = useState<VariantOption[]>([])
-  const [variantsLoading, setVariantsLoading] = useState(false)
-  const [pendingVehicle,  setPendingVehicle]  = useState<LoadedVehicle | null>(null)
-  const [step,            setStep]            = useState<SelectorStep>('brand')
+  const [brands,        setBrands]        = useState<BrandOption[]>([])
+  const [brand,         setBrand]         = useState<BrandOption | null>(null)
+  const [models,        setModels]        = useState<ModelOption[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [variants,      setVariants]      = useState<VariantOption[]>([])
+  const [pendingVehicle, setPendingVehicle] = useState<LoadedVehicle | null>(null)
+  const [step,          setStep]          = useState<SelectorStep>('brand')
 
   useEffect(() => {
     supabase.from('brands').select('id, name, slug, logo_url')
@@ -188,25 +187,44 @@ function VehicleSelector({ slot, vehicle, vehicleType, onLoad, onClear }: {
 
   async function onBrandSelect(b: BrandOption) {
     setBrand(b); setModels([]); setStep('model'); setModelsLoading(true)
+    // Fetch models and their variants in one joined query
     const { data } = await supabase
-      .from('models').select('id, name, slug, price_min, thumbnail_url')
+      .from('models')
+      .select('id, name, slug, price_min, thumbnail_url, variants(id, name, ex_showroom_price, fuel_type, transmission, is_popular, sort_order)')
       .eq('brand_id', b.id).neq('status', 'discontinued').order('name')
-    setModels((data ?? []) as ModelOption[])
+    const enriched = ((data ?? []) as ModelOption[]).map(m => ({
+      ...m,
+      variants: ((m.variants ?? []) as VariantOption[]).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    }))
+    setModels(enriched)
     setModelsLoading(false)
   }
 
-  async function onModelSelect(m: ModelOption) {
+  function onModelSelect(m: ModelOption) {
     if (!brand) return
-    setStep('variant'); setVariantsLoading(true); setPendingVehicle(null)
-    const [loaded, { data: vdata }] = await Promise.all([
-      loadVehicleByBrandModel(brand.slug, m.slug),
-      supabase.from('variants')
-        .select('id, name, ex_showroom_price, fuel_type, transmission, is_popular, sort_order')
-        .eq('model_id', m.id).order('sort_order'),
-    ])
-    setPendingVehicle(loaded)
-    setVariants((vdata ?? []) as VariantOption[])
-    setVariantsLoading(false)
+    const vars = (m.variants ?? []) as VariantOption[]
+    const pop  = vars.find(v => v.is_popular) ?? vars[0] ?? null
+    const top  = vars.length > 1 ? vars[vars.length - 1] : null
+    const pending: LoadedVehicle = {
+      modelId:             m.id,
+      modelName:           m.name,
+      modelSlug:           m.slug,
+      brandSlug:           brand.slug,
+      brandPageSlug:       getBrandPageSlug(brand.slug, vehicleType),
+      brandName:           brand.name,
+      vehicleType,
+      price_min:           m.price_min,
+      price_max:           null,
+      thumbnail_url:       m.thumbnail_url,
+      selectedVariantSlug: null,
+      popularVariant: pop ? { name: pop.name, ex_showroom_price: pop.ex_showroom_price, fuel_type: pop.fuel_type, transmission: pop.transmission } : null,
+      topVariant: top ? { name: top.name, ex_showroom_price: top.ex_showroom_price } : null,
+      specs: null,
+    }
+    if (!vars.length) { onLoad(pending); return }
+    setPendingVehicle(pending)
+    setVariants(vars)
+    setStep('variant')
   }
 
   function onVariantSelect(v: VariantOption) {
@@ -274,7 +292,7 @@ function VehicleSelector({ slot, vehicle, vehicleType, onLoad, onClear }: {
 
       {step === 'brand'   && <BrandGrid brands={brands} selectedId={brand?.id ?? ''} onSelect={onBrandSelect} />}
       {step === 'model'   && <ModelGrid models={models} loading={modelsLoading} onSelect={onModelSelect} />}
-      {step === 'variant' && <VariantList variants={variants} loading={variantsLoading} onSelect={onVariantSelect} onSkip={onVariantSkip} />}
+      {step === 'variant' && <VariantList variants={variants} loading={false} onSelect={onVariantSelect} onSkip={onVariantSkip} />}
     </div>
   )
 }

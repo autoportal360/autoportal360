@@ -3,6 +3,8 @@ import { getCanonicalUrl } from '@/lib/seo'
 import { loadVehiclesFromSlugs } from '../../compareUtils'
 import ComparisonPageContent from '../../ComparisonPageContent'
 
+export const revalidate = 3600
+
 export async function generateMetadata({
   params,
 }: {
