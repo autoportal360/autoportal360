@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,6 +41,9 @@ interface Campaign {
 }
 
 export default async function AdsPage() {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'ads')) return <AccessDenied section="Ads" />
+
   let campaigns: Campaign[] = []
   try {
     const { data } = await db

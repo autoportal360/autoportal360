@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,6 +19,9 @@ const TD: React.CSSProperties = {
 }
 
 export default async function StatesPage() {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'states')) return <AccessDenied section="States" />
+
   const [{ data: states = [] }, { data: citiesRaw = [] }] = await Promise.all([
     db.from('states').select('*').order('name'),
     db.from('cities').select('state_id'),

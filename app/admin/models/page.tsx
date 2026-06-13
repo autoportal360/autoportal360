@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatPriceRange } from '@/lib/utils'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +49,9 @@ const TD: React.CSSProperties = {
 }
 
 export default async function ModelsPage({ searchParams }: Props) {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'models')) return <AccessDenied section="Models" />
+
   const { type = 'all', status = 'all', q = '' } = await searchParams
 
   let query = db

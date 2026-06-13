@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,6 +28,9 @@ const TIER_COLOR: Record<string, { bg: string; text: string; border: string }> =
 type Props = { searchParams: Promise<{ state?: string; q?: string }> }
 
 export default async function CitiesPage({ searchParams }: Props) {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'cities')) return <AccessDenied section="Cities" />
+
   const { state: stateFilter = '', q = '' } = await searchParams
 
   const [{ data: states = [] }] = await Promise.all([

@@ -3,6 +3,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatPriceRange } from '@/lib/utils'
 import type { Brand } from '@/types'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +38,9 @@ const TD: React.CSSProperties = {
 }
 
 export default async function BrandsPage({ searchParams }: Props) {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'brands')) return <AccessDenied section="Brands" />
+
   const { type = 'all', q = '' } = await searchParams
 
   // Brands query — filter server-side

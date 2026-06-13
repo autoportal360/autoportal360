@@ -1,21 +1,31 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
+import { getAdminUser, hasPermission, ROLE_LABELS, ROLE_COLORS } from '@/lib/admin-auth'
+import type { AdminRole } from '@/lib/admin-auth'
 
 const NAV = [
-  { href: '/admin',          label: 'Dashboard', icon: '◼' },
-  { href: '/admin/brands',   label: 'Brands',    icon: '🏷' },
-  { href: '/admin/models',   label: 'Models',    icon: '🚗' },
-  { href: '/admin/slider',   label: 'Slider',    icon: '🎞️' },
-  { href: '/admin/leads',    label: 'Leads',     icon: '📋' },
-  { href: '/admin/states',   label: 'States',    icon: '🗺️' },
-  { href: '/admin/cities',   label: 'Cities',    icon: '🏙️' },
-  { href: '/admin/pages',    label: 'Pages SEO', icon: '📄' },
-  { href: '/admin/ads',      label: 'Ads',       icon: '📢' },
-  { href: '/admin/seo',      label: 'SEO',       icon: '🔍' },
-  { href: '/admin/blog',     label: 'Blog',      icon: '✍' },
+  { href: '/admin',          label: 'Dashboard', icon: '◼',  section: null },
+  { href: '/admin/brands',   label: 'Brands',    icon: '🏷',  section: 'brands' },
+  { href: '/admin/models',   label: 'Models',    icon: '🚗',  section: 'models' },
+  { href: '/admin/slider',   label: 'Slider',    icon: '🎞️', section: 'slider' },
+  { href: '/admin/leads',    label: 'Leads',     icon: '📋',  section: 'leads' },
+  { href: '/admin/states',   label: 'States',    icon: '🗺️', section: 'states' },
+  { href: '/admin/cities',   label: 'Cities',    icon: '🏙️', section: 'cities' },
+  { href: '/admin/pages',    label: 'Pages SEO', icon: '📄',  section: 'pages' },
+  { href: '/admin/ads',      label: 'Ads',       icon: '📢',  section: 'ads' },
+  { href: '/admin/seo',      label: 'SEO',       icon: '🔍',  section: 'seo' },
+  { href: '/admin/blog',     label: 'Blog',      icon: '✍',   section: 'blog' },
+  { href: '/admin/users',    label: 'Users',     icon: '👥',  section: 'users' },
 ]
+
+function navVisible(section: string | null, role: AdminRole): boolean {
+  if (section === null) return true
+  if (section === 'users') return role === 'super_admin'
+  return hasPermission(role, section)
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -33,10 +43,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Not authenticated — no sidebar (login page handles its own layout)
   if (!user) {
     return <>{children}</>
   }
+
+  const adminUser = await getAdminUser()
+  if (!adminUser) {
+    redirect('/admin/login?error=unauthorized')
+  }
+
+  const role = adminUser.role
+  const visibleNav = NAV.filter(link => navVisible(link.section, role))
 
   return (
     <div style={{
@@ -74,7 +91,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
           {/* Nav links */}
           <div style={{ padding: '12px', flex: 1 }}>
-            {NAV.map(link => (
+            {visibleNav.map(link => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -91,14 +108,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             ))}
           </div>
 
-          {/* Email footer */}
+          {/* User info footer */}
           <div style={{
             padding: '14px 20px',
             borderTop: '1px solid rgba(255,255,255,0.05)',
-            fontSize: '11px', color: '#8E99A8',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            {user.email}
+            <div style={{
+              fontSize: '12px', color: '#FFFFFF', fontWeight: 600,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              marginBottom: '4px',
+            }}>
+              {adminUser.name ?? user.email}
+            </div>
+            <span style={{
+              display: 'inline-block',
+              fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px',
+              letterSpacing: '0.5px', textTransform: 'uppercase',
+              background: `${ROLE_COLORS[role]}18`,
+              color: ROLE_COLORS[role],
+              border: `1px solid ${ROLE_COLORS[role]}40`,
+            }}>
+              {ROLE_LABELS[role]}
+            </span>
           </div>
         </nav>
 

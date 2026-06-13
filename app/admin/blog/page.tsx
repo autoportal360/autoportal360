@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,6 +42,9 @@ interface BlogPost {
 }
 
 export default async function BlogPage({ searchParams }: Props) {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'blog')) return <AccessDenied section="Blog" />
+
   const { status = 'all', q = '' } = await searchParams
 
   let posts: BlogPost[] = []

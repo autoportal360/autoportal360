@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { getAdminUser, hasPermission } from '@/lib/admin-auth'
+import AccessDenied from '@/app/admin/AccessDenied'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +30,9 @@ export default async function PageSeoListPage({
 }: {
   searchParams: Promise<{ q?: string; type?: string }>
 }) {
+  const admin = await getAdminUser()
+  if (!admin || !hasPermission(admin.role, 'pages')) return <AccessDenied section="Pages SEO" />
+
   const { q, type } = await searchParams
 
   const supabase = createClient(
