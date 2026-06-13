@@ -17,33 +17,210 @@ import {
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
-type BrandOption = { id: string; name: string; slug: string }
-type ModelOption = { id: string; name: string; slug: string; price_min: number | null }
+type BrandOption  = { id: string; name: string; slug: string; logo_url: string | null }
+type ModelOption  = { id: string; name: string; slug: string; price_min: number | null; thumbnail_url: string | null }
 
-// ─── style tokens ─────────────────────────────────────────────────────────────
+// ─── sticky comparison bar ────────────────────────────────────────────────────
 
-const SELECT: React.CSSProperties = {
-  background: '#0A1F44',
-  color: '#FFFFFF',
-  border: '1px solid rgba(0,212,255,0.3)',
-  borderRadius: '8px',
-  padding: '10px 36px 10px 14px',
-  width: '100%',
-  boxSizing: 'border-box',
-  fontSize: '14px',
-  cursor: 'pointer',
-  outline: 'none',
-  appearance: 'none',
-  WebkitAppearance: 'none',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238E99A8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 12px center',
+function StickyBar({
+  vehicles,
+  basePath,
+  onNavigate,
+}: {
+  vehicles: (LoadedVehicle | null)[]
+  basePath: string
+  onNavigate: () => void
+}) {
+  const filled = vehicles.filter(Boolean) as LoadedVehicle[]
+  if (filled.length === 0) return null
+
+  const canCompare = filled.length >= 2
+
+  return (
+    <div style={{
+      position: 'sticky', top: 62, zIndex: 50,
+      background: 'rgba(10,31,68,0.97)',
+      borderBottom: '1px solid rgba(0,212,255,0.2)',
+      backdropFilter: 'blur(12px)',
+      padding: '10px 20px',
+    }}>
+      <div style={{
+        maxWidth: '960px', margin: '0 auto',
+        display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+      }}>
+        <div style={{
+          display: 'flex', gap: 8, flex: 1,
+          alignItems: 'center', flexWrap: 'wrap',
+        }}>
+          {vehicles.map((v, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {i > 0 && <span style={{ fontSize: 10, color: '#8E99A8', fontWeight: 700 }}>VS</span>}
+              {v ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(0,212,255,0.08)',
+                  border: '1px solid rgba(0,212,255,0.2)',
+                  borderRadius: 8, padding: '4px 10px',
+                }}>
+                  {v.thumbnail_url && (
+                    <div style={{ width: 28, height: 20, position: 'relative', flexShrink: 0 }}>
+                      <Image src={v.thumbnail_url} alt={v.modelName} fill style={{ objectFit: 'contain' }} sizes="28px" />
+                    </div>
+                  )}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF', whiteSpace: 'nowrap' }}>
+                    {v.brandName} {v.modelName}
+                  </span>
+                </div>
+              ) : (
+                <div style={{
+                  fontSize: 11, color: '#555',
+                  border: '1px dashed rgba(255,255,255,0.12)',
+                  borderRadius: 8, padding: '4px 12px',
+                  whiteSpace: 'nowrap',
+                }}>
+                  + Vehicle {i + 1}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {canCompare && (
+          <button
+            onClick={onNavigate}
+            style={{
+              background: '#00D4FF', color: '#06142D',
+              border: 'none', borderRadius: 10,
+              padding: '9px 22px', cursor: 'pointer',
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: 900, fontSize: 13, whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            Compare Now →
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
-const LABEL_SM: React.CSSProperties = {
-  fontSize: '10px', fontWeight: 700, color: '#8E99A8',
-  textTransform: 'uppercase', letterSpacing: '0.8px',
-  marginBottom: '5px', display: 'block',
+// ─── brand card grid ──────────────────────────────────────────────────────────
+
+function BrandGrid({
+  brands,
+  selectedId,
+  onSelect,
+}: {
+  brands: BrandOption[]
+  selectedId: string
+  onSelect: (b: BrandOption) => void
+}) {
+  if (!brands.length) {
+    return <div style={{ fontSize: 12, color: '#8E99A8', padding: '16px 0', textAlign: 'center' }}>Loading brands…</div>
+  }
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+      gap: 6, maxHeight: 220, overflowY: 'auto',
+      paddingRight: 4,
+    }}>
+      {brands.map(b => {
+        const isSelected = b.id === selectedId
+        return (
+          <button
+            key={b.id}
+            onClick={() => onSelect(b)}
+            style={{
+              background: isSelected ? 'rgba(0,212,255,0.12)' : '#0A1F44',
+              border: isSelected ? '2px solid #00D4FF' : '1px solid rgba(0,212,255,0.15)',
+              borderRadius: 10, padding: '8px 4px',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 5, transition: 'all 0.15s',
+            }}
+          >
+            <div style={{
+              width: 32, height: 24, position: 'relative', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {b.logo_url
+                ? <Image src={b.logo_url} alt={b.name} fill style={{ objectFit: 'contain' }} sizes="32px" />
+                : <span style={{ fontSize: 16 }}>🏭</span>
+              }
+            </div>
+            <span style={{
+              fontSize: 9, fontWeight: 700, color: isSelected ? '#00D4FF' : '#C0C0C0',
+              textAlign: 'center', lineHeight: 1.2, wordBreak: 'break-word',
+              maxWidth: 64,
+            }}>
+              {b.name}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── model card grid ──────────────────────────────────────────────────────────
+
+function ModelGrid({
+  models,
+  loading,
+  onSelect,
+}: {
+  models: ModelOption[]
+  loading: boolean
+  onSelect: (m: ModelOption) => void
+}) {
+  if (loading) return (
+    <div style={{ fontSize: 12, color: '#8E99A8', padding: '16px 0', textAlign: 'center' }}>Loading models…</div>
+  )
+  if (!models.length) return (
+    <div style={{ fontSize: 12, color: '#8E99A8', padding: '16px 0', textAlign: 'center' }}>No models found</div>
+  )
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))',
+      gap: 8, maxHeight: 260, overflowY: 'auto',
+    }}>
+      {models.map(m => (
+        <button key={m.id} onClick={() => onSelect(m)} style={{
+          background: '#0A1F44',
+          border: '1px solid rgba(0,212,255,0.15)',
+          borderRadius: 10, padding: '8px',
+          cursor: 'pointer', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 5,
+          transition: 'border-color 0.15s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.borderColor = '#00D4FF')}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.15)')}
+        >
+          <div style={{
+            width: 72, height: 48, position: 'relative', flexShrink: 0,
+            background: 'rgba(0,212,255,0.03)',
+            borderRadius: 6, overflow: 'hidden',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {m.thumbnail_url
+              ? <Image src={m.thumbnail_url} alt={m.name} fill style={{ objectFit: 'contain', padding: 3 }} sizes="72px" />
+              : <span style={{ fontSize: 22 }}>🚗</span>
+            }
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#FFFFFF', textAlign: 'center', lineHeight: 1.2, wordBreak: 'break-word' }}>
+            {m.name}
+          </span>
+          {m.price_min && (
+            <span style={{ fontSize: 9, color: '#00D4FF', fontWeight: 700 }}>
+              {formatPrice(m.price_min)}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 // ─── vehicle selector card ────────────────────────────────────────────────────
@@ -62,51 +239,51 @@ function VehicleSelector({
   onClear: () => void
 }) {
   const [brands,    setBrands]    = useState<BrandOption[]>([])
-  const [brandId,   setBrandId]   = useState('')
-  const [brandSlug, setBrandSlug] = useState('')
+  const [brand,     setBrand]     = useState<BrandOption | null>(null)
   const [models,    setModels]    = useState<ModelOption[]>([])
-  const [modelId,   setModelId]   = useState('')
   const [loading,   setLoading]   = useState(false)
+  const [step,      setStep]      = useState<'brand' | 'model'>('brand')
 
-  // Auto-load brands for fixed vehicleType on mount
   useEffect(() => {
-    supabase.from('brands').select('id, name, slug')
+    supabase.from('brands').select('id, name, slug, logo_url')
       .eq('type', vehicleType).eq('is_active', true).order('name')
       .then(({ data }) => setBrands((data ?? []) as BrandOption[]))
   }, [vehicleType])
 
-  async function onBrandChange(id: string) {
-    setBrandId(id); setModelId('')
-    const brand = brands.find(b => b.id === id)
-    setBrandSlug(brand?.slug ?? '')
-    if (!id) { setModels([]); return }
+  async function onBrandSelect(b: BrandOption) {
+    setBrand(b)
+    setModels([]); setStep('model')
+    setLoading(true)
     const { data } = await supabase
-      .from('models').select('id, name, slug, price_min')
-      .eq('brand_id', id).neq('status', 'discontinued').order('name')
+      .from('models').select('id, name, slug, price_min, thumbnail_url')
+      .eq('brand_id', b.id).neq('status', 'discontinued').order('name')
     setModels((data ?? []) as ModelOption[])
+    setLoading(false)
   }
 
-  async function onModelChange(id: string) {
-    setModelId(id)
-    if (!id || !brandSlug) return
-    const m = models.find(x => x.id === id)
-    if (!m) return
-    setLoading(true)
-    const loaded = await loadVehicleByBrandModel(brandSlug, m.slug)
-    setLoading(false)
+  async function onModelSelect(m: ModelOption) {
+    if (!brand) return
+    const loaded = await loadVehicleByBrandModel(brand.slug, m.slug)
     if (loaded) onLoad(loaded)
   }
 
+  function handleClear() {
+    setBrand(null); setModels([]); setStep('brand')
+    onClear()
+  }
+
+  const emoji = vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'
+
+  // ── selected vehicle ──────────────────────────────────────────────────────
   if (vehicle) {
-    const emoji = vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'
     return (
       <div style={{
-        background: 'rgba(0,212,255,0.04)',
-        border: '1px solid rgba(0,212,255,0.2)',
+        background: 'rgba(0,212,255,0.05)',
+        border: '1px solid rgba(0,212,255,0.25)',
         borderRadius: '14px', padding: '14px',
         position: 'relative',
       }}>
-        <button onClick={onClear} style={{
+        <button onClick={handleClear} style={{
           position: 'absolute', top: 8, right: 8,
           background: 'rgba(255,255,255,0.06)',
           border: '1px solid rgba(255,255,255,0.1)',
@@ -116,17 +293,17 @@ function VehicleSelector({
         }}>×</button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', paddingRight: 28 }}>
           <div style={{
-            width: 64, height: 46, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+            width: 72, height: 52, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
             background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
           }}>
             {vehicle.thumbnail_url
-              ? <Image src={vehicle.thumbnail_url} alt={vehicle.modelName} fill style={{ objectFit: 'contain', padding: 4 }} sizes="64px" />
+              ? <Image src={vehicle.thumbnail_url} alt={vehicle.modelName} fill style={{ objectFit: 'contain', padding: 4 }} sizes="72px" />
               : <span style={{ fontSize: 24 }}>{emoji}</span>
             }
           </div>
           <div>
-            <div style={{ fontSize: 10, color: '#8E99A8', marginBottom: 1 }}>{vehicle.brandName}</div>
+            <div style={{ fontSize: 10, color: '#8E99A8', marginBottom: 2 }}>{vehicle.brandName}</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', fontFamily: 'Montserrat, sans-serif' }}>
               {vehicle.modelName}
             </div>
@@ -144,41 +321,64 @@ function VehicleSelector({
     )
   }
 
+  // ── empty selector ────────────────────────────────────────────────────────
   return (
     <div style={{
-      background: 'rgba(0,212,255,0.02)',
-      border: '1px dashed rgba(0,212,255,0.18)',
+      background: '#0A1F44',
+      border: '1px solid rgba(0,212,255,0.15)',
       borderRadius: '14px', padding: '16px',
     }}>
+      {/* Slot header */}
       <div style={{
-        fontSize: 11, fontWeight: 700, color: '#00D4FF',
-        fontFamily: 'Montserrat, sans-serif',
-        marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.5px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 12,
       }}>
-        Vehicle {slot}
-      </div>
-
-      <div style={{ marginBottom: 10 }}>
-        <label style={LABEL_SM}>Brand</label>
-        <select value={brandId} onChange={e => onBrandChange(e.target.value)} style={SELECT}>
-          <option value="">Select brand…</option>
-          {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
-      </div>
-
-      {brandId && (
-        <div>
-          <label style={LABEL_SM}>Model</label>
-          <select
-            value={modelId}
-            onChange={e => onModelChange(e.target.value)}
-            style={SELECT}
-            disabled={loading}
-          >
-            <option value="">{loading ? 'Loading…' : 'Select model…'}</option>
-            {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: '#00D4FF',
+          fontFamily: 'Montserrat, sans-serif',
+          textTransform: 'uppercase', letterSpacing: '0.5px',
+        }}>
+          {emoji} Vehicle {slot}
         </div>
+        {step === 'model' && brand && (
+          <button onClick={() => { setBrand(null); setStep('brand') }} style={{
+            background: 'transparent', border: 'none',
+            color: '#8E99A8', cursor: 'pointer', fontSize: 11,
+            padding: 0, display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            ← Back
+          </button>
+        )}
+      </div>
+
+      {step === 'brand' && (
+        <>
+          <div style={{
+            fontSize: 11, color: '#8E99A8',
+            marginBottom: 8, fontWeight: 600,
+          }}>
+            Select Brand
+          </div>
+          <BrandGrid brands={brands} selectedId={brand?.id ?? ''} onSelect={onBrandSelect} />
+        </>
+      )}
+
+      {step === 'model' && brand && (
+        <>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            marginBottom: 8,
+          }}>
+            {brand.logo_url && (
+              <div style={{ width: 18, height: 14, position: 'relative', flexShrink: 0 }}>
+                <Image src={brand.logo_url} alt={brand.name} fill style={{ objectFit: 'contain' }} sizes="18px" />
+              </div>
+            )}
+            <span style={{ fontSize: 11, color: '#FFFFFF', fontWeight: 700 }}>{brand.name}</span>
+            <span style={{ fontSize: 11, color: '#8E99A8' }}>— Select Model</span>
+          </div>
+          <ModelGrid models={models} loading={loading} onSelect={onModelSelect} />
+        </>
       )}
     </div>
   )
@@ -213,116 +413,131 @@ export default function CompareClient({
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Navigate to type-specific SEO URL as soon as 2+ slots are filled
-  useEffect(() => {
-    const filled = [v1, v2, showThird ? v3 : null].filter(Boolean) as LoadedVehicle[]
+  const filledVehicles = [v1, v2, showThird ? v3 : null]
+  const filled = filledVehicles.filter(Boolean) as LoadedVehicle[]
+  const filledCount = filled.length
+
+  function navigateToComparison() {
     if (filled.length >= 2) {
       router.push(buildTypedComparisonPath(basePath, filled))
     }
-  }, [v1, v2, v3, showThird, basePath, router])
+  }
 
-  const filledCount = [v1, v2, showThird ? v3 : null].filter(Boolean).length
+  // Auto-navigate when 2+ slots filled
+  useEffect(() => {
+    if (filled.length >= 2) {
+      router.push(buildTypedComparisonPath(basePath, filled))
+    }
+  }, [v1, v2, v3, showThird, basePath, router]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const popular = POPULAR_COMPARISONS_BY_TYPE[vehicleType]
   const typeLabel = TYPE_LABEL[vehicleType]
 
   return (
-    <div style={{ background: '#06142D', minHeight: '100vh', padding: '32px 20px 72px', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+    <div style={{ background: '#06142D', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
 
-        {/* Breadcrumb */}
-        <div style={{ display: 'flex', gap: 6, fontSize: 12, color: '#8E99A8', marginBottom: 28, alignItems: 'center' }}>
-          <Link href="/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Home</Link>
-          <span>›</span>
-          <Link href="/compare" style={{ color: '#8E99A8', textDecoration: 'none' }}>Compare</Link>
-          <span>›</span>
-          <span style={{ color: '#00D4FF' }}>Compare {typeLabel}</span>
-        </div>
+      {/* Sticky bar */}
+      <StickyBar vehicles={filledVehicles} basePath={basePath} onNavigate={navigateToComparison} />
 
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{
-            fontFamily: 'Montserrat, sans-serif',
-            fontSize: 30, fontWeight: 900,
-            color: '#FFFFFF', margin: '0 0 6px',
-          }}>
-            Compare <span style={{ color: '#00D4FF' }}>{typeLabel}</span>
-          </h1>
-          <p style={{ fontSize: 14, color: '#8E99A8', margin: 0 }}>
-            Select 2 or 3 {typeLabel.toLowerCase()} to compare specs, prices and features side by side
-          </p>
-        </div>
+      <div style={{ padding: '28px 20px 72px' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
 
-        {/* Selectors grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: showThird ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
-          gap: 12, marginBottom: 12,
-        }}>
-          <VehicleSelector slot={1} vehicle={v1} vehicleType={vehicleType} onLoad={setV1} onClear={() => setV1(null)} />
-          <VehicleSelector slot={2} vehicle={v2} vehicleType={vehicleType} onLoad={setV2} onClear={() => setV2(null)} />
-          {showThird && (
-            <VehicleSelector slot={3} vehicle={v3} vehicleType={vehicleType} onLoad={setV3} onClear={() => setV3(null)} />
-          )}
-        </div>
-
-        {/* 3rd vehicle toggle */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          {!showThird ? (
-            <button onClick={() => setShowThird(true)} style={{
-              background: 'rgba(0,212,255,0.06)',
-              border: '1px dashed rgba(0,212,255,0.25)',
-              color: '#8E99A8', borderRadius: 10,
-              padding: '8px 18px', cursor: 'pointer',
-              fontSize: 13, fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
-            }}>
-              + Add 3rd {typeLabel.slice(0, -1).toLowerCase()}
-            </button>
-          ) : (
-            <button onClick={() => { setShowThird(false); setV3(null) }} style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: '#8E99A8', borderRadius: 10,
-              padding: '8px 18px', cursor: 'pointer', fontSize: 13,
-            }}>
-              Remove 3rd vehicle
-            </button>
-          )}
-        </div>
-
-        {/* Status hint */}
-        <div style={{ textAlign: 'center', color: '#8E99A8', fontSize: 13, marginBottom: 36 }}>
-          {filledCount === 0 && `Select ${typeLabel.toLowerCase()} above to start comparing`}
-          {filledCount === 1 && 'Select one more vehicle to compare'}
-          {filledCount >= 2 && <span style={{ color: '#00D4FF' }}>Loading comparison…</span>}
-        </div>
-
-        {/* Popular comparisons */}
-        <div style={{
-          background: 'rgba(0,212,255,0.03)',
-          border: '1px solid rgba(0,212,255,0.1)',
-          borderRadius: 14, padding: '20px 24px',
-        }}>
-          <h2 style={{
-            fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 800,
-            color: '#00D4FF', textTransform: 'uppercase', letterSpacing: '0.6px',
-            margin: '0 0 14px',
-          }}>
-            Popular {typeLabel} Comparisons
-          </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {popular.map(c => (
-              <Link key={c.slug} href={`${basePath}/${c.slug}/`} style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8, padding: '8px 14px',
-                textDecoration: 'none', fontSize: 13, color: '#C0C0C0',
-              }}>
-                {c.label}
-              </Link>
-            ))}
+          {/* Breadcrumb */}
+          <div style={{ display: 'flex', gap: 6, fontSize: 12, color: '#8E99A8', marginBottom: 24, alignItems: 'center' }}>
+            <Link href="/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Home</Link>
+            <span>›</span>
+            <Link href="/compare" style={{ color: '#8E99A8', textDecoration: 'none' }}>Compare</Link>
+            <span>›</span>
+            <span style={{ color: '#00D4FF' }}>Compare {typeLabel}</span>
           </div>
-        </div>
 
+          {/* Header */}
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{
+              fontFamily: 'Montserrat, sans-serif',
+              fontSize: 28, fontWeight: 900,
+              color: '#FFFFFF', margin: '0 0 6px',
+            }}>
+              Compare <span style={{ color: '#00D4FF' }}>{typeLabel}</span>
+            </h1>
+            <p style={{ fontSize: 13, color: '#8E99A8', margin: 0 }}>
+              Select 2 or 3 {typeLabel.toLowerCase()} — click a brand then a model to add
+            </p>
+          </div>
+
+          {/* Selectors grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: showThird ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+            gap: 14, marginBottom: 14,
+            alignItems: 'start',
+          }}>
+            <VehicleSelector slot={1} vehicle={v1} vehicleType={vehicleType} onLoad={setV1} onClear={() => setV1(null)} />
+            <VehicleSelector slot={2} vehicle={v2} vehicleType={vehicleType} onLoad={setV2} onClear={() => setV2(null)} />
+            {showThird && (
+              <VehicleSelector slot={3} vehicle={v3} vehicleType={vehicleType} onLoad={setV3} onClear={() => setV3(null)} />
+            )}
+          </div>
+
+          {/* 3rd vehicle toggle */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+            {!showThird ? (
+              <button onClick={() => setShowThird(true)} style={{
+                background: 'rgba(0,212,255,0.05)',
+                border: '1px dashed rgba(0,212,255,0.22)',
+                color: '#8E99A8', borderRadius: 10,
+                padding: '8px 18px', cursor: 'pointer',
+                fontSize: 12, fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
+              }}>
+                + Add 3rd {typeLabel.slice(0, -1).toLowerCase()}
+              </button>
+            ) : (
+              <button onClick={() => { setShowThird(false); setV3(null) }} style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#8E99A8', borderRadius: 10,
+                padding: '8px 18px', cursor: 'pointer', fontSize: 12,
+              }}>
+                Remove 3rd vehicle
+              </button>
+            )}
+          </div>
+
+          {/* Status hint */}
+          <div style={{ textAlign: 'center', color: '#8E99A8', fontSize: 13, marginBottom: 36 }}>
+            {filledCount === 0 && `Click a brand above to start selecting ${typeLabel.toLowerCase()}`}
+            {filledCount === 1 && 'Select one more vehicle to compare'}
+            {filledCount >= 2 && <span style={{ color: '#00D4FF' }}>Navigating to comparison…</span>}
+          </div>
+
+          {/* Popular comparisons */}
+          <div style={{
+            background: 'rgba(0,212,255,0.02)',
+            border: '1px solid rgba(0,212,255,0.1)',
+            borderRadius: 14, padding: '18px 20px',
+          }}>
+            <h2 style={{
+              fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 800,
+              color: '#00D4FF', textTransform: 'uppercase', letterSpacing: '0.6px',
+              margin: '0 0 12px',
+            }}>
+              Popular {typeLabel} Comparisons
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {popular.map(c => (
+                <Link key={c.slug} href={`${basePath}/${c.slug}/`} style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  borderRadius: 7, padding: '7px 12px',
+                  textDecoration: 'none', fontSize: 12, color: '#C0C0C0',
+                }}>
+                  {c.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )
