@@ -3,8 +3,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
-import { getAdminUser, hasPermission, ROLE_LABELS, ROLE_COLORS } from '@/lib/admin-auth'
-import type { AdminRole } from '@/lib/admin-auth'
+import { getAdminUser } from '@/lib/admin-auth'
+import { hasPermission, ROLE_LABELS, ROLE_COLORS } from '@/lib/admin-auth-client'
+import type { AdminRole } from '@/lib/admin-auth-client'
 
 const NAV = [
   { href: '/admin',          label: 'Dashboard', icon: '◼',  section: null },

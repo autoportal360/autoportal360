@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAdminUser } from '@/lib/admin-auth'
+import type { AdminRole } from '@/lib/admin-auth-client'
 import AccessDenied from '@/app/admin/AccessDenied'
 import UserForm from '../UserForm'
-import type { AdminRole } from '@/lib/admin-auth'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
