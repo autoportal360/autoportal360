@@ -171,6 +171,13 @@ a {
   font-family: monospace;
 }
 
+/* ── Select dropdown option colours ──────────────────────────────────────── */
+
+select option {
+  background: #0A1F44;
+  color: #FFFFFF;
+}
+
 /* Model page — responsive two-column layout */
 .model-layout {
   display: grid;

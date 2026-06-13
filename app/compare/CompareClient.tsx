@@ -9,10 +9,10 @@ import { formatPrice } from '@/lib/utils'
 import {
   type VehicleType,
   type LoadedVehicle,
-  buildComparisonPath,
+  buildTypedComparisonPath,
   loadVehicleByBrandModel,
   loadVehiclesFromSlugs,
-  POPULAR_COMPARISONS,
+  POPULAR_COMPARISONS_BY_TYPE,
 } from './compareUtils'
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -23,15 +23,21 @@ type ModelOption = { id: string; name: string; slug: string; price_min: number |
 // ─── style tokens ─────────────────────────────────────────────────────────────
 
 const SELECT: React.CSSProperties = {
-  width: '100%', boxSizing: 'border-box',
-  padding: '10px 32px 10px 14px',
-  background: 'rgba(0,212,255,0.04)',
-  border: '1px solid rgba(0,212,255,0.18)',
-  borderRadius: '10px', color: '#FFFFFF',
-  fontSize: '14px', outline: 'none',
-  appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer',
+  background: '#0A1F44',
+  color: '#FFFFFF',
+  border: '1px solid rgba(0,212,255,0.3)',
+  borderRadius: '8px',
+  padding: '10px 36px 10px 14px',
+  width: '100%',
+  boxSizing: 'border-box',
+  fontSize: '14px',
+  cursor: 'pointer',
+  outline: 'none',
+  appearance: 'none',
+  WebkitAppearance: 'none',
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238E99A8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
 }
 
 const LABEL_SM: React.CSSProperties = {
@@ -45,15 +51,16 @@ const LABEL_SM: React.CSSProperties = {
 function VehicleSelector({
   slot,
   vehicle,
+  vehicleType,
   onLoad,
   onClear,
 }: {
   slot: number
   vehicle: LoadedVehicle | null
+  vehicleType: VehicleType
   onLoad: (v: LoadedVehicle) => void
   onClear: () => void
 }) {
-  const [type,      setType]      = useState<VehicleType | ''>('')
   const [brands,    setBrands]    = useState<BrandOption[]>([])
   const [brandId,   setBrandId]   = useState('')
   const [brandSlug, setBrandSlug] = useState('')
@@ -61,14 +68,12 @@ function VehicleSelector({
   const [modelId,   setModelId]   = useState('')
   const [loading,   setLoading]   = useState(false)
 
-  async function onTypeChange(t: VehicleType | '') {
-    setType(t); setBrandId(''); setBrandSlug(''); setModels([]); setModelId('')
-    if (!t) { setBrands([]); return }
-    const { data } = await supabase
-      .from('brands').select('id, name, slug')
-      .eq('type', t).eq('is_active', true).order('name')
-    setBrands((data ?? []) as BrandOption[])
-  }
+  // Auto-load brands for fixed vehicleType on mount
+  useEffect(() => {
+    supabase.from('brands').select('id, name, slug')
+      .eq('type', vehicleType).eq('is_active', true).order('name')
+      .then(({ data }) => setBrands((data ?? []) as BrandOption[]))
+  }, [vehicleType])
 
   async function onBrandChange(id: string) {
     setBrandId(id); setModelId('')
@@ -83,7 +88,7 @@ function VehicleSelector({
 
   async function onModelChange(id: string) {
     setModelId(id)
-    if (!id || !type || !brandSlug) return
+    if (!id || !brandSlug) return
     const m = models.find(x => x.id === id)
     if (!m) return
     setLoading(true)
@@ -93,7 +98,7 @@ function VehicleSelector({
   }
 
   if (vehicle) {
-    const emoji = vehicle.vehicleType === 'car' ? '🚗' : vehicle.vehicleType === 'bike' ? '🏍️' : '🛵'
+    const emoji = vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'
     return (
       <div style={{
         background: 'rgba(0,212,255,0.04)',
@@ -154,24 +159,12 @@ function VehicleSelector({
       </div>
 
       <div style={{ marginBottom: 10 }}>
-        <label style={LABEL_SM}>Type</label>
-        <select value={type} onChange={e => onTypeChange(e.target.value as VehicleType | '')} style={SELECT}>
-          <option value="">Select type…</option>
-          <option value="car">Car</option>
-          <option value="bike">Bike</option>
-          <option value="scooter">Scooter</option>
+        <label style={LABEL_SM}>Brand</label>
+        <select value={brandId} onChange={e => onBrandChange(e.target.value)} style={SELECT}>
+          <option value="">Select brand…</option>
+          {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
-
-      {type && (
-        <div style={{ marginBottom: 10 }}>
-          <label style={LABEL_SM}>Brand</label>
-          <select value={brandId} onChange={e => onBrandChange(e.target.value)} style={SELECT}>
-            <option value="">Select brand…</option>
-            {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </div>
-      )}
 
       {brandId && (
         <div>
@@ -193,9 +186,17 @@ function VehicleSelector({
 
 // ─── main component ───────────────────────────────────────────────────────────
 
+const TYPE_LABEL: Record<VehicleType, string> = {
+  car: 'Cars', bike: 'Bikes', scooter: 'Scooters',
+}
+
 export default function CompareClient({
+  vehicleType,
+  basePath,
   initialCombinedSlug,
 }: {
+  vehicleType: VehicleType
+  basePath: string
   initialCombinedSlug?: string
 }) {
   const router = useRouter()
@@ -212,15 +213,17 @@ export default function CompareClient({
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Navigate to SEO URL as soon as 2+ slots are filled
+  // Navigate to type-specific SEO URL as soon as 2+ slots are filled
   useEffect(() => {
     const filled = [v1, v2, showThird ? v3 : null].filter(Boolean) as LoadedVehicle[]
     if (filled.length >= 2) {
-      router.push(buildComparisonPath(filled))
+      router.push(buildTypedComparisonPath(basePath, filled))
     }
-  }, [v1, v2, v3, showThird, router])
+  }, [v1, v2, v3, showThird, basePath, router])
 
   const filledCount = [v1, v2, showThird ? v3 : null].filter(Boolean).length
+  const popular = POPULAR_COMPARISONS_BY_TYPE[vehicleType]
+  const typeLabel = TYPE_LABEL[vehicleType]
 
   return (
     <div style={{ background: '#06142D', minHeight: '100vh', padding: '32px 20px 72px', fontFamily: 'system-ui, sans-serif' }}>
@@ -230,7 +233,9 @@ export default function CompareClient({
         <div style={{ display: 'flex', gap: 6, fontSize: 12, color: '#8E99A8', marginBottom: 28, alignItems: 'center' }}>
           <Link href="/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Home</Link>
           <span>›</span>
-          <span style={{ color: '#00D4FF' }}>Compare Vehicles</span>
+          <Link href="/compare" style={{ color: '#8E99A8', textDecoration: 'none' }}>Compare</Link>
+          <span>›</span>
+          <span style={{ color: '#00D4FF' }}>Compare {typeLabel}</span>
         </div>
 
         {/* Header */}
@@ -240,10 +245,10 @@ export default function CompareClient({
             fontSize: 30, fontWeight: 900,
             color: '#FFFFFF', margin: '0 0 6px',
           }}>
-            Compare <span style={{ color: '#00D4FF' }}>Cars, Bikes &amp; Scooters</span>
+            Compare <span style={{ color: '#00D4FF' }}>{typeLabel}</span>
           </h1>
           <p style={{ fontSize: 14, color: '#8E99A8', margin: 0 }}>
-            Select 2 or 3 vehicles to compare specs, prices and features side by side
+            Select 2 or 3 {typeLabel.toLowerCase()} to compare specs, prices and features side by side
           </p>
         </div>
 
@@ -253,10 +258,10 @@ export default function CompareClient({
           gridTemplateColumns: showThird ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
           gap: 12, marginBottom: 12,
         }}>
-          <VehicleSelector slot={1} vehicle={v1} onLoad={setV1} onClear={() => setV1(null)} />
-          <VehicleSelector slot={2} vehicle={v2} onLoad={setV2} onClear={() => setV2(null)} />
+          <VehicleSelector slot={1} vehicle={v1} vehicleType={vehicleType} onLoad={setV1} onClear={() => setV1(null)} />
+          <VehicleSelector slot={2} vehicle={v2} vehicleType={vehicleType} onLoad={setV2} onClear={() => setV2(null)} />
           {showThird && (
-            <VehicleSelector slot={3} vehicle={v3} onLoad={setV3} onClear={() => setV3(null)} />
+            <VehicleSelector slot={3} vehicle={v3} vehicleType={vehicleType} onLoad={setV3} onClear={() => setV3(null)} />
           )}
         </div>
 
@@ -270,7 +275,7 @@ export default function CompareClient({
               padding: '8px 18px', cursor: 'pointer',
               fontSize: 13, fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
             }}>
-              + Add 3rd vehicle
+              + Add 3rd {typeLabel.slice(0, -1).toLowerCase()}
             </button>
           ) : (
             <button onClick={() => { setShowThird(false); setV3(null) }} style={{
@@ -286,7 +291,7 @@ export default function CompareClient({
 
         {/* Status hint */}
         <div style={{ textAlign: 'center', color: '#8E99A8', fontSize: 13, marginBottom: 36 }}>
-          {filledCount === 0 && 'Select vehicles above to start comparing'}
+          {filledCount === 0 && `Select ${typeLabel.toLowerCase()} above to start comparing`}
           {filledCount === 1 && 'Select one more vehicle to compare'}
           {filledCount >= 2 && <span style={{ color: '#00D4FF' }}>Loading comparison…</span>}
         </div>
@@ -302,11 +307,11 @@ export default function CompareClient({
             color: '#00D4FF', textTransform: 'uppercase', letterSpacing: '0.6px',
             margin: '0 0 14px',
           }}>
-            Popular Comparisons
+            Popular {typeLabel} Comparisons
           </h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {POPULAR_COMPARISONS.map(c => (
-              <Link key={c.slug} href={`/compare/${c.slug}/`} style={{
+            {popular.map(c => (
+              <Link key={c.slug} href={`${basePath}/${c.slug}/`} style={{
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 8, padding: '8px 14px',

@@ -56,6 +56,20 @@ export function buildComparisonPath(vehicles: (LoadedVehicle | null)[]): string 
   return `/compare/${slugs.join('-vs-')}/`
 }
 
+// Type-specific comparison path: /compare/cars/slug1-vs-slug2/
+export function buildTypedComparisonPath(basePath: string, vehicles: (LoadedVehicle | null)[]): string {
+  const filled = vehicles.filter(Boolean) as LoadedVehicle[]
+  if (filled.length < 2) return basePath
+  const slugs = filled.map(v => getCombinedSlug(v.brandSlug, v.modelSlug))
+  return `${basePath}/${slugs.join('-vs-')}/`
+}
+
+export function getComparePath(vehicleType: VehicleType): string {
+  if (vehicleType === 'car')     return '/compare/cars'
+  if (vehicleType === 'bike')    return '/compare/bikes'
+  return '/compare/scooters'
+}
+
 // ─── DB loading ───────────────────────────────────────────────────────────────
 
 type RawModel = {
@@ -238,10 +252,30 @@ export function generateComparisonSummary(vehicles: LoadedVehicle[]): string {
 
 // ─── popular comparisons ──────────────────────────────────────────────────────
 
-export const POPULAR_COMPARISONS: { label: string; slug: string }[] = [
-  { label: 'Tata Punch vs Maruti Swift',              slug: 'tata-punch-vs-maruti-suzuki-swift' },
-  { label: 'Hyundai Creta vs Kia Seltos',             slug: 'hyundai-creta-vs-kia-seltos' },
-  { label: 'Royal Enfield Classic 350 vs Meteor 350', slug: 'royal-enfield-classic-350-vs-royal-enfield-meteor-350' },
-  { label: 'Honda Activa vs TVS Jupiter',             slug: 'honda-activa-vs-tvs-jupiter' },
-  { label: 'Ather 450X vs Ola S1 Pro',                slug: 'ather-450x-vs-ola-s1-pro' },
+export type PopularComparison = { label: string; slug: string }
+
+export const POPULAR_COMPARISONS_BY_TYPE: Record<VehicleType, PopularComparison[]> = {
+  car: [
+    { label: 'Tata Punch vs Maruti Swift',      slug: 'tata-punch-vs-maruti-suzuki-swift' },
+    { label: 'Hyundai Creta vs Kia Seltos',     slug: 'hyundai-creta-vs-kia-seltos' },
+    { label: 'Maruti Ertiga vs Kia Carens',     slug: 'maruti-suzuki-ertiga-vs-kia-carens' },
+    { label: 'Tata Nexon vs Hyundai Venue',     slug: 'tata-nexon-vs-hyundai-venue' },
+  ],
+  bike: [
+    { label: 'RE Classic 350 vs Meteor 350',    slug: 'royal-enfield-classic-350-vs-royal-enfield-meteor-350' },
+    { label: 'Bajaj Pulsar NS200 vs KTM Duke 200', slug: 'bajaj-pulsar-ns200-vs-ktm-duke-200' },
+    { label: 'Hero Splendor Plus vs Honda Shine', slug: 'hero-splendor-plus-vs-honda-shine' },
+  ],
+  scooter: [
+    { label: 'Honda Activa vs TVS Jupiter',     slug: 'honda-activa-vs-tvs-jupiter' },
+    { label: 'Ather 450X vs Ola S1 Pro',        slug: 'ather-450x-vs-ola-s1-pro' },
+    { label: 'TVS NTorq vs Yamaha Aerox',       slug: 'tvs-ntorq-125-vs-yamaha-aerox-155' },
+  ],
+}
+
+// Legacy flat list kept for any existing references
+export const POPULAR_COMPARISONS: PopularComparison[] = [
+  ...POPULAR_COMPARISONS_BY_TYPE.car,
+  ...POPULAR_COMPARISONS_BY_TYPE.bike,
+  ...POPULAR_COMPARISONS_BY_TYPE.scooter,
 ]

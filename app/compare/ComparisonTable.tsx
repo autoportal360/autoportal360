@@ -1,3 +1,4 @@
+import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
@@ -194,13 +195,13 @@ export default function ComparisonTable({
               const winner = winners[ri]
 
               return (
-                <>
+                <React.Fragment key={row.label}>
                   {row.section && (
-                    <tr key={`sec-${ri}`}>
+                    <tr>
                       <td colSpan={count + 1} style={SECTION_ROW}>{row.section}</td>
                     </tr>
                   )}
-                  <tr key={row.label} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                  <tr style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
                     <td style={{
                       ...TD,
                       textAlign: 'left',
@@ -221,7 +222,7 @@ export default function ComparisonTable({
                       </td>
                     ))}
                   </tr>
-                </>
+                </React.Fragment>
               )
             })}
           </tbody>
