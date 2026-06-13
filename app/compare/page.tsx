@@ -87,18 +87,14 @@ function ComparisonCard({ data, basePath }: { data: PopularComparisonData; baseP
 
   return (
     <Link href={`${basePath}/${slug}/`} style={{ textDecoration: 'none', display: 'block' }}>
-      <div style={{
+      <div className="compare-card" style={{
         background: '#0D1E3A',
         border: '1px solid rgba(0,212,255,0.1)',
         borderRadius: 14,
         padding: '16px',
-        transition: 'border-color 0.15s',
         height: '100%', boxSizing: 'border-box',
         display: 'flex', flexDirection: 'column', gap: 12,
-      }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.4)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.1)')}
-      >
+      }}>
         {/* Thumbnails row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <VehicleHalf v={v1} side="left" />
@@ -266,28 +262,13 @@ export default async function CompareLandingPage() {
           }}>
             {TYPE_CARDS.map(card => (
               <Link key={card.type} href={card.href} style={{ textDecoration: 'none' }}>
-                <div style={{
+                <div className="compare-type-card" style={{
                   background: '#0A1F44',
                   border: `1px solid ${card.color}30`,
                   borderRadius: 16, padding: '24px 20px 20px',
                   display: 'flex', flexDirection: 'column', gap: 8,
-                  cursor: 'pointer', transition: 'all 0.18s',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget
-                  el.style.borderColor = `${card.color}80`
-                  el.style.background = '#0C2454'
-                  el.style.transform = 'translateY(-2px)'
-                  el.style.boxShadow = `0 8px 24px ${card.color}18`
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget
-                  el.style.borderColor = `${card.color}30`
-                  el.style.background = '#0A1F44'
-                  el.style.transform = 'none'
-                  el.style.boxShadow = 'none'
-                }}
-                >
+                  cursor: 'pointer',
+                }}>
                   <div style={{ fontSize: 40, marginBottom: 4 }}>{card.emoji}</div>
                   <div style={{
                     fontFamily: 'Montserrat, sans-serif', fontSize: 16,
