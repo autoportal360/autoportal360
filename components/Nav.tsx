@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 
 const SearchOverlay = dynamic(() => import('./SearchOverlay'), { ssr: false })
 
@@ -22,9 +23,12 @@ const LINK_STYLE: React.CSSProperties = {
 }
 
 export default function Nav() {
-  const [menuOpen,    setMenuOpen]    = useState(false)
-  const [isMobile,    setIsMobile]    = useState(false)
-  const [searchOpen,  setSearchOpen]  = useState(false)
+  const router = useRouter()
+  const [menuOpen,   setMenuOpen]   = useState(false)
+  const [isMobile,   setIsMobile]   = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [mobileQ,    setMobileQ]    = useState('')
+  const mobileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const check = () => {
@@ -36,6 +40,23 @@ export default function Nav() {
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // Auto-focus mobile search input when drawer opens
+  useEffect(() => {
+    if (menuOpen && isMobile) {
+      setTimeout(() => mobileInputRef.current?.focus(), 80)
+    }
+  }, [menuOpen, isMobile])
+
+  function handleMobileSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const q = mobileQ.trim()
+    if (q.length >= 2) {
+      setMenuOpen(false)
+      setMobileQ('')
+      router.push(`/search?q=${encodeURIComponent(q)}`)
+    }
+  }
 
   return (
     <>
@@ -58,31 +79,10 @@ export default function Nav() {
           Auto<span style={{ color: '#00D4FF' }}>Portal</span>360
         </Link>
 
-        {/* DESKTOP: nav links + search icon */}
+        {/* DESKTOP: nav links (centred) */}
         {!isMobile && (
           <div style={{ display: 'flex', gap: '2px', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-            {LINKS.slice(0, 5).map(item => (
-              <Link key={item.href} href={item.href} style={LINK_STYLE}
-                onMouseEnter={e => { (e.target as HTMLElement).style.color = '#00D4FF'; (e.target as HTMLElement).style.background = 'rgba(0,212,255,0.07)' }}
-                onMouseLeave={e => { (e.target as HTMLElement).style.color = '#8E99A8'; (e.target as HTMLElement).style.background = 'transparent' }}
-              >{item.label}</Link>
-            ))}
-
-            {/* Search icon button — between News and Dealers */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              title="Search"
-              style={{
-                background: 'transparent', border: '1px solid rgba(0,212,255,0.15)',
-                color: '#8E99A8', width: 34, height: 34, borderRadius: 8,
-                cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget.style.color = '#00D4FF'); (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.4)'); (e.currentTarget.style.background = 'rgba(0,212,255,0.07)') }}
-              onMouseLeave={e => { (e.currentTarget.style.color = '#8E99A8'); (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.15)'); (e.currentTarget.style.background = 'transparent') }}
-            >🔍</button>
-
-            {LINKS.slice(5).map(item => (
+            {LINKS.map(item => (
               <Link key={item.href} href={item.href} style={LINK_STYLE}
                 onMouseEnter={e => { (e.target as HTMLElement).style.color = '#00D4FF'; (e.target as HTMLElement).style.background = 'rgba(0,212,255,0.07)' }}
                 onMouseLeave={e => { (e.target as HTMLElement).style.color = '#8E99A8'; (e.target as HTMLElement).style.background = 'transparent' }}
@@ -91,8 +91,29 @@ export default function Nav() {
           </div>
         )}
 
-        {/* RIGHT: city pill + hamburger */}
+        {/* RIGHT: search icon + city pill + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+
+          {/* 🔍 Search icon — desktop only */}
+          {!isMobile && (
+            <button
+              onClick={() => setSearchOpen(true)}
+              title="Search"
+              aria-label="Open search"
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(0,212,255,0.1)',
+                border: '1px solid rgba(0,212,255,0.2)',
+                color: '#00D4FF', fontSize: 15,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,255,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,212,255,0.1)')}
+            >🔍</button>
+          )}
+
+          {/* City pill */}
           <button style={{
             background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)',
             color: '#00D4FF', fontSize: '12px', fontWeight: 500,
@@ -103,7 +124,7 @@ export default function Nav() {
             {isMobile ? '📍 City ▾' : '📍 Chandigarh ▾'}
           </button>
 
-          {/* HAMBURGER — mobile only */}
+          {/* Hamburger — mobile only */}
           {isMobile && (
             <button
               onClick={() => setMenuOpen(o => !o)}
@@ -132,20 +153,35 @@ export default function Nav() {
           zIndex: 99, paddingBottom: '8px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
         }}>
-          {/* Search — first item in mobile menu */}
-          <button
-            onClick={() => { setMenuOpen(false); setSearchOpen(true) }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '14px 20px', color: '#00D4FF',
-              background: 'none', border: 'none', borderBottom: '1px solid rgba(0,212,255,0.06)',
-              fontSize: '15px', fontWeight: 700, fontFamily: 'Montserrat, sans-serif',
-              cursor: 'pointer', width: '100%', textAlign: 'left',
-            }}
-          >
-            🔍 Search
-          </button>
+          {/* Full-width search bar at top of drawer */}
+          <form onSubmit={handleMobileSearch} style={{ padding: '12px 16px', borderBottom: '1px solid rgba(0,212,255,0.08)' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              background: '#06142D', border: '1px solid rgba(0,212,255,0.25)',
+              borderRadius: 10, overflow: 'hidden',
+            }}>
+              <span style={{ padding: '0 12px', fontSize: 15, color: '#8E99A8', flexShrink: 0 }}>🔍</span>
+              <input
+                ref={mobileInputRef}
+                value={mobileQ}
+                onChange={e => setMobileQ(e.target.value)}
+                placeholder="Search cars, bikes, brands…"
+                style={{
+                  flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                  color: '#FFFFFF', fontSize: 15, padding: '12px 0',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+              />
+              {mobileQ && (
+                <button type="button" onClick={() => setMobileQ('')}
+                  style={{ padding: '0 12px', background: 'none', border: 'none', color: '#8E99A8', cursor: 'pointer', fontSize: 16 }}>
+                  ✕
+                </button>
+              )}
+            </div>
+          </form>
 
+          {/* Nav links */}
           {LINKS.map((item, i) => (
             <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
               style={{
@@ -162,7 +198,7 @@ export default function Nav() {
         </div>
       )}
 
-      {/* SEARCH OVERLAY */}
+      {/* SEARCH OVERLAY — desktop */}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   )
