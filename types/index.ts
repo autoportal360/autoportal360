@@ -66,6 +66,12 @@ export interface Spec {
   kerb_weight_kg: number | null
   tyre_size: string | null
   ncap_rating: string | null
+  airbags: number | null
+  abs: boolean | null
+  front_suspension: string | null
+  rear_suspension: string | null
+  front_brake: string | null
+  rear_brake: string | null
 }
 
 export interface State {
