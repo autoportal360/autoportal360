@@ -64,10 +64,11 @@ export default async function NewsPage({ searchParams }: Props) {
       .range(from, to),
   ])
 
-  const totalPages = Math.ceil((countRes.count ?? 0) / PER_PAGE)
-  const posts      = (postsRes.data ?? []) as BlogPost[]
-  const featured   = page === 1 && posts.length > 0 ? posts[0] : null
-  const gridPosts  = page === 1 ? posts.slice(1) : posts
+  const totalPages   = Math.ceil((countRes.count ?? 0) / PER_PAGE)
+  const posts        = (postsRes.data ?? []) as BlogPost[]
+  const featuredPost = page === 1 && posts.length > 0 ? posts[0] : null
+  // Exclude the featured post from the grid — slice(1) when featured, full list on page 2+
+  const latestPosts  = featuredPost ? posts.slice(1) : posts
 
   return (
     <div>
@@ -129,7 +130,7 @@ export default async function NewsPage({ searchParams }: Props) {
           <>
 
             {/* ── Featured Post ── */}
-            {featured && (
+            {featuredPost && (
               <section style={{ marginBottom: '52px' }}>
                 <p style={{
                   fontFamily: 'Montserrat, sans-serif', fontSize: '11px', fontWeight: 800,
@@ -137,18 +138,18 @@ export default async function NewsPage({ searchParams }: Props) {
                   marginBottom: '16px',
                 }}>Featured</p>
 
-                <Link href={`/news/${featured.slug}/`} style={{ textDecoration: 'none', display: 'block' }}>
+                <Link href={`/news/${featuredPost.slug}/`} style={{ textDecoration: 'none', display: 'block' }}>
                   <div style={{
                     background: '#0A1F44',
                     border: '1px solid rgba(0,212,255,0.15)',
                     borderRadius: '20px', overflow: 'hidden',
                   }}>
-                    {featured.cover_image_url ? (
+                    {featuredPost.cover_image_url ? (
                       <div style={{ height: '340px', overflow: 'hidden', position: 'relative', background: '#111' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={featured.cover_image_url}
-                          alt={featured.title}
+                          src={featuredPost.cover_image_url}
+                          alt={featuredPost.title}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div style={{
@@ -165,9 +166,9 @@ export default async function NewsPage({ searchParams }: Props) {
                     )}
 
                     <div style={{ padding: '28px 32px 32px' }}>
-                      {featured.tags && featured.tags.length > 0 && (
+                      {featuredPost.tags && featuredPost.tags.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                          {featured.tags.slice(0, 3).map(tag => (
+                          {featuredPost.tags.slice(0, 3).map(tag => (
                             <span key={tag} style={{
                               background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)',
                               color: '#00D4FF', fontSize: '11px', fontWeight: 700,
@@ -182,21 +183,21 @@ export default async function NewsPage({ searchParams }: Props) {
                         fontFamily: 'Montserrat, sans-serif', fontSize: '26px', fontWeight: 900,
                         color: '#FFFFFF', lineHeight: 1.2, marginBottom: '12px', letterSpacing: '-0.5px',
                       }}>
-                        {featured.title}
+                        {featuredPost.title}
                       </h2>
 
-                      {featured.excerpt && (
+                      {featuredPost.excerpt && (
                         <p style={{ color: '#C0C0C0', fontSize: '15px', lineHeight: 1.7, marginBottom: '20px' }}>
-                          {featured.excerpt}
+                          {featuredPost.excerpt}
                         </p>
                       )}
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '12px', color: '#8E99A8' }}>
-                          By {featured.author ?? 'AutoPortal360 Editorial'}
+                          By {featuredPost.author ?? 'AutoPortal360 Editorial'}
                         </span>
                         <span style={{ color: '#444' }}>·</span>
-                        <span style={{ fontSize: '12px', color: '#8E99A8' }}>{formatDate(featured.published_at)}</span>
+                        <span style={{ fontSize: '12px', color: '#8E99A8' }}>{formatDate(featuredPost.published_at)}</span>
                         <span style={{
                           marginLeft: 'auto',
                           background: '#00D4FF', color: '#06142D',
@@ -212,10 +213,10 @@ export default async function NewsPage({ searchParams }: Props) {
               </section>
             )}
 
-            {/* ── Posts Grid ── */}
-            {gridPosts.length > 0 && (
+            {/* ── Posts Grid (excludes featuredPost) ── */}
+            {latestPosts.length > 0 && (
               <section style={{ marginBottom: '52px' }}>
-                {page === 1 && posts.length > 1 && (
+                {featuredPost && (
                   <p style={{
                     fontFamily: 'Montserrat, sans-serif', fontSize: '11px', fontWeight: 800,
                     color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '1px',
@@ -227,7 +228,7 @@ export default async function NewsPage({ searchParams }: Props) {
                   gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                   gap: '24px',
                 }}>
-                  {gridPosts.map(post => (
+                  {latestPosts.map(post => (
                     <Link key={post.id} href={`/news/${post.slug}/`} style={{ textDecoration: 'none', display: 'flex' }}>
                       <article style={{
                         background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)',
