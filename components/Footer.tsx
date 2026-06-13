@@ -165,7 +165,7 @@ export default function Footer() {
               { label: 'News & Reviews',    href: '/news/' },
               { label: 'About Us',          href: '/about/' },
               { label: 'Contact',           href: '/contact/' },
-              { label: 'Sitemap',           href: '/sitemap.xml' },
+              { label: 'Sitemap',           href: '/sitemap' },
             ].map(link => (
               <Link key={link.href} href={link.href} style={{
                 display: 'block',
