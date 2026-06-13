@@ -56,6 +56,22 @@ type ModelRow = {
   meta_description: string | null
 }
 
+type ModelImageRow = {
+  id: string
+  url: string
+  alt_text: string | null
+  type: string
+  sort_order: number
+}
+
+type ModelColourRow = {
+  id: string
+  name: string
+  hex_code: string | null
+  image_url: string | null
+  sort_order: number
+}
+
 // ─── Slug parsing (mirrors brand page) ───────────────────────────────────────
 
 interface ParsedSlug {
@@ -187,15 +203,19 @@ export default async function ModelPage({
 
   const pageKey = `model-${brandSlug}-${modelSlug}`
 
-  // Parallel: variants, featured cities, page SEO
-  const [{ data: variantsRaw }, { data: citiesRaw }, seo] = await Promise.all([
+  // Parallel: variants, featured cities, page SEO, images, colours
+  const [{ data: variantsRaw }, { data: citiesRaw }, seo, { data: imagesRaw }, { data: coloursRaw }] = await Promise.all([
     supabase.from('variants').select('*').eq('model_id', m.id).order('sort_order'),
     supabase.from('cities').select('id, name, states(rto_percentage, handling_charge)').eq('is_featured', true).order('name'),
     getPageSeo(pageKey),
+    supabase.from('model_images').select('*').eq('model_id', m.id).order('sort_order'),
+    supabase.from('model_colours').select('*').eq('model_id', m.id).order('sort_order'),
   ])
 
-  const variants = (variantsRaw ?? []) as unknown as VariantRow[]
-  const cities   = (citiesRaw  ?? []) as unknown as CityRow[]
+  const variants      = (variantsRaw  ?? []) as unknown as VariantRow[]
+  const cities        = (citiesRaw    ?? []) as unknown as CityRow[]
+  const modelImages   = (imagesRaw    ?? []) as ModelImageRow[]
+  const modelColours  = (coloursRaw   ?? []) as ModelColourRow[]
 
   const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
 
@@ -528,13 +548,70 @@ export default async function ModelPage({
             )}
           </section>
 
+          {/* ── IMAGES PREVIEW ── */}
+          {modelImages.length > 0 && (
+            <section id="images" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Images</span></h2>
+                <Link href={`/${brandSlug}/${modelSlug}/images/`} style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, textDecoration: 'none' }}>
+                  View All {modelImages.length} →
+                </Link>
+              </div>
+              <p style={SECTION_SUB}>Exterior, interior and detail photos</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                {modelImages.slice(0, 4).map(img => (
+                  <Link key={img.id} href={`/${brandSlug}/${modelSlug}/images/`} style={{ textDecoration: 'none', display: 'block' }}>
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#111', border: '1px solid rgba(0,212,255,0.1)', height: '140px' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt={img.alt_text ?? `${brand.name} ${m.name} ${img.type}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* ── COLOURS ── */}
           <section id="colours" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
-            <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Colours</span></h2>
-            <p style={SECTION_SUB}>Available colour options</p>
-            <div style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.08)', borderRadius: '16px', padding: '36px', textAlign: 'center', color: '#8E99A8', fontSize: '14px' }}>
-              Colour images coming soon — check at your nearest dealership for the latest options.
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Colours</span></h2>
+              {modelColours.length > 0 && (
+                <Link href={`/${brandSlug}/${modelSlug}/colours/`} style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, textDecoration: 'none' }}>
+                  View All →
+                </Link>
+              )}
             </div>
+            <p style={SECTION_SUB}>
+              {modelColours.length > 0
+                ? `${modelColours.length} colour option${modelColours.length !== 1 ? 's' : ''} available`
+                : 'Available colour options'}
+            </p>
+
+            {modelColours.length > 0 ? (
+              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                {modelColours.map(colour => (
+                  <div key={colour.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '76px' }}>
+                    <div style={{
+                      width: '52px', height: '52px', borderRadius: '50%',
+                      background: colour.hex_code ?? '#555',
+                      border: '3px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                    }} />
+                    <span style={{ fontSize: '11px', color: '#C0C0C0', textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>
+                      {colour.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.08)', borderRadius: '16px', padding: '36px', textAlign: 'center', color: '#8E99A8', fontSize: '14px' }}>
+                Colour options coming soon — check at your nearest dealership.
+              </div>
+            )}
           </section>
 
           {/* AD ZONE 2 */}

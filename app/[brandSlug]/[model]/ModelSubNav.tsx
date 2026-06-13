@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
-const ANCHOR_IDS = ['overview', 'variants', 'mileage', 'colours', 'faqs'] as const
+const ANCHOR_IDS = ['overview', 'variants', 'mileage', 'faqs'] as const
 
 export default function ModelSubNav({
   brandSlug,
@@ -40,7 +40,7 @@ export default function ModelSubNav({
     { label: 'Variants', key: 'variants', href: '#variants',         external: false },
     { label: 'Mileage',  key: 'mileage',  href: '#mileage',          external: false },
     { label: 'Images',   key: 'images',   href: `${base}/images/`,   external: true  },
-    { label: 'Colours',  key: 'colours',  href: '#colours',          external: false },
+    { label: 'Colours',  key: 'colours',  href: `${base}/colours/`,  external: true  },
     { label: 'FAQs',     key: 'faqs',     href: '#faqs',             external: false },
   ]
 
