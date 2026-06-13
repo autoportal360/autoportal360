@@ -34,13 +34,20 @@ export default function UserForm({ userId, initial }: Props) {
   const sb = sbRef.current
   const router = useRouter()
 
-  const [email,    setEmail]    = useState(initial?.email    ?? '')
-  const [name,     setName]     = useState(initial?.name     ?? '')
-  const [role,     setRole]     = useState<AdminRole>(initial?.role ?? 'editor')
-  const [active,   setActive]   = useState(initial?.is_active ?? true)
-  const [saving,   setSaving]   = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [toast,    setToast]    = useState<{ msg: string; ok: boolean } | null>(null)
+  const [email,       setEmail]       = useState(initial?.email    ?? '')
+  const [name,        setName]        = useState(initial?.name     ?? '')
+  const [role,        setRole]        = useState<AdminRole>(initial?.role ?? 'editor')
+  const [active,      setActive]      = useState(initial?.is_active ?? true)
+  const [password,    setPassword]    = useState('')
+  const [confirmPwd,  setConfirmPwd]  = useState('')
+  const [saving,      setSaving]      = useState(false)
+  const [deleting,    setDeleting]    = useState(false)
+  const [toast,       setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
+
+  // Reset password modal state
+  const [resetModal,  setResetModal]  = useState(false)
+  const [resetPwd,    setResetPwd]    = useState('')
+  const [resetting,   setResetting]   = useState(false)
 
   function showToast(msg: string, ok: boolean) {
     setToast({ msg, ok })
@@ -49,21 +56,43 @@ export default function UserForm({ userId, initial }: Props) {
 
   async function handleSave() {
     if (!email.trim()) { showToast('Email is required', false); return }
+
+    if (!userId) {
+      if (!password)            { showToast('Password is required', false); return }
+      if (password.length < 8)  { showToast('Password must be at least 8 characters', false); return }
+      if (password !== confirmPwd) { showToast('Passwords do not match', false); return }
+
+      setSaving(true)
+      try {
+        const res = await fetch('/api/admin/create-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            password,
+            name: name || null,
+            role,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? 'Failed to create user')
+        showToast('User created — they can log in at /admin/login', true)
+        setTimeout(() => router.push('/admin/users'), 1500)
+      } catch (err: unknown) {
+        showToast(err instanceof Error ? err.message : 'Failed to create user', false)
+      }
+      setSaving(false)
+      return
+    }
+
     setSaving(true)
     try {
-      if (userId) {
-        const { error } = await sb
-          .from('admin_users')
-          .update({ name: name || null, role, is_active: active })
-          .eq('id', userId)
-        if (error) throw new Error(error.message)
-      } else {
-        const { error } = await sb
-          .from('admin_users')
-          .insert({ email: email.trim().toLowerCase(), name: name || null, role, is_active: active })
-        if (error) throw new Error(error.message)
-      }
-      showToast(userId ? 'User updated' : 'User created', true)
+      const { error } = await sb
+        .from('admin_users')
+        .update({ name: name || null, role, is_active: active })
+        .eq('id', userId)
+      if (error) throw new Error(error.message)
+      showToast('User updated', true)
       setTimeout(() => router.push('/admin/users'), 1000)
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Save failed', false)
@@ -80,9 +109,31 @@ export default function UserForm({ userId, initial }: Props) {
     router.push('/admin/users')
   }
 
+  async function handleResetPassword() {
+    if (!resetPwd)            { showToast('Password is required', false); return }
+    if (resetPwd.length < 8)  { showToast('Password must be at least 8 characters', false); return }
+    setResetting(true)
+    try {
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: initial!.email, newPassword: resetPwd }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Reset failed')
+      showToast('Password reset successfully', true)
+      setResetModal(false)
+      setResetPwd('')
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Reset failed', false)
+    }
+    setResetting(false)
+  }
+
   return (
     <div style={{ maxWidth: '560px' }}>
 
+      {/* ── Toast ── */}
       {toast && (
         <div style={{
           position: 'fixed', bottom: 28, right: 28, zIndex: 9999,
@@ -96,6 +147,65 @@ export default function UserForm({ userId, initial }: Props) {
         </div>
       )}
 
+      {/* ── Reset Password Modal ── */}
+      {resetModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+          zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+          onClick={() => { setResetModal(false); setResetPwd('') }}
+        >
+          <div
+            style={{
+              background: '#0A1F44', border: '1px solid rgba(0,212,255,0.2)',
+              borderRadius: 16, padding: 32, width: 400, maxWidth: '90vw',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{
+              fontFamily: 'Montserrat, sans-serif', fontSize: 18, fontWeight: 900,
+              color: '#FFFFFF', margin: '0 0 6px',
+            }}>
+              Reset Password
+            </h3>
+            <p style={{ fontSize: 12, color: '#8E99A8', margin: '0 0 24px' }}>
+              {initial?.email}
+            </p>
+
+            <div style={FIELD}>
+              <label style={LABEL}>New Password</label>
+              <input
+                type="password"
+                value={resetPwd}
+                onChange={e => setResetPwd(e.target.value)}
+                placeholder="Minimum 8 characters"
+                autoFocus
+                style={INPUT}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={handleResetPassword} disabled={resetting} style={{
+                background: resetting ? 'rgba(0,212,255,0.35)' : '#00D4FF',
+                color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
+                fontSize: 14, padding: '11px 24px', borderRadius: 10, border: 'none',
+                cursor: resetting ? 'not-allowed' : 'pointer',
+              }}>
+                {resetting ? 'Resetting…' : 'Set Password'}
+              </button>
+              <button onClick={() => { setResetModal(false); setResetPwd('') }} style={{
+                background: 'transparent', color: '#8E99A8',
+                border: '1px solid rgba(255,255,255,0.1)',
+                fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
+                fontSize: 14, padding: '11px 20px', borderRadius: 10, cursor: 'pointer',
+              }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{
         background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)',
         borderRadius: '16px', padding: '32px',
@@ -103,29 +213,18 @@ export default function UserForm({ userId, initial }: Props) {
 
         {!userId && (
           <div style={{
-            background: 'rgba(0,212,255,0.08)',
-            border: '1px solid rgba(0,212,255,0.2)',
-            borderRadius: '10px',
-            padding: '12px 16px',
-            marginBottom: '20px',
-            fontSize: '13px',
-            color: '#C0C0C0',
-            lineHeight: 1.6,
+            background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)',
+            borderRadius: '10px', padding: '12px 16px', marginBottom: '20px',
+            fontSize: '13px', color: '#C0C0C0', lineHeight: 1.6,
           }}>
-            <strong style={{ color: '#00D4FF' }}>How to create a new admin user:</strong><br/>
-            1. First create the user in{' '}
-            <a href="https://supabase.com/dashboard/project/qmhnfdyjisxjhhrdfvqp/auth/users"
-               target="_blank"
-               rel="noopener noreferrer"
-               style={{ color: '#00D4FF' }}>
-              Supabase Auth →
-            </a>
-            {' '}with their email and password.<br/>
-            2. Then add their email here and assign a role.<br/>
-            3. They can login at /admin/login with the password you set in Supabase.
+            <strong style={{ color: '#00D4FF' }}>Creating a new admin user:</strong><br/>
+            Fill in the form and click <strong style={{ color: '#FFFFFF' }}>Create User</strong>.
+            Their Supabase Auth account and admin access will be set up automatically.
+            They can log in immediately at <strong style={{ color: '#FFFFFF' }}>/admin/login</strong>.
           </div>
         )}
 
+        {/* Email */}
         <div style={FIELD}>
           <label style={LABEL}>Email</label>
           <input
@@ -136,13 +235,9 @@ export default function UserForm({ userId, initial }: Props) {
             disabled={!!userId}
             style={{ ...INPUT, ...(userId ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
           />
-          {!userId && (
-            <p style={{ fontSize: 11, color: '#8E99A8', margin: '5px 0 0' }}>
-              Must match their Supabase Auth account email exactly.
-            </p>
-          )}
         </div>
 
+        {/* Name */}
         <div style={FIELD}>
           <label style={LABEL}>Display Name</label>
           <input
@@ -154,6 +249,46 @@ export default function UserForm({ userId, initial }: Props) {
           />
         </div>
 
+        {/* Password fields — new users only */}
+        {!userId && (
+          <>
+            <div style={FIELD}>
+              <label style={LABEL}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+                style={INPUT}
+              />
+            </div>
+
+            <div style={FIELD}>
+              <label style={LABEL}>Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPwd}
+                onChange={e => setConfirmPwd(e.target.value)}
+                placeholder="Repeat password"
+                style={{
+                  ...INPUT,
+                  ...(confirmPwd && confirmPwd !== password
+                    ? { borderColor: 'rgba(255,80,80,0.5)', background: 'rgba(255,80,80,0.04)' }
+                    : confirmPwd && confirmPwd === password
+                    ? { borderColor: 'rgba(0,204,102,0.5)' }
+                    : {}),
+                }}
+              />
+              {confirmPwd && confirmPwd !== password && (
+                <p style={{ fontSize: 11, color: '#FF8080', margin: '5px 0 0' }}>
+                  Passwords do not match
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Role */}
         <div style={FIELD}>
           <label style={LABEL}>Role</label>
           <select
@@ -173,10 +308,7 @@ export default function UserForm({ userId, initial }: Props) {
               </option>
             ))}
           </select>
-          <div style={{
-            fontSize: 11, color: '#8E99A8', margin: '8px 0 0',
-            lineHeight: 1.7,
-          }}>
+          <div style={{ fontSize: 11, color: '#8E99A8', margin: '8px 0 0', lineHeight: 1.7 }}>
             <strong style={{ color: '#C0C0C0' }}>super_admin</strong> — full access &nbsp;·&nbsp;
             <strong style={{ color: '#C0C0C0' }}>catalogue</strong> — brands, models, slider, locations &nbsp;·&nbsp;
             <strong style={{ color: '#C0C0C0' }}>editor</strong> — blog, pages &nbsp;·&nbsp;
@@ -184,28 +316,32 @@ export default function UserForm({ userId, initial }: Props) {
           </div>
         </div>
 
-        <div style={{ ...FIELD, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            type="button"
-            onClick={() => setActive(a => !a)}
-            style={{
-              width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: active ? '#00CC66' : 'rgba(255,255,255,0.12)',
-              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
-            }}
-          >
-            <span style={{
-              position: 'absolute', top: 3, left: active ? 23 : 3,
-              width: 18, height: 18, borderRadius: '50%', background: '#FFFFFF',
-              transition: 'left 0.2s',
-            }} />
-          </button>
-          <span style={{ fontSize: 13, color: active ? '#00CC66' : '#8E99A8', fontWeight: 600 }}>
-            {active ? 'Active — can log in' : 'Inactive — access revoked'}
-          </span>
-        </div>
+        {/* Active toggle — edit mode only */}
+        {userId && (
+          <div style={{ ...FIELD, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={() => setActive(a => !a)}
+              style={{
+                width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                background: active ? '#00CC66' : 'rgba(255,255,255,0.12)',
+                transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 3, left: active ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%', background: '#FFFFFF',
+                transition: 'left 0.2s',
+              }} />
+            </button>
+            <span style={{ fontSize: 13, color: active ? '#00CC66' : '#8E99A8', fontWeight: 600 }}>
+              {active ? 'Active — can log in' : 'Inactive — access revoked'}
+            </span>
+          </div>
+        )}
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
           <button onClick={handleSave} disabled={saving} style={{
             background: saving ? 'rgba(0,212,255,0.35)' : '#00D4FF',
             color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
@@ -222,20 +358,30 @@ export default function UserForm({ userId, initial }: Props) {
           }}>
             Cancel
           </button>
+
           {userId && (
-            <button onClick={handleDelete} disabled={deleting} style={{
-              marginLeft: 'auto', background: 'rgba(255,80,80,0.08)', color: '#FF5050',
-              border: '1px solid rgba(255,80,80,0.25)',
-              fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
-              fontSize: 14, padding: '12px 20px', borderRadius: '10px',
-              cursor: deleting ? 'not-allowed' : 'pointer',
-            }}>
-              {deleting ? 'Deleting…' : 'Delete'}
-            </button>
+            <>
+              <button onClick={() => setResetModal(true)} style={{
+                background: 'rgba(255,180,0,0.08)', color: '#FFB400',
+                border: '1px solid rgba(255,180,0,0.25)',
+                fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
+                fontSize: 14, padding: '12px 20px', borderRadius: '10px', cursor: 'pointer',
+              }}>
+                Reset Password
+              </button>
+              <button onClick={handleDelete} disabled={deleting} style={{
+                marginLeft: 'auto', background: 'rgba(255,80,80,0.08)', color: '#FF5050',
+                border: '1px solid rgba(255,80,80,0.25)',
+                fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
+                fontSize: 14, padding: '12px 20px', borderRadius: '10px',
+                cursor: deleting ? 'not-allowed' : 'pointer',
+              }}>
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </>
           )}
         </div>
       </div>
-
     </div>
   )
 }
