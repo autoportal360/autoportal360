@@ -3,8 +3,8 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useRef } from 'react'
-import type { AdminRole } from '@/lib/admin-auth'
-import { ROLE_LABELS } from '@/lib/admin-auth'
+import type { AdminRole } from '@/lib/admin-auth-client'
+import { ROLE_LABELS } from '@/lib/admin-auth-client'
 
 const INPUT: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
