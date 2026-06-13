@@ -391,7 +391,7 @@ export default async function ModelPage({
                   <a href="#on-road" style={{ background: 'rgba(0,212,255,0.08)', color: '#00D4FF', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                     On-Road Price
                   </a>
-                  <Link href="/compare/" style={{ background: 'rgba(255,255,255,0.04)', color: '#C0C0C0', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  <Link href={`/compare?v1=${brandSlug}-${modelSlug}`} style={{ background: 'rgba(255,255,255,0.04)', color: '#C0C0C0', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                     Compare
                   </Link>
                 </div>
