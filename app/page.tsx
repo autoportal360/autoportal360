@@ -9,6 +9,7 @@ import HeroSlider, { type HeroSlide } from '@/components/HeroSlider'
 import type { Brand } from '@/types'
 import SchemaMarkup from '@/components/SchemaMarkup'
 import { websiteSchema, organizationSchema } from '@/lib/schema'
+import HomeSearchBar from '@/components/HomeSearchBar'
 
 export const metadata: Metadata = {
   title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
@@ -368,36 +369,7 @@ export default async function HomePage() {
               }}>{tab.label}</div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <select style={{
-              flex: 1, minWidth: '140px',
-              background: '#06142D', border: '1px solid rgba(0,212,255,0.15)',
-              color: '#C0C0C0', fontSize: '13px', padding: '10px 14px',
-              borderRadius: '8px', fontFamily: 'Inter, sans-serif', outline: 'none',
-            }}>
-              <option>Select Car Brand</option>
-              {carBrands.map(b => <option key={b.id} value={b.slug}>{b.name}</option>)}
-            </select>
-            <select style={{
-              flex: 1, minWidth: '140px',
-              background: '#06142D', border: '1px solid rgba(0,212,255,0.15)',
-              color: '#C0C0C0', fontSize: '13px', padding: '10px 14px',
-              borderRadius: '8px', fontFamily: 'Inter, sans-serif', outline: 'none',
-            }}>
-              <option>Select City</option>
-              <option>Chandigarh</option>
-              <option>Delhi</option>
-              <option>Mumbai</option>
-              <option>Bengaluru</option>
-              <option>Hyderabad</option>
-            </select>
-            <button style={{
-              background: '#00D4FF', color: '#06142D', fontWeight: 900,
-              fontSize: '13px', padding: '10px 22px', borderRadius: '8px',
-              border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif',
-              whiteSpace: 'nowrap',
-            }}>Search →</button>
-          </div>
+          <HomeSearchBar brands={carBrands} />
         </div>
       </section>
 
