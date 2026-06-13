@@ -295,8 +295,13 @@ export default async function ComparisonPageContent({
             <p style={{ fontSize: 13, color: '#8E99A8', margin: 0 }}>
               {emoji} Side-by-side {vehicleType} comparison — prices, specs, mileage &amp; features
             </p>
-            <Link href={basePath} style={{ fontSize: 11, fontWeight: 700, color: '#8E99A8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 12px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              + Change vehicles
+            <Link href={basePath} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)',
+              color: '#00D4FF', padding: '8px 16px', borderRadius: 8,
+              fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',
+            }}>
+              🔄 Change Vehicles
             </Link>
           </div>
         </div>
@@ -332,6 +337,34 @@ export default async function ComparisonPageContent({
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Reset / change bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)',
+          borderRadius: 12, padding: '12px 20px', marginBottom: 20,
+          flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{ fontSize: 13, color: '#8E99A8' }}>
+            Comparing {vehicles.length} vehicles
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link href={basePath} style={{
+              background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)',
+              color: '#00D4FF', padding: '7px 14px', borderRadius: 8,
+              fontSize: 12, fontWeight: 600, textDecoration: 'none',
+            }}>
+              🔄 Change Vehicles
+            </Link>
+            <Link href={basePath} style={{
+              background: 'rgba(255,77,79,0.1)', border: '1px solid rgba(255,77,79,0.3)',
+              color: '#FF4D4F', padding: '7px 14px', borderRadius: 8,
+              fontSize: 12, fontWeight: 600, textDecoration: 'none',
+            }}>
+              ✕ Reset
+            </Link>
+          </div>
         </div>
 
         {/* Comparison table */}
