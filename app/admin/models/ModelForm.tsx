@@ -491,12 +491,17 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
         thumbnail_url,
       }
       if (currentModelId) {
-        const { error: uErr } = await sb.from('models').update(payload).eq('id', currentModelId)
+        const { data: updated, error: uErr } = await sb
+          .from('models').update(payload).eq('id', currentModelId).select('id')
         if (uErr) throw new Error(uErr.message)
+        if (!updated?.length) throw new Error('Save failed — run the RLS migration in Supabase SQL Editor (supabase/20260613_disable_rls_core_tables.sql)')
+        // Sync local state so re-saves don't re-upload the file
+        if (thumbnail_url) { setThumbExisting(thumbnail_url); setThumbFile(null) }
       } else {
         const { data, error: iErr } = await sb.from('models').insert(payload).select('id').single()
         if (iErr) throw new Error(iErr.message)
         setCurrentModelId(data.id as string)
+        if (thumbnail_url) { setThumbExisting(thumbnail_url); setThumbFile(null) }
       }
       showToast('Basic info saved!', true)
     } catch (err: unknown) {

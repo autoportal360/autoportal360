@@ -283,8 +283,10 @@ export default function BrandForm({ brandId }: { brandId?: string }) {
       let savedId = brandId
 
       if (isEdit) {
-        const { error: uErr } = await sb.from('brands').update(payload).eq('id', brandId!)
+        const { data: updated, error: uErr } = await sb
+          .from('brands').update(payload).eq('id', brandId!).select('id')
         if (uErr) throw new Error(uErr.message)
+        if (!updated?.length) throw new Error('Save failed — run the RLS migration in Supabase SQL Editor (supabase/20260613_disable_rls_core_tables.sql)')
       } else {
         const { data, error: iErr } = await sb.from('brands').insert(payload).select('id').single()
         if (iErr) throw new Error(iErr.message)
