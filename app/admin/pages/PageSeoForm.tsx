@@ -4,7 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 
 type FaqRow = { q: string; a: string }
-type PageType = 'city' | 'model' | 'brand' | 'specs' | 'new-cars' | 'new-bikes' | 'new-scooters' | 'home' | 'custom'
+type PageType = 'city' | 'model' | 'brand' | 'specs' | 'new-cars' | 'new-bikes' | 'new-scooters' | 'home' | 'compare-cars' | 'compare-bikes' | 'compare-scooters' | 'custom'
 
 const FIXED_KEYS: Partial<Record<PageType, string>> = {
   'new-cars':     'new-cars',
@@ -14,26 +14,31 @@ const FIXED_KEYS: Partial<Record<PageType, string>> = {
 }
 
 function detectType(key: string): PageType {
-  if (key.startsWith('city-'))   return 'city'
-  if (key.startsWith('model-'))  return 'model'
-  if (key.startsWith('brand-'))  return 'brand'
-  if (key.startsWith('specs-'))  return 'specs'
-  if (key === 'new-cars')        return 'new-cars'
-  if (key === 'new-bikes')       return 'new-bikes'
-  if (key === 'new-scooters')    return 'new-scooters'
-  if (key === 'home')            return 'home'
+  if (key.startsWith('city-'))             return 'city'
+  if (key.startsWith('model-'))            return 'model'
+  if (key.startsWith('brand-'))            return 'brand'
+  if (key.startsWith('specs-'))            return 'specs'
+  if (key.startsWith('compare-cars-'))     return 'compare-cars'
+  if (key.startsWith('compare-bikes-'))    return 'compare-bikes'
+  if (key.startsWith('compare-scooters-')) return 'compare-scooters'
+  if (key === 'new-cars')                  return 'new-cars'
+  if (key === 'new-bikes')                 return 'new-bikes'
+  if (key === 'new-scooters')              return 'new-scooters'
+  if (key === 'home')                      return 'home'
   return 'custom'
 }
 
-function buildKey(type: PageType, brand: string, model: string, city: string): string {
+function buildKey(type: PageType, brand: string, model: string, city: string, brand2: string, model2: string): string {
   if (FIXED_KEYS[type]) return FIXED_KEYS[type]!
-  const b = brand.trim()
-  const m = model.trim()
-  const c = city.trim()
-  if (type === 'city')   return b && m && c ? `city-${b}-${m}-${c}` : ''
-  if (type === 'model')  return b && m ? `model-${b}-${m}` : ''
-  if (type === 'brand')  return b ? `brand-${b}` : ''
-  if (type === 'specs')  return b && m ? `specs-${b}-${m}` : ''
+  const b  = brand.trim(),  m  = model.trim(),  c = city.trim()
+  const b2 = brand2.trim(), m2 = model2.trim()
+  if (type === 'city')              return b && m && c ? `city-${b}-${m}-${c}` : ''
+  if (type === 'model')             return b && m ? `model-${b}-${m}` : ''
+  if (type === 'brand')             return b ? `brand-${b}` : ''
+  if (type === 'specs')             return b && m ? `specs-${b}-${m}` : ''
+  if (type === 'compare-cars')      return b && m && b2 && m2 ? `compare-cars-${b}-${m}-vs-${b2}-${m2}` : ''
+  if (type === 'compare-bikes')     return b && m && b2 && m2 ? `compare-bikes-${b}-${m}-vs-${b2}-${m2}` : ''
+  if (type === 'compare-scooters')  return b && m && b2 && m2 ? `compare-scooters-${b}-${m}-vs-${b2}-${m2}` : ''
   return ''
 }
 
@@ -58,11 +63,13 @@ export default function PageSeoForm({
   const [toast,      setToast]      = useState<string | null>(null)
   const [existingId, setExistingId] = useState<string | null>(recordId ?? null)
 
-  const [pageType,   setPageType]   = useState<PageType>('custom')
-  const [brandSlug,  setBrandSlug]  = useState('')
-  const [modelSlug,  setModelSlug]  = useState('')
-  const [citySlug,   setCitySlug]   = useState('')
-  const [pageKey,    setPageKey]    = useState(initialKey ?? '')
+  const [pageType,    setPageType]    = useState<PageType>('custom')
+  const [brandSlug,   setBrandSlug]   = useState('')
+  const [modelSlug,   setModelSlug]   = useState('')
+  const [citySlug,    setCitySlug]    = useState('')
+  const [brand2Slug,  setBrand2Slug]  = useState('')
+  const [model2Slug,  setModel2Slug]  = useState('')
+  const [pageKey,     setPageKey]     = useState(initialKey ?? '')
 
   const [metaTitle,  setMetaTitle]  = useState('')
   const [metaDesc,   setMetaDesc]   = useState('')
@@ -110,10 +117,10 @@ export default function PageSeoForm({
   // ── Auto-build page_key from slug helpers ─────────────────────────────────
   useEffect(() => {
     if (pageType === 'custom') return
-    const built = buildKey(pageType, brandSlug, modelSlug, citySlug)
+    const built = buildKey(pageType, brandSlug, modelSlug, citySlug, brand2Slug, model2Slug)
     if (built) setPageKey(built)
     else if (FIXED_KEYS[pageType]) setPageKey(FIXED_KEYS[pageType]!)
-  }, [pageType, brandSlug, modelSlug, citySlug])
+  }, [pageType, brandSlug, modelSlug, citySlug, brand2Slug, model2Slug])
 
   // ── Save ──────────────────────────────────────────────────────────────────
   async function handleSave() {
@@ -168,7 +175,8 @@ export default function PageSeoForm({
 
   if (loading) return <div style={{ color: '#8E99A8', padding: '48px', textAlign: 'center' }}>Loading…</div>
 
-  const PAGE_TYPES: PageType[] = ['city', 'model', 'brand', 'specs', 'new-cars', 'new-bikes', 'new-scooters', 'home', 'custom']
+  const PAGE_TYPES: PageType[] = ['city', 'model', 'brand', 'specs', 'new-cars', 'new-bikes', 'new-scooters', 'home', 'compare-cars', 'compare-bikes', 'compare-scooters', 'custom']
+  const isCompare = pageType === 'compare-cars' || pageType === 'compare-bikes' || pageType === 'compare-scooters'
 
   return (
     <div style={{ maxWidth: '860px' }}>
@@ -212,7 +220,7 @@ export default function PageSeoForm({
           </select>
         </div>
 
-        {/* Slug helpers */}
+        {/* Slug helpers — standard page types */}
         {(pageType === 'city' || pageType === 'model' || pageType === 'brand' || pageType === 'specs') && (
           <div style={{ ...gridTwo, marginBottom: '16px' }}>
             <div>
@@ -231,6 +239,41 @@ export default function PageSeoForm({
                 <input style={inputStyle} value={citySlug} onChange={e => setCitySlug(e.target.value)} placeholder="e.g. lucknow" />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Slug helpers — compare page types */}
+        {isCompare && (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '11px', color: '#8E99A8', marginBottom: '10px', fontWeight: 600 }}>
+              Vehicle 1
+            </div>
+            <div style={{ ...gridTwo, marginBottom: '12px' }}>
+              <div>
+                <label style={labelStyle}>Brand DB Slug</label>
+                <input style={inputStyle} value={brandSlug} onChange={e => setBrandSlug(e.target.value)} placeholder="e.g. tata" />
+              </div>
+              <div>
+                <label style={labelStyle}>Model Slug</label>
+                <input style={inputStyle} value={modelSlug} onChange={e => setModelSlug(e.target.value)} placeholder="e.g. punch" />
+              </div>
+            </div>
+            <div style={{ fontSize: '11px', color: '#8E99A8', marginBottom: '10px', fontWeight: 600 }}>
+              Vehicle 2
+            </div>
+            <div style={gridTwo}>
+              <div>
+                <label style={labelStyle}>Brand DB Slug</label>
+                <input style={inputStyle} value={brand2Slug} onChange={e => setBrand2Slug(e.target.value)} placeholder="e.g. maruti-suzuki" />
+              </div>
+              <div>
+                <label style={labelStyle}>Model Slug</label>
+                <input style={inputStyle} value={model2Slug} onChange={e => setModel2Slug(e.target.value)} placeholder="e.g. swift" />
+              </div>
+            </div>
+            <div style={{ fontSize: '11px', color: '#8E99A8', marginTop: '8px' }}>
+              💡 Auto-generates key: <code style={{ color: '#00D4FF' }}>compare-cars-{brandSlug || 'brand1'}-{modelSlug || 'model1'}-vs-{brand2Slug || 'brand2'}-{model2Slug || 'model2'}</code>
+            </div>
           </div>
         )}
 
