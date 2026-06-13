@@ -101,6 +101,31 @@ export default function UserForm({ userId, initial }: Props) {
         borderRadius: '16px', padding: '32px',
       }}>
 
+        {!userId && (
+          <div style={{
+            background: 'rgba(0,212,255,0.08)',
+            border: '1px solid rgba(0,212,255,0.2)',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            marginBottom: '20px',
+            fontSize: '13px',
+            color: '#C0C0C0',
+            lineHeight: 1.6,
+          }}>
+            <strong style={{ color: '#00D4FF' }}>How to create a new admin user:</strong><br/>
+            1. First create the user in{' '}
+            <a href="https://supabase.com/dashboard/project/qmhnfdyjisxjhhrdfvqp/auth/users"
+               target="_blank"
+               rel="noopener noreferrer"
+               style={{ color: '#00D4FF' }}>
+              Supabase Auth →
+            </a>
+            {' '}with their email and password.<br/>
+            2. Then add their email here and assign a role.<br/>
+            3. They can login at /admin/login with the password you set in Supabase.
+          </div>
+        )}
+
         <div style={FIELD}>
           <label style={LABEL}>Email</label>
           <input
@@ -211,20 +236,6 @@ export default function UserForm({ userId, initial }: Props) {
         </div>
       </div>
 
-      {!userId && (
-        <div style={{
-          marginTop: '16px', padding: '16px 20px',
-          background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)',
-          borderRadius: '12px', fontSize: '12px', color: '#8E99A8', lineHeight: 1.7,
-        }}>
-          <strong style={{ color: '#FFB400' }}>Note:</strong> Adding a user here only grants admin panel access.
-          To let them sign in, you must also create a Supabase Auth account for them at{' '}
-          <span style={{ fontFamily: 'monospace', color: '#C0C0C0' }}>
-            dashboard.supabase.com → Authentication → Users → Invite user
-          </span>
-          {' '}using the same email address.
-        </div>
-      )}
     </div>
   )
 }
