@@ -123,6 +123,14 @@ export default async function AdminDashboard() {
           }}>
             📝 Brand SEO
           </Link>
+          <Link href="/admin/brand-page-seo" style={{
+            background: 'rgba(168,85,247,0.08)', color: '#A855F7',
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
+            fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
+            border: '1px solid rgba(168,85,247,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            📄 Brand Page SEO
+          </Link>
         </div>
       </div>
 

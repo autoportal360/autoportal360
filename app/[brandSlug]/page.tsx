@@ -9,6 +9,7 @@ import { getCanonicalUrl } from '@/lib/seo'
 import type { Brand } from '@/types'
 import ModelGrid, { type ModelRow } from './ModelGrid'
 import BrandFaq from './BrandFaq'
+import BrandPageSeoBlock from '@/components/BrandPageSeoBlock'
 import { getPageSeo } from '@/lib/page-seo'
 import EditSeoButton from '@/components/EditSeoButton'
 import SchemaMarkup from '@/components/SchemaMarkup'
@@ -83,6 +84,16 @@ const getBrand = cache(async (slug: string, type: VehicleType): Promise<Brand | 
   return null
 })
 
+async function getBrandPageSeo(slug: string) {
+  const { data } = await supabase
+    .from('brand_page_seo')
+    .select('seo_heading, seo_text, top_models')
+    .eq('brand_slug', slug)
+    .eq('is_published', true)
+    .maybeSingle()
+  return data
+}
+
 async function getModels(brandId: string, type: VehicleType): Promise<ModelRow[]> {
   const { data, error } = await supabase
     .from('models')
@@ -149,9 +160,10 @@ export default async function BrandVehiclePage({
   if (!brand) notFound()
 
   const pageKey = `brand-${brandSlug}`
-  const [models, seo] = await Promise.all([
+  const [models, seo, brandPageSeo] = await Promise.all([
     getModels(brand.id, vehicleType),
     getPageSeo(pageKey),
+    getBrandPageSeo(brandSlug),
   ])
 
   const compareModels = models.filter(m => m.status === 'active').slice(0, 4)
@@ -455,6 +467,16 @@ export default async function BrandVehiclePage({
             <BrandFaq brandName={brand.name} vehicleLabel={vehicleLabel} />
           )}
         </section>
+
+        {/* ── BRAND PAGE SEO BLOCK ── */}
+        {brandPageSeo?.seo_text && (
+          <BrandPageSeoBlock
+            seoHeading={brandPageSeo.seo_heading ?? `About ${brand.name} ${vehicleLabel} in India`}
+            seoText={brandPageSeo.seo_text}
+            topModels={(brandPageSeo.top_models as { name: string; price: string }[]) ?? []}
+            brandName={brand.name}
+          />
+        )}
 
       </div>
 
