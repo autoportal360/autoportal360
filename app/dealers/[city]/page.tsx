@@ -2,206 +2,224 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import { getCanonicalUrl } from '@/lib/seo'
-import type { Dealer } from '@/types/dealer'
-
-export const revalidate = 3600
-
-const db = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import type { Dealer, DealerBrandSummary } from '@/types/dealer'
 
 type Props = { params: Promise<{ city: string }> }
 
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
+async function fetchCityDealers(citySlug: string) {
+  const supabase = getSupabase()
+
+  const { data, error } = await supabase
+    .from('dealers')
+    .select('*')
+    .eq('city_slug', citySlug)
+    .eq('is_active', true)
+    .order('brand_name', { ascending: true })
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []) as Dealer[]
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { city } = await params
-  const { data } = await db.from('dealers').select('city').eq('city_slug', city).limit(1).single()
-  if (!data) return { title: 'Dealers | AutoPortal360' }
+  const dealers = await fetchCityDealers(city)
+  if (!dealers.length) return { title: 'Dealers Not Found | AutoPortal360' }
+
+  const cityName  = dealers[0].city
+  const stateName = dealers[0].state
+  const count     = dealers.length
+
   return {
-    title: `Authorized Car & Bike Dealers in ${data.city} | AutoPortal360`,
-    description: `Find authorized showrooms for cars, bikes and scooters in ${data.city}. Compare dealers, check ratings and get directions.`,
-    alternates: { canonical: getCanonicalUrl(`/dealers/${city}/`) },
+    title: `${count} Authorized Car & Bike Dealers in ${cityName} | AutoPortal360`,
+    description:
+      `Find authorized car, bike and scooter dealers in ${cityName}, ${stateName}. ` +
+      `Browse ${count} verified showrooms with contact details, working hours and directions.`,
+    alternates: {
+      canonical: `https://autoportal360.vercel.app/dealers/${city}/`,
+    },
   }
 }
 
-export async function generateStaticParams() {
-  const { data } = await db.from('dealers').select('city_slug').eq('is_active', true)
-  const slugs = [...new Set((data ?? []).map(d => d.city_slug))]
-  return slugs.map(city => ({ city }))
-}
-
-const TYPE_COLOR: Record<string, string> = { cars: '#00D4FF', bikes: '#FF6B35', scooters: '#A855F7' }
-
-function TypePill({ type }: { type: string }) {
-  const c = TYPE_COLOR[type] ?? '#8E99A8'
+// Dealer Card Component
+function DealerCard({ dealer }: { dealer: Dealer }) {
   return (
-    <span style={{
-      background: `${c}18`, border: `1px solid ${c}40`, color: c,
-      padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700,
-      textTransform: 'capitalize',
-    }}>{type}</span>
+    <div className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-5 hover:border-[#00D4FF]/50 transition-all">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-white font-semibold text-base">{dealer.name}</h3>
+            {dealer.is_authorized && (
+              <span className="bg-green-900/40 text-green-400 border border-green-700/50 text-xs px-2 py-0.5 rounded-full">
+                ✓ Authorized
+              </span>
+            )}
+          </div>
+          <p className="text-[#00D4FF] text-sm mt-0.5">{dealer.brand_name}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-1">
+            <span className="text-yellow-400 text-sm">★</span>
+            <span className="text-white text-sm font-medium">{dealer.rating}</span>
+          </div>
+          <span className="text-[#666] text-xs">{dealer.review_count} reviews</span>
+        </div>
+      </div>
+
+      {/* Vehicle types */}
+      <div className="flex gap-1.5 mb-3">
+        {dealer.vehicle_types.map(vt => (
+          <span
+            key={vt}
+            className="bg-[#111] border border-[#1e3a6e] text-[#C0C0C0] text-xs px-2 py-0.5 rounded capitalize"
+          >
+            {vt}
+          </span>
+        ))}
+      </div>
+
+      {/* Address */}
+      <div className="space-y-1.5 text-sm">
+        <div className="flex items-start gap-2">
+          <span className="text-[#00D4FF] mt-0.5">📍</span>
+          <p className="text-[#C0C0C0]">{dealer.address}</p>
+        </div>
+        {dealer.working_hours && (
+          <div className="flex items-center gap-2">
+            <span className="text-[#00D4FF]">🕒</span>
+            <p className="text-[#C0C0C0]">{dealer.working_hours}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3 mt-4 pt-4 border-t border-[#1e3a6e]">
+        {dealer.phone && (
+          <a
+            href={`tel:${dealer.phone.replace(/\s+/g, '')}`}
+            className="flex-1 bg-[#00D4FF] text-[#06142D] font-semibold text-sm py-2 rounded-lg text-center hover:bg-[#4DEBFF] transition-colors"
+          >
+            📞 Call Now
+          </a>
+        )}
+        {dealer.google_maps_url && (
+          <a
+            href={dealer.google_maps_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-[#111] border border-[#1e3a6e] text-white text-sm py-2 rounded-lg text-center hover:border-[#00D4FF] transition-colors"
+          >
+            🗺️ Directions
+          </a>
+        )}
+      </div>
+    </div>
   )
 }
 
 export default async function CityDealersPage({ params }: Props) {
-  const { city: citySlug } = await params
+  const { city } = await params
+  const dealers = await fetchCityDealers(city)
 
-  const { data: dealers } = await db
-    .from('dealers')
-    .select('*')
-    .eq('is_active', true)
-    .eq('city_slug', citySlug)
-    .order('brand_name')
+  if (!dealers.length) notFound()
 
-  if (!dealers || dealers.length === 0) notFound()
+  const cityName  = dealers[0].city
+  const stateName = dealers[0].state
 
-  const cityName = (dealers[0] as Dealer).city
-
-  // Group by brand
-  const byBrand = new Map<string, { brand: string; brand_slug: string; dealers: Dealer[] }>()
-  for (const d of dealers as Dealer[]) {
-    if (!byBrand.has(d.brand_slug)) {
-      byBrand.set(d.brand_slug, { brand: d.brand_name, brand_slug: d.brand_slug, dealers: [] })
-    }
-    byBrand.get(d.brand_slug)!.dealers.push(d)
+  // Aggregate brands in this city
+  const brandMap = new Map<string, DealerBrandSummary>()
+  for (const d of dealers) {
+    if (brandMap.has(d.brand_slug)) brandMap.get(d.brand_slug)!.count++
+    else brandMap.set(d.brand_slug, { brand_name: d.brand_name, brand_slug: d.brand_slug, count: 1 })
   }
-  const brandGroups = [...byBrand.values()]
+  const brands = Array.from(brandMap.values()).sort((a, b) => b.count - a.count)
+
+  // LocalBusiness schema for the city
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Authorized Vehicle Dealers in ${cityName}`,
+    url: `https://autoportal360.vercel.app/dealers/${city}/`,
+    numberOfItems: dealers.length,
+    itemListElement: dealers.slice(0, 10).map((d, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'AutoDealer',
+        name: d.name,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: d.address,
+          addressLocality: d.city,
+          addressRegion: d.state,
+          addressCountry: 'IN',
+          postalCode: d.pincode ?? undefined,
+        },
+        telephone: d.phone ?? undefined,
+      },
+    })),
+  }
 
   return (
-    <div style={{ background: '#06142D', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #0A1F44 0%, #06142D 100%)',
-        borderBottom: '1px solid rgba(0,212,255,0.1)',
-        padding: '40px 20px 32px',
-      }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: 6, fontSize: 12, color: '#8E99A8', marginBottom: 16, alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Home</Link>
-            <span>›</span>
-            <Link href="/dealers/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Dealers</Link>
-            <span>›</span>
-            <span style={{ color: '#00D4FF' }}>{cityName}</span>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-[#06142D]">
+        {/* ── Breadcrumb ── */}
+        <div className="bg-[#0A1F44] border-b border-[#1e3a6e]">
+          <div className="max-w-6xl mx-auto px-6 py-3">
+            <nav className="flex items-center gap-2 text-sm text-[#C0C0C0]">
+              <Link href="/" className="hover:text-[#00D4FF] transition-colors">Home</Link>
+              <span>›</span>
+              <Link href="/dealers/" className="hover:text-[#00D4FF] transition-colors">Dealers</Link>
+              <span>›</span>
+              <span className="text-white">{cityName}</span>
+            </nav>
           </div>
-          <h1 style={{
-            fontFamily: 'Montserrat, sans-serif', fontWeight: 900,
-            fontSize: 'clamp(22px, 4vw, 32px)', color: '#FFFFFF', margin: '0 0 8px',
-          }}>
-            Authorized Dealers in {cityName}
-          </h1>
-          <p style={{ fontSize: 14, color: '#8E99A8', margin: 0 }}>
-            {dealers.length} showroom{dealers.length !== 1 ? 's' : ''} · {brandGroups.length} brand{brandGroups.length !== 1 ? 's' : ''}
-          </p>
         </div>
-      </div>
 
-      {/* Brand filter tabs */}
-      <div style={{ borderBottom: '1px solid rgba(0,212,255,0.08)', padding: '0 20px' }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', gap: 4, overflowX: 'auto', padding: '12px 0' }}>
-          <Link href={`/dealers/${citySlug}/`} style={{
-            background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)',
-            color: '#00D4FF', padding: '6px 14px', borderRadius: 20,
-            fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap',
-          }}>
-            All Brands
-          </Link>
-          {brandGroups.map(bg => (
-            <Link key={bg.brand_slug} href={`/dealers/${citySlug}/${bg.brand_slug}/`} style={{
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-              color: '#C0C0C0', padding: '6px 14px', borderRadius: 20,
-              fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',
-            }}>
-              {bg.brand}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Dealer list */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 20px 72px' }}>
-        {brandGroups.map(({ brand, brand_slug, dealers: brandDealers }) => (
-          <section key={brand_slug} style={{ marginBottom: 36 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h2 style={{
-                fontFamily: 'Montserrat, sans-serif', fontSize: 16, fontWeight: 800,
-                color: '#00D4FF', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px',
-              }}>
-                {brand}
-              </h2>
-              <Link href={`/dealers/${citySlug}/${brand_slug}/`} style={{
-                fontSize: 12, color: '#8E99A8', textDecoration: 'none',
-              }}>
-                {brand} dealers in {cityName} →
-              </Link>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-              {brandDealers.map(d => (
-                <div key={d.id} style={{
-                  background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)',
-                  borderRadius: 14, padding: '18px 20px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div>
-                      <div style={{
-                        fontFamily: 'Montserrat, sans-serif', fontSize: 15, fontWeight: 800,
-                        color: '#FFFFFF', marginBottom: 3,
-                      }}>{d.name}</div>
-                      {d.locality && <div style={{ fontSize: 12, color: '#8E99A8' }}>{d.locality}</div>}
-                    </div>
-                    {d.is_authorized && (
-                      <span style={{
-                        background: 'rgba(0,204,102,0.1)', border: '1px solid rgba(0,204,102,0.25)',
-                        color: '#00CC66', padding: '2px 8px', borderRadius: 12,
-                        fontSize: 9, fontWeight: 800, marginLeft: 8,
-                      }}>✓ AUTH</span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
-                    {d.vehicle_types.map(t => <TypePill key={t} type={t} />)}
-                  </div>
-
-                  {d.address && (
-                    <div style={{ fontSize: 12, color: '#8E99A8', marginBottom: 8, display: 'flex', gap: 6 }}>
-                      <span>📍</span><span>{d.address}</span>
-                    </div>
-                  )}
-                  {d.working_hours && (
-                    <div style={{ fontSize: 12, color: '#8E99A8', marginBottom: 10, display: 'flex', gap: 6 }}>
-                      <span>🕐</span><span>{d.working_hours}</span>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                      {d.rating && (
-                        <span style={{ color: '#FFB400', fontWeight: 700, fontSize: 13 }}>
-                          ★ {Number(d.rating).toFixed(1)}
-                          {d.review_count > 0 && (
-                            <span style={{ fontSize: 11, color: '#8E99A8', fontWeight: 400 }}> ({d.review_count})</span>
-                          )}
-                        </span>
-                      )}
-                      {d.phone && (
-                        <a href={`tel:${d.phone}`} style={{ fontSize: 12, color: '#00D4FF', textDecoration: 'none' }}>
-                          📞 {d.phone}
-                        </a>
-                      )}
-                    </div>
-                    {d.google_maps_url && (
-                      <a href={d.google_maps_url} target="_blank" rel="noopener noreferrer" style={{
-                        fontSize: 11, color: '#8E99A8', textDecoration: 'none', fontWeight: 600,
-                      }}>Maps →</a>
-                    )}
-                  </div>
-                </div>
+        {/* ── Hero ── */}
+        <section className="bg-gradient-to-b from-[#0A1F44] to-[#06142D] py-12 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              Authorized Dealers in {cityName}
+            </h1>
+            <p className="text-[#C0C0C0]">
+              {dealers.length} verified showrooms in {cityName}, {stateName}
+            </p>
+            {/* Brand filter pills */}
+            <div className="flex flex-wrap gap-2 mt-5">
+              {brands.map(b => (
+                <Link
+                  key={b.brand_slug}
+                  href={`/dealers/${city}/${b.brand_slug}/`}
+                  className="bg-[#111] border border-[#1e3a6e] text-[#C0C0C0] hover:text-[#00D4FF] hover:border-[#00D4FF] text-sm px-3 py-1.5 rounded-full transition-all"
+                >
+                  {b.brand_name} ({b.count})
+                </Link>
               ))}
             </div>
-          </section>
-        ))}
+          </div>
+        </section>
+
+        {/* ── Dealer Grid ── */}
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {dealers.map(dealer => (
+              <DealerCard key={dealer.id} dealer={dealer} />
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
