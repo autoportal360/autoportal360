@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import BrandSeoText from '@/components/BrandSeoText'
 
 type Props = { params: Promise<{ brand: string }> }
 
@@ -22,6 +23,16 @@ async function fetchBrandData(brandSlug: string) {
   return data ?? []
 }
 
+async function fetchBrandSeo(brandSlug: string) {
+  const { data } = await getSupabase()
+    .from('brand_seo_content')
+    .select('seo_text, brand_name')
+    .eq('brand_slug', brandSlug)
+    .eq('is_published', true)
+    .maybeSingle()
+  return data
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { brand } = await params
   const rows = await fetchBrandData(brand)
@@ -36,7 +47,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BrandDealersPage({ params }: Props) {
   const { brand } = await params
-  const rows = await fetchBrandData(brand)
+  const [rows, seoContent] = await Promise.all([
+    fetchBrandData(brand),
+    fetchBrandSeo(brand),
+  ])
   if (!rows.length) notFound()
 
   const brandName = rows[0].brand_name
@@ -115,6 +129,11 @@ export default async function BrandDealersPage({ params }: Props) {
       </section>
 
       <div className="max-w-5xl mx-auto px-6 py-10" style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+
+        {/* Brand SEO Text */}
+        {seoContent?.seo_text && (
+          <BrandSeoText seoText={seoContent.seo_text} brandName={seoContent.brand_name} />
+        )}
 
         {/* Select Your City */}
         <section>

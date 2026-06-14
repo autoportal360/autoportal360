@@ -115,6 +115,14 @@ export default async function AdminDashboard() {
           }}>
             View Leads
           </Link>
+          <Link href="/admin/brand-seo" style={{
+            background: 'rgba(0,204,102,0.08)', color: '#00CC66',
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
+            fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
+            border: '1px solid rgba(0,204,102,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            📝 Brand SEO
+          </Link>
         </div>
       </div>
 

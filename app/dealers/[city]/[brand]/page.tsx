@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import type { Dealer } from '@/types/dealer'
+import BrandSeoText from '@/components/BrandSeoText'
 
 type Props = { params: Promise<{ city: string; brand: string }> }
 
@@ -15,17 +16,20 @@ function getSupabase() {
 
 async function fetchData(citySlug: string, brandSlug: string) {
   const supabase = getSupabase()
-  const [mainRes, otherRes] = await Promise.all([
+  const [mainRes, otherRes, seoRes] = await Promise.all([
     supabase.from('dealers').select('*')
       .eq('city_slug', citySlug).eq('brand_slug', brandSlug).eq('is_active', true)
       .order('rating', { ascending: false }),
     supabase.from('dealers').select('brand_slug, brand_name')
       .eq('city_slug', citySlug).eq('is_active', true)
       .neq('brand_slug', brandSlug),
+    supabase.from('brand_seo_content').select('seo_text, brand_name')
+      .eq('brand_slug', brandSlug).eq('is_published', true).maybeSingle(),
   ])
   return {
     dealers:     (mainRes.data ?? []) as Dealer[],
     otherBrands: otherRes.data ?? [],
+    seoContent:  seoRes.data,
   }
 }
 
@@ -187,7 +191,7 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
 
 export default async function BrandCityPage({ params }: Props) {
   const { city, brand } = await params
-  const { dealers, otherBrands } = await fetchData(city, brand)
+  const { dealers, otherBrands, seoContent } = await fetchData(city, brand)
   if (!dealers.length) notFound()
 
   const { city: cityName, brand_name, state } = dealers[0]
@@ -298,6 +302,13 @@ export default async function BrandCityPage({ params }: Props) {
             </div>
           </aside>
         </div>
+
+        {/* Brand SEO text */}
+        {seoContent?.seo_text && (
+          <div style={{ marginTop: '2.5rem' }}>
+            <BrandSeoText seoText={seoContent.seo_text} brandName={seoContent.brand_name} />
+          </div>
+        )}
 
         {/* Mobile: other brands */}
         {otherBrandList.length > 0 && (

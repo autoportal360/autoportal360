@@ -18,8 +18,9 @@ const NAV = [
   { href: '/admin/pages',    label: 'Pages SEO', icon: '📄',  section: 'pages' },
   { href: '/admin/dealers',  label: 'Dealers',   icon: '🏪',  section: 'dealers' },
   { href: '/admin/ads',      label: 'Ads',       icon: '📢',  section: 'ads' },
-  { href: '/admin/seo',      label: 'SEO',       icon: '🔍',  section: 'seo' },
-  { href: '/admin/blog',     label: 'Blog',      icon: '✍',   section: 'blog' },
+  { href: '/admin/seo',       label: 'SEO',       icon: '🔍',  section: 'seo' },
+  { href: '/admin/brand-seo', label: 'Brand SEO', icon: '📝',  section: 'brand-seo' },
+  { href: '/admin/blog',      label: 'Blog',      icon: '✍',   section: 'blog' },
   { href: '/admin/users',    label: 'Users',     icon: '👥',  section: 'users' },
 ]
 
