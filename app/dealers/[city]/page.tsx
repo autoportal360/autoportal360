@@ -38,39 +38,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function DealerCardCompact({ dealer }: { dealer: Dealer }) {
   return (
-    <div className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4 hover:border-[#00D4FF] transition-all">
-      <div className="flex items-start justify-between gap-3 mb-3">
+    <div className="ap-card" style={{ padding: '1rem' }}>
+      <div className="flex items-start justify-between mb-3" style={{ gap: '.75rem' }}>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          <div className="flex items-center flex-wrap mb-1" style={{ gap: '.5rem' }}>
             <h3 className="text-white font-semibold text-sm">{dealer.name}</h3>
             {dealer.is_authorized && (
-              <span className="shrink-0 bg-green-900/40 text-green-400 border border-green-800 text-[10px] px-1.5 py-0.5 rounded-full">
+              <span style={{
+                background: 'rgba(20,83,45,.4)', color: '#4ade80',
+                border: '1px solid #166534', fontSize: '.625rem',
+                padding: '.125rem .375rem', borderRadius: '9999px', flexShrink: 0
+              }}>
                 ✓ Auth
               </span>
             )}
           </div>
           {dealer.address && (
-            <p className="text-[#666] text-xs truncate">{dealer.address}</p>
+            <p className="truncate" style={{ color: '#666', fontSize: '.75rem' }}>{dealer.address}</p>
           )}
           {dealer.working_hours && (
             <p className="text-[#C0C0C0] text-xs mt-1">🕒 {dealer.working_hours}</p>
           )}
         </div>
-        <div className="text-right shrink-0">
-          <div className="flex items-center gap-0.5 justify-end">
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div className="flex items-center" style={{ gap: '.125rem', justifyContent: 'flex-end' }}>
             {[...Array(5)].map((_, i) => (
-              <span key={i} className={`text-xs ${i < Math.round(dealer.rating) ? 'text-yellow-400' : 'text-[#333]'}`}>★</span>
+              <span key={i} style={{ fontSize: '.75rem', color: i < Math.round(dealer.rating) ? '#facc15' : '#333' }}>★</span>
             ))}
           </div>
-          <p className="text-[#666] text-[10px] mt-0.5">{dealer.review_count} reviews</p>
+          <p style={{ color: '#666', fontSize: '.625rem', marginTop: '.125rem' }}>{dealer.review_count} reviews</p>
         </div>
       </div>
 
-      <div className="flex gap-2 pt-3 border-t border-[#1e3a6e]">
+      <div className="ap-cta-row">
         {dealer.phone && (
           <a
             href={`tel:${dealer.phone.replace(/[\s\-()]/g, '')}`}
-            className="flex-1 bg-[#00D4FF] text-[#06142D] font-bold text-xs py-2 rounded-lg text-center hover:bg-[#4DEBFF] transition-colors"
+            className="ap-cta-call"
           >
             📞 Call Now
           </a>
@@ -80,7 +84,7 @@ function DealerCardCompact({ dealer }: { dealer: Dealer }) {
             href={dealer.google_maps_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 bg-[#06142D] border border-[#1e3a6e] text-[#C0C0C0] text-xs py-2 rounded-lg text-center hover:border-[#00D4FF] hover:text-white transition-colors"
+            className="ap-cta-dir"
           >
             🗺️ Directions
           </a>
@@ -139,13 +143,13 @@ export default async function CityDealersPage({ params }: Props) {
       <div className="min-h-screen bg-[#06142D]">
 
         {/* Breadcrumb */}
-        <div className="bg-[#0A1F44] border-b border-[#1e3a6e]">
+        <div className="bg-[#0A1F44]" style={{ borderBottom: '1px solid #1e3a6e' }}>
           <div className="max-w-5xl mx-auto px-6 py-3">
             <nav className="flex items-center gap-2 text-sm text-[#C0C0C0]">
               <Link href="/" className="hover:text-[#00D4FF] transition-colors">Home</Link>
-              <span className="text-[#444]">›</span>
+              <span style={{ color: '#444' }}>›</span>
               <Link href="/dealers/" className="hover:text-[#00D4FF] transition-colors">Dealers</Link>
-              <span className="text-[#444]">›</span>
+              <span style={{ color: '#444' }}>›</span>
               <span className="text-white">{cityName}</span>
             </nav>
           </div>
@@ -162,21 +166,21 @@ export default async function CityDealersPage({ params }: Props) {
             </p>
 
             {/* Vehicle type counts */}
-            <div className="flex gap-3 flex-wrap mb-6">
+            <div className="ap-tab-group mb-6">
               {carCount > 0 && (
-                <div className="flex items-center gap-2 bg-[#06142D] border border-[#1e3a6e] rounded-xl px-4 py-2">
+                <div className="ap-chip">
                   <span>🚗</span>
                   <span className="text-white text-sm font-medium">{carCount} Car dealers</span>
                 </div>
               )}
               {bikeCount > 0 && (
-                <div className="flex items-center gap-2 bg-[#06142D] border border-[#1e3a6e] rounded-xl px-4 py-2">
+                <div className="ap-chip">
                   <span>🏍️</span>
                   <span className="text-white text-sm font-medium">{bikeCount} Bike dealers</span>
                 </div>
               )}
               {scooterCount > 0 && (
-                <div className="flex items-center gap-2 bg-[#06142D] border border-[#1e3a6e] rounded-xl px-4 py-2">
+                <div className="ap-chip">
                   <span>🛵</span>
                   <span className="text-white text-sm font-medium">{scooterCount} Scooter dealers</span>
                 </div>
@@ -184,15 +188,14 @@ export default async function CityDealersPage({ params }: Props) {
             </div>
 
             {/* Brand filter pills */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap" style={{ gap: '.5rem' }}>
               {brands.map(b => (
                 <Link
                   key={b.brand_slug}
                   href={`/dealers/${city}/${b.brand_slug}/`}
-                  className="bg-[#06142D] border border-[#1e3a6e] text-[#C0C0C0] hover:border-[#00D4FF] hover:text-[#00D4FF] text-sm px-4 py-1.5 rounded-full transition-all"
+                  className="ap-pill"
                 >
-                  {b.brand_name}
-                  <span className="ml-1.5 text-[#00D4FF] text-xs font-bold">{b.count}</span>
+                  {b.brand_name}<span className="ap-pill-count">{b.count}</span>
                 </Link>
               ))}
             </div>
@@ -200,16 +203,16 @@ export default async function CityDealersPage({ params }: Props) {
         </section>
 
         {/* Dealers grouped by brand */}
-        <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
+        <div className="max-w-5xl mx-auto px-6 py-10" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
           {brands.map(b => {
             const bDealers = dealers.filter(d => d.brand_slug === b.brand_slug)
             return (
               <section key={b.brand_slug}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-[#00D4FF] text-[#06142D] text-xs font-bold flex items-center justify-center shrink-0 select-none">
+                  <h2 className="text-base font-bold text-white flex items-center" style={{ gap: '.5rem' }}>
+                    <div className="ap-avatar-xs">
                       {b.brand_name.charAt(0)}
-                    </span>
+                    </div>
                     {b.brand_name} in {cityName}
                   </h2>
                   <Link href={`/dealers/${city}/${b.brand_slug}/`} className="text-[#00D4FF] text-sm hover:underline shrink-0">
@@ -217,7 +220,7 @@ export default async function CityDealersPage({ params }: Props) {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="ap-grid-dealers">
                   {bDealers.slice(0, 2).map(d => (
                     <DealerCardCompact key={d.id} dealer={d} />
                   ))}
@@ -226,7 +229,8 @@ export default async function CityDealersPage({ params }: Props) {
                 {b.count > 2 && (
                   <Link
                     href={`/dealers/${city}/${b.brand_slug}/`}
-                    className="mt-3 block w-full py-2.5 bg-[#0A1F44] border border-[#1e3a6e] rounded-xl text-center text-[#C0C0C0] text-sm hover:border-[#00D4FF] hover:text-[#00D4FF] transition-colors"
+                    className="ap-view-all"
+                    style={{ marginTop: '.75rem' }}
                   >
                     +{b.count - 2} more {b.brand_name} dealers in {cityName} →
                   </Link>

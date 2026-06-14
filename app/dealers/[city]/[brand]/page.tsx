@@ -70,55 +70,57 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
   }
 
   return (
-    <div className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-5 hover:border-[#00D4FF]/50 transition-all">
+    <div className="ap-card-p5">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="flex items-start gap-4">
+      <div className="flex items-start" style={{ gap: '1rem' }}>
         {/* Rank */}
-        <div className="w-9 h-9 rounded-full bg-[#06142D] border border-[#1e3a6e] text-[#C0C0C0] text-sm font-bold flex items-center justify-center shrink-0 select-none">
-          {rank}
-        </div>
+        <div className="ap-rank-badge" style={{ userSelect: 'none' }}>{rank}</div>
 
         <div className="flex-1 min-w-0">
           {/* Name + authorized badge */}
-          <div className="flex items-center gap-2 flex-wrap mb-2">
+          <div className="flex items-center flex-wrap mb-2" style={{ gap: '.5rem' }}>
             <h2 className="text-white font-bold text-base">{dealer.name}</h2>
             {dealer.is_authorized && (
-              <span className="bg-green-900/40 text-green-400 border border-green-800 text-xs px-2 py-0.5 rounded-full font-medium shrink-0">
+              <span style={{
+                background: 'rgba(20,83,45,.4)', color: '#4ade80',
+                border: '1px solid #166534', fontSize: '.75rem',
+                padding: '.125rem .5rem', borderRadius: '9999px', fontWeight: 500, flexShrink: 0
+              }}>
                 ✓ Authorized
               </span>
             )}
           </div>
 
           {/* Vehicle type tags */}
-          <div className="flex gap-1.5 mb-4 flex-wrap">
+          <div className="flex flex-wrap mb-4" style={{ gap: '.375rem' }}>
             {dealer.vehicle_types.map(vt => (
-              <span key={vt} className="bg-[#06142D] border border-[#1e3a6e] text-[#00D4FF] text-xs px-2.5 py-0.5 rounded-full capitalize font-medium">
+              <span key={vt} className="ap-type-chip">
                 {vt === 'cars' ? '🚗' : vt === 'bikes' ? '🏍️' : '🛵'} {vt}
               </span>
             ))}
           </div>
 
           {/* Contact info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-4">
-            <div className="flex items-start gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 text-sm mb-4" style={{ gap: '.5rem' }}>
+            <div className="flex items-start" style={{ gap: '.5rem' }}>
               <span className="text-[#00D4FF] shrink-0 mt-0.5">📍</span>
               <p className="text-[#C0C0C0] leading-snug">{dealer.address}</p>
             </div>
             {dealer.locality && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center" style={{ gap: '.5rem' }}>
                 <span className="text-[#00D4FF]">📌</span>
                 <p className="text-[#C0C0C0]">{dealer.locality}{dealer.pincode ? ` — ${dealer.pincode}` : ''}</p>
               </div>
             )}
             {dealer.working_hours && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center" style={{ gap: '.5rem' }}>
                 <span className="text-[#00D4FF]">🕒</span>
                 <p className="text-[#C0C0C0]">{dealer.working_hours}</p>
               </div>
             )}
             {dealer.phone && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center" style={{ gap: '.5rem' }}>
                 <span className="text-[#00D4FF]">📞</span>
                 <a href={`tel:${dealer.phone}`} className="text-white hover:text-[#00D4FF] transition-colors font-medium">
                   {dealer.phone}
@@ -126,7 +128,7 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
               </div>
             )}
             {dealer.email && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center" style={{ gap: '.5rem' }}>
                 <span className="text-[#00D4FF]">✉️</span>
                 <a href={`mailto:${dealer.email}`} className="text-[#C0C0C0] hover:text-[#00D4FF] transition-colors text-xs truncate">
                   {dealer.email}
@@ -136,22 +138,22 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
           </div>
 
           {/* Rating */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-0.5">
+          <div className="flex items-center mb-4" style={{ gap: '.5rem' }}>
+            <div className="flex items-center" style={{ gap: '.125rem' }}>
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={`text-sm ${i < Math.round(dealer.rating) ? 'text-yellow-400' : 'text-[#333]'}`}>★</span>
+                <span key={i} style={{ fontSize: '.875rem', color: i < Math.round(dealer.rating) ? '#facc15' : '#333' }}>★</span>
               ))}
             </div>
             <span className="text-white text-sm font-bold">{dealer.rating}</span>
-            <span className="text-[#666] text-xs">({dealer.review_count} reviews)</span>
+            <span style={{ color: '#666', fontSize: '.75rem' }}>({dealer.review_count} reviews)</span>
           </div>
 
           {/* CTAs */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap" style={{ gap: '.5rem' }}>
             {dealer.phone && (
               <a
                 href={`tel:${dealer.phone.replace(/[\s\-()]/g, '')}`}
-                className="flex items-center gap-2 bg-[#00D4FF] text-[#06142D] font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#4DEBFF] transition-colors"
+                className="ap-btn-cyan"
               >
                 📞 Call Now
               </a>
@@ -161,7 +163,7 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
                 href={dealer.google_maps_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 border border-[#00D4FF] text-[#00D4FF] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#00D4FF] hover:text-[#06142D] transition-all"
+                className="ap-btn-outline"
               >
                 🗺️ Directions
               </a>
@@ -171,7 +173,7 @@ function DealerFullCard({ dealer, rank }: { dealer: Dealer; rank: number }) {
                 href={dealer.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-[#1e3a6e] text-[#C0C0C0] text-sm px-4 py-2.5 rounded-xl hover:border-[#00D4FF] hover:text-white transition-colors"
+                className="ap-btn-ghost"
               >
                 🌐 Website
               </a>
@@ -205,15 +207,15 @@ export default async function BrandCityPage({ params }: Props) {
     <div className="min-h-screen bg-[#06142D]">
 
       {/* Breadcrumb */}
-      <div className="bg-[#0A1F44] border-b border-[#1e3a6e]">
+      <div className="bg-[#0A1F44]" style={{ borderBottom: '1px solid #1e3a6e' }}>
         <div className="max-w-5xl mx-auto px-6 py-3">
-          <nav className="flex items-center gap-2 text-sm text-[#C0C0C0] flex-wrap">
+          <nav className="flex items-center flex-wrap gap-2 text-sm text-[#C0C0C0]">
             <Link href="/" className="hover:text-[#00D4FF] transition-colors">Home</Link>
-            <span className="text-[#444]">›</span>
+            <span style={{ color: '#444' }}>›</span>
             <Link href="/dealers/" className="hover:text-[#00D4FF] transition-colors">Dealers</Link>
-            <span className="text-[#444]">›</span>
+            <span style={{ color: '#444' }}>›</span>
             <Link href={`/dealers/brand/${brand}/`} className="hover:text-[#00D4FF] transition-colors">{brand_name}</Link>
-            <span className="text-[#444]">›</span>
+            <span style={{ color: '#444' }}>›</span>
             <Link href={`/dealers/${city}/`} className="hover:text-[#00D4FF] transition-colors">{cityName}</Link>
           </nav>
         </div>
@@ -222,8 +224,8 @@ export default async function BrandCityPage({ params }: Props) {
       {/* Hero */}
       <section className="bg-[#0A1F44] py-12 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-[#00D4FF] text-[#06142D] font-bold text-xl flex items-center justify-center shrink-0 select-none">
+          <div className="flex items-center mb-6" style={{ gap: '1rem' }}>
+            <div className="ap-avatar-lg" style={{ userSelect: 'none' }}>
               {brand_name.charAt(0)}
             </div>
             <div>
@@ -237,13 +239,13 @@ export default async function BrandCityPage({ params }: Props) {
           </div>
 
           {/* Stats */}
-          <div className="flex gap-3 flex-wrap">
+          <div className="ap-stat-group">
             {[
               { label: 'Showrooms',  value: dealers.length },
               { label: 'Avg Rating', value: `★ ${avgRating}` },
               { label: 'Authorized', value: authCount },
             ].map(s => (
-              <div key={s.label} className="bg-[#06142D] border border-[#1e3a6e] rounded-xl px-5 py-3 text-center min-w-[90px]">
+              <div key={s.label} className="ap-stat">
                 <p className="text-xl font-bold text-[#00D4FF]">{s.value}</p>
                 <p className="text-[#C0C0C0] text-xs mt-1">{s.label}</p>
               </div>
@@ -254,23 +256,22 @@ export default async function BrandCityPage({ params }: Props) {
 
       {/* Main content + sidebar */}
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <div className="flex gap-8 items-start">
+        <div className="flex items-start" style={{ gap: '2rem' }}>
 
           {/* Dealer cards */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="flex-1 min-w-0" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {dealers.map((d, i) => (
               <DealerFullCard key={d.id} dealer={d} rank={i + 1} />
             ))}
           </div>
 
           {/* Sidebar */}
-          <aside className="hidden lg:block w-60 shrink-0">
-            <div className="sticky top-6 space-y-4">
-
+          <aside className="ap-sidebar-wrap">
+            <div className="ap-sidebar">
               {otherBrandList.length > 0 && (
-                <div className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-5">
-                  <h3 className="text-white font-semibold text-sm mb-4">Other Brands in {cityName}</h3>
-                  <div className="space-y-2">
+                <div className="ap-panel">
+                  <p className="text-white font-semibold text-sm mb-4">Other Brands in {cityName}</p>
+                  <div className="ap-stack-rows">
                     {otherBrandList.slice(0, 8).map(b => (
                       <Link
                         key={b.slug}
@@ -278,7 +279,7 @@ export default async function BrandCityPage({ params }: Props) {
                         className="flex items-center justify-between py-1 group"
                       >
                         <span className="text-[#C0C0C0] text-sm group-hover:text-[#00D4FF] transition-colors">{b.brand_name}</span>
-                        <span className="text-[#666] text-xs group-hover:text-[#00D4FF] transition-colors">{b.count}</span>
+                        <span style={{ color: '#666', fontSize: '.75rem' }} className="group-hover:text-[#00D4FF] transition-colors">{b.count}</span>
                       </Link>
                     ))}
                   </div>
@@ -288,8 +289,8 @@ export default async function BrandCityPage({ params }: Props) {
                 </div>
               )}
 
-              <div className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-5">
-                <h3 className="text-white font-semibold text-sm mb-3">{brand_name} in Other Cities</h3>
+              <div className="ap-panel">
+                <p className="text-white font-semibold text-sm mb-3">{brand_name} in Other Cities</p>
                 <Link href={`/dealers/brand/${brand}/`} className="text-[#00D4FF] text-sm hover:underline">
                   View all {brand_name} cities →
                 </Link>
@@ -300,16 +301,16 @@ export default async function BrandCityPage({ params }: Props) {
 
         {/* Mobile: other brands */}
         {otherBrandList.length > 0 && (
-          <section className="mt-10 lg:hidden">
-            <h3 className="text-white font-semibold mb-4">Other Brands in {cityName}</h3>
-            <div className="flex flex-wrap gap-2">
+          <section style={{ marginTop: '2.5rem' }}>
+            <p className="text-white font-semibold mb-4">Other Brands in {cityName}</p>
+            <div className="flex flex-wrap" style={{ gap: '.5rem' }}>
               {otherBrandList.map(b => (
                 <Link
                   key={b.slug}
                   href={`/dealers/${city}/${b.slug}/`}
-                  className="bg-[#0A1F44] border border-[#1e3a6e] text-[#C0C0C0] hover:border-[#00D4FF] hover:text-[#00D4FF] text-sm px-3 py-1.5 rounded-full transition-all"
+                  className="ap-pill"
                 >
-                  {b.brand_name} ({b.count})
+                  {b.brand_name}<span className="ap-pill-count">{b.count}</span>
                 </Link>
               ))}
             </div>

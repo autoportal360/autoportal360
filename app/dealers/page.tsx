@@ -11,17 +11,16 @@ const TABS = ['All', 'Cars', 'Bikes', 'Scooters']
 
 export default function DealersPage() {
   const router = useRouter()
-  const [brands, setBrands]       = useState<BrandSummary[]>([])
-  const [cities, setCities]       = useState<CitySummary[]>([])
-  const [total, setTotal]         = useState(0)
-  const [loading, setLoading]     = useState(true)
-  const [showAll, setShowAll]     = useState(false)
-  const [brand, setBrand]         = useState('')
-  const [city, setCity]           = useState('')
-  const [tab, setTab]             = useState('All')
+  const [brands, setBrands]   = useState<BrandSummary[]>([])
+  const [cities, setCities]   = useState<CitySummary[]>([])
+  const [total, setTotal]     = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [showAll, setShowAll] = useState(false)
+  const [brand, setBrand]     = useState('')
+  const [city, setCity]       = useState('')
+  const [tab, setTab]         = useState('All')
 
   useEffect(() => {
-    // Use allSettled so one failing API doesn't zero out everything
     Promise.allSettled([
       fetch('/api/dealers/brands').then(r => r.json()),
       fetch('/api/dealers/cities').then(r => r.json()),
@@ -49,13 +48,12 @@ export default function DealersPage() {
       <section className="bg-[#0A1F44] pt-12 pb-14 px-6">
         <div className="max-w-5xl mx-auto">
 
-          {/* Stats row */}
           {!loading && (
             <div className="flex items-center gap-2 mb-7 flex-wrap text-sm text-[#C0C0C0]">
               <span>{total} verified dealers</span>
-              <span className="text-[#1e3a6e]">·</span>
+              <span style={{ color: '#1e3a6e' }}>·</span>
               <span>{cities.length} cities</span>
-              <span className="text-[#1e3a6e]">·</span>
+              <span style={{ color: '#1e3a6e' }}>·</span>
               <span>{brands.length} brands</span>
             </div>
           )}
@@ -70,10 +68,10 @@ export default function DealersPage() {
             Cars, bikes and scooters — select a brand and city to find verified showrooms instantly.
           </p>
 
-          {/* ── Finder bar ── */}
-          <div className="bg-[#06142D] border border-[#1e3a6e] rounded-2xl overflow-hidden mb-5">
-            <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-[#1e3a6e]">
-              <div className="flex-1 px-4 pt-3 pb-3">
+          {/* Finder bar */}
+          <div className="ap-finder">
+            <div className="ap-finder-row">
+              <div className="ap-finder-field">
                 <label className="block text-[#666] text-[10px] font-semibold tracking-widest mb-1">BRAND</label>
                 <select
                   value={brand}
@@ -82,13 +80,11 @@ export default function DealersPage() {
                 >
                   <option value="">All Brands</option>
                   {brands.map(b => (
-                    <option key={b.brand_slug} value={b.brand_slug} className="bg-[#06142D]">
-                      {b.brand_name} ({b.count})
-                    </option>
+                    <option key={b.brand_slug} value={b.brand_slug}>{b.brand_name} ({b.count})</option>
                   ))}
                 </select>
               </div>
-              <div className="flex-1 px-4 pt-3 pb-3">
+              <div className="ap-finder-field">
                 <label className="block text-[#666] text-[10px] font-semibold tracking-widest mb-1">CITY</label>
                 <select
                   value={city}
@@ -97,9 +93,7 @@ export default function DealersPage() {
                 >
                   <option value="">All Cities</option>
                   {cities.map(c => (
-                    <option key={c.city_slug} value={c.city_slug} className="bg-[#06142D]">
-                      {c.city}, {c.state}
-                    </option>
+                    <option key={c.city_slug} value={c.city_slug}>{c.city}, {c.state}</option>
                   ))}
                 </select>
               </div>
@@ -113,17 +107,13 @@ export default function DealersPage() {
             </div>
           </div>
 
-          {/* ── Vehicle tabs ── */}
-          <div className="flex gap-3 flex-wrap">
+          {/* Vehicle tabs */}
+          <div className="ap-tab-group">
             {TABS.map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-5 py-2 rounded-full text-sm font-medium border transition-all ${
-                  tab === t
-                    ? 'bg-[#00D4FF] text-[#06142D] border-[#00D4FF]'
-                    : 'bg-[#06142D] text-[#C0C0C0] border-[#1e3a6e] hover:border-[#00D4FF] hover:text-white'
-                }`}
+                className={`ap-tab${tab === t ? ' ap-tab-active' : ''}`}
               >
                 {t}
               </button>
@@ -133,7 +123,7 @@ export default function DealersPage() {
       </section>
 
       {/* ── BODY ── */}
-      <div className="max-w-5xl mx-auto px-6 py-12 space-y-14">
+      <div className="max-w-5xl mx-auto px-6 py-12" style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
 
         {/* Browse by Brand */}
         <section>
@@ -143,27 +133,21 @@ export default function DealersPage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl h-28 animate-pulse" />
-              ))}
+            <div className="ap-grid-brands">
+              {[...Array(8)].map((_, i) => <div key={i} className="ap-skeleton-tall" />)}
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div className="ap-grid-brands">
                 {displayBrands.map(b => (
-                  <Link
-                    key={b.brand_slug}
-                    href={`/dealers/brand/${b.brand_slug}/`}
-                    className="block bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4 hover:border-[#00D4FF] hover:bg-[#0d2a5a] transition-all text-center"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-[#00D4FF] flex items-center justify-center mx-auto mb-3 shrink-0">
-                      <span className="text-[#06142D] font-bold text-lg leading-none select-none">
+                  <Link key={b.brand_slug} href={`/dealers/brand/${b.brand_slug}/`} className="ap-card-centered">
+                    <div className="ap-avatar">
+                      <span style={{ color: '#06142D', fontWeight: 700, fontSize: '1.125rem', lineHeight: 1 }}>
                         {b.brand_name.charAt(0)}
                       </span>
                     </div>
                     <p className="text-white text-sm font-semibold leading-tight">{b.brand_name}</p>
-                    <p className="text-[#666] text-xs mt-1">{b.count} dealers</p>
+                    <p style={{ color: '#666', fontSize: '.75rem', marginTop: '.25rem' }}>{b.count} dealers</p>
                   </Link>
                 ))}
               </div>
@@ -171,7 +155,8 @@ export default function DealersPage() {
               {brands.length > 12 && (
                 <button
                   onClick={() => setShowAll(v => !v)}
-                  className="mt-4 w-full py-3 bg-[#0A1F44] border border-[#1e3a6e] rounded-xl text-[#00D4FF] text-sm hover:border-[#00D4FF] transition-colors"
+                  className="ap-view-all"
+                  style={{ marginTop: '1rem' }}
                 >
                   {showAll ? 'Show Less ↑' : `View All ${brands.length} Brands ↓`}
                 </button>
@@ -188,26 +173,20 @@ export default function DealersPage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl h-20 animate-pulse" />
-              ))}
+            <div className="ap-grid-cities">
+              {[...Array(8)].map((_, i) => <div key={i} className="ap-skeleton" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="ap-grid-cities">
               {cities.map(c => (
-                <Link
-                  key={c.city_slug}
-                  href={`/dealers/${c.city_slug}/`}
-                  className="block bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4 hover:border-[#00D4FF] hover:bg-[#0d2a5a] transition-all"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
+                <Link key={c.city_slug} href={`/dealers/${c.city_slug}/`} className="ap-card">
+                  <div className="flex items-center justify-between" style={{ gap: '.5rem' }}>
+                    <div style={{ minWidth: 0 }}>
                       <p className="text-white font-semibold text-sm truncate">{c.city}</p>
-                      <p className="text-[#666] text-xs mt-0.5">{c.state}</p>
+                      <p style={{ color: '#666', fontSize: '.75rem', marginTop: '.125rem' }}>{c.state}</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-[#06142D] border border-[#1e3a6e] flex items-center justify-center shrink-0">
-                      <span className="text-[#00D4FF] text-xs font-bold">{c.count}</span>
+                    <div className="ap-count-badge">
+                      <span>{c.count}</span>
                     </div>
                   </div>
                 </Link>
