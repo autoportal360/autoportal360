@@ -12,44 +12,55 @@ type Params = { params: Promise<{ id: string }> }
 
 // GET /api/dealers/[id]
 export async function GET(_req: NextRequest, { params }: Params) {
-  const { id } = await params
-  const supabase = getAdminClient()
+  try {
+    const { id } = await params
+    const supabase = getAdminClient()
 
-  const { data, error } = await supabase
-    .from('dealers')
-    .select('*')
-    .eq('id', id)
-    .single()
+    const { data, error } = await supabase
+      .from('dealers')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  if (error || !data) {
-    return NextResponse.json({ error: 'Dealer not found' }, { status: 404 })
+    if (error || !data) {
+      return NextResponse.json({ error: 'Dealer not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('[GET /api/dealers/[id]]', error)
+    return NextResponse.json({ error: 'Failed to fetch dealer' }, { status: 500 })
   }
-  return NextResponse.json(data)
 }
 
 // PUT /api/dealers/[id]
 export async function PUT(request: NextRequest, { params }: Params) {
-  const { id } = await params
   try {
+    const { id } = await params
     const supabase = getAdminClient()
     const body = await request.json()
 
-    // Strip read-only fields
-    const { id: _id, created_at: _ca, updated_at: _ua, slug: _slug, ...rest } = body
+    // Remove read-only / auto fields
+    const { id: _id, slug: _slug, created_at: _ca, updated_at: _ua, ...updateData } = body
 
     const { data, error } = await supabase
       .from('dealers')
-      .update(rest)
+      .update({
+        ...updateData,
+        // Nullify empty strings
+        locality:        updateData.locality        || null,
+        pincode:         updateData.pincode         || null,
+        phone:           updateData.phone           || null,
+        email:           updateData.email           || null,
+        website:         updateData.website         || null,
+        google_maps_url: updateData.google_maps_url || null,
+      })
       .eq('id', id)
       .select()
       .single()
 
-    if (error) {
-      if (error.code === '23505') {
-        return NextResponse.json({ error: 'Slug conflict' }, { status: 409 })
-      }
-      throw error
-    }
+    if (error) throw error
+
     return NextResponse.json(data)
   } catch (error) {
     console.error('[PUT /api/dealers/[id]]', error)
@@ -59,11 +70,17 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
 // DELETE /api/dealers/[id]
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { id } = await params
   try {
+    const { id } = await params
     const supabase = getAdminClient()
-    const { error } = await supabase.from('dealers').delete().eq('id', id)
+
+    const { error } = await supabase
+      .from('dealers')
+      .delete()
+      .eq('id', id)
+
     if (error) throw error
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[DELETE /api/dealers/[id]]', error)
