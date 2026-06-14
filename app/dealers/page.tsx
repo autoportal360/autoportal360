@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { getCanonicalUrl } from '@/lib/seo'
-import type { Dealer } from '@/types'
+import type { Dealer } from '@/types/dealer'
 
 export const revalidate = 3600
 

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { getCanonicalUrl } from '@/lib/seo'
-import type { Dealer } from '@/types'
+import type { Dealer } from '@/types/dealer'
 
 export const revalidate = 3600
 

@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { getAdminUser, hasPermission } from '@/lib/admin-auth'
 import AccessDenied from '@/app/admin/AccessDenied'
-import type { Dealer } from '@/types'
+import type { Dealer } from '@/types/dealer'
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

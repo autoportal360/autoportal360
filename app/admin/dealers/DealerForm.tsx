@@ -4,6 +4,12 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toSlug } from '@/lib/utils'
+import {
+  type DealerFormData,
+  type VehicleType,
+  EMPTY_DEALER_FORM,
+  INDIAN_STATES,
+} from '@/types/dealer'
 
 // ─── style tokens ──────────────────────────────────────────────────────────────
 
@@ -71,43 +77,7 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) =
   )
 }
 
-// ─── types ────────────────────────────────────────────────────────────────────
-
-interface FormState {
-  name: string
-  slug: string
-  brand_slug: string
-  brand_name: string
-  city: string
-  city_slug: string
-  state: string
-  address: string
-  locality: string
-  pincode: string
-  phone: string
-  email: string
-  website: string
-  google_maps_url: string
-  vehicle_types: string[]
-  is_authorized: boolean
-  is_active: boolean
-  working_hours: string
-  rating: string
-  review_count: string
-}
-
-const DEFAULT: FormState = {
-  name: '', slug: '', brand_slug: '', brand_name: '',
-  city: '', city_slug: '', state: '',
-  address: '', locality: '', pincode: '',
-  phone: '', email: '', website: '', google_maps_url: '',
-  vehicle_types: ['cars'],
-  is_authorized: true, is_active: true,
-  working_hours: '9:00 AM – 7:00 PM',
-  rating: '', review_count: '0',
-}
-
-const VEHICLE_TYPES = ['cars', 'bikes', 'scooters']
+const VEHICLE_TYPES: VehicleType[] = ['cars', 'bikes', 'scooters']
 
 // ─── component ────────────────────────────────────────────────────────────────
 
@@ -120,7 +90,8 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
   ))
   const sb = sbRef.current
 
-  const [form,    setForm]    = useState<FormState>(DEFAULT)
+  const [form,    setForm]    = useState<DealerFormData>(EMPTY_DEALER_FORM)
+  const [slug,    setSlug]    = useState('')
   const [loading, setLoading] = useState(isEdit)
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState('')
@@ -136,9 +107,9 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
     sb.from('dealers').select('*').eq('id', dealerId).single()
       .then(({ data, error: err }) => {
         if (err || !data) { setError('Dealer not found'); setLoading(false); return }
+        setSlug(data.slug)
         setForm({
           name:           data.name,
-          slug:           data.slug,
           brand_slug:     data.brand_slug,
           brand_name:     data.brand_name,
           city:           data.city,
@@ -151,25 +122,23 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
           email:          data.email ?? '',
           website:        data.website ?? '',
           google_maps_url: data.google_maps_url ?? '',
-          vehicle_types:  data.vehicle_types ?? ['cars'],
+          vehicle_types:  (data.vehicle_types ?? ['cars']) as VehicleType[],
           is_authorized:  data.is_authorized ?? true,
           is_active:      data.is_active ?? true,
-          working_hours:  data.working_hours ?? '9:00 AM – 7:00 PM',
-          rating:         String(data.rating ?? ''),
-          review_count:   String(data.review_count ?? 0),
+          working_hours:  data.working_hours ?? EMPTY_DEALER_FORM.working_hours,
         })
         setLoading(false)
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dealerId])
 
-  function set<K extends keyof FormState>(key: K, val: FormState[K]) {
+  function set<K extends keyof DealerFormData>(key: K, val: DealerFormData[K]) {
     setForm(f => ({ ...f, [key]: val }))
   }
 
   function handleNameChange(val: string) {
     set('name', val)
-    if (!isEdit) set('slug', toSlug(val))
+    if (!isEdit) setSlug(toSlug(val))
   }
 
   function handleCityChange(val: string) {
@@ -182,7 +151,7 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
     if (!isEdit) set('brand_slug', toSlug(val))
   }
 
-  function toggleVehicleType(t: string) {
+  function toggleVehicleType(t: VehicleType) {
     setForm(f => ({
       ...f,
       vehicle_types: f.vehicle_types.includes(t)
@@ -196,7 +165,7 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
     setError('')
 
     if (!form.name.trim())       { setError('Name is required'); return }
-    if (!form.slug.trim())       { setError('Slug is required'); return }
+    if (!slug.trim())            { setError('Slug is required'); return }
     if (!form.brand_slug.trim()) { setError('Brand slug is required'); return }
     if (!form.brand_name.trim()) { setError('Brand name is required'); return }
     if (!form.city.trim())       { setError('City is required'); return }
@@ -207,26 +176,24 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
     setSaving(true)
     try {
       const payload = {
-        name:           form.name.trim(),
-        slug:           form.slug.trim(),
-        brand_slug:     form.brand_slug.trim(),
-        brand_name:     form.brand_name.trim(),
-        city:           form.city.trim(),
-        city_slug:      form.city_slug.trim(),
-        state:          form.state.trim(),
-        address:        form.address.trim() || null,
-        locality:       form.locality.trim() || null,
-        pincode:        form.pincode.trim() || null,
-        phone:          form.phone.trim() || null,
-        email:          form.email.trim() || null,
-        website:        form.website.trim() || null,
+        name:            form.name.trim(),
+        slug:            slug.trim(),
+        brand_slug:      form.brand_slug.trim(),
+        brand_name:      form.brand_name.trim(),
+        city:            form.city.trim(),
+        city_slug:       form.city_slug.trim(),
+        state:           form.state.trim(),
+        address:         form.address.trim(),
+        locality:        form.locality.trim() || null,
+        pincode:         form.pincode.trim() || null,
+        phone:           form.phone.trim() || null,
+        email:           form.email.trim() || null,
+        website:         form.website.trim() || null,
         google_maps_url: form.google_maps_url.trim() || null,
-        vehicle_types:  form.vehicle_types,
-        is_authorized:  form.is_authorized,
-        is_active:      form.is_active,
-        working_hours:  form.working_hours.trim() || null,
-        rating:         form.rating ? Number(form.rating) : null,
-        review_count:   Number(form.review_count) || 0,
+        vehicle_types:   form.vehicle_types,
+        is_authorized:   form.is_authorized,
+        is_active:       form.is_active,
+        working_hours:   form.working_hours.trim() || null,
       }
 
       if (isEdit) {
@@ -263,6 +230,16 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '80px', color: '#8E99A8', fontSize: 14 }}>Loading…</div>
+  }
+
+  const SELECT_STYLE: React.CSSProperties = {
+    ...INPUT,
+    appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238E99A8'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    paddingRight: 32,
+    cursor: 'pointer',
   }
 
   return (
@@ -335,8 +312,8 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
           </Field>
 
           <Field label="Slug *" hint="URL-safe, auto-generated from name">
-            <input type="text" value={form.slug} required
-              onChange={e => set('slug', e.target.value)}
+            <input type="text" value={slug} required
+              onChange={e => setSlug(e.target.value)}
               placeholder="e.g. tata-motors-delhi-north"
               style={{ ...INPUT, fontFamily: 'monospace' }} />
           </Field>
@@ -400,14 +377,16 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
           </div>
 
           <Field label="State *">
-            <input type="text" value={form.state} required
-              onChange={e => set('state', e.target.value)}
-              placeholder="e.g. Delhi"
-              style={INPUT} />
+            <select value={form.state} required onChange={e => set('state', e.target.value)} style={SELECT_STYLE}>
+              <option value="">Select state…</option>
+              {INDIAN_STATES.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </Field>
 
-          <Field label="Address">
-            <input type="text" value={form.address}
+          <Field label="Address *">
+            <input type="text" value={form.address} required
               onChange={e => set('address', e.target.value)}
               placeholder="e.g. Plot 12, Industrial Area"
               style={INPUT} />
@@ -451,49 +430,33 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
           <Field label="Website">
             <input type="url" value={form.website}
               onChange={e => set('website', e.target.value)}
-              placeholder="https://..."
+              placeholder="https://…"
               style={{ ...INPUT, fontFamily: 'monospace' }} />
           </Field>
 
           <Field label="Google Maps URL">
             <input type="url" value={form.google_maps_url}
               onChange={e => set('google_maps_url', e.target.value)}
-              placeholder="https://maps.google.com/..."
+              placeholder="https://maps.google.com/…"
               style={{ ...INPUT, fontFamily: 'monospace' }} />
           </Field>
 
           <Field label="Working Hours">
             <input type="text" value={form.working_hours}
               onChange={e => set('working_hours', e.target.value)}
-              placeholder="e.g. 9:00 AM – 7:00 PM"
+              placeholder="e.g. Mon-Sat: 9 AM – 7 PM"
               style={INPUT} />
           </Field>
         </div>
 
-        {/* ── Stats & Status ── */}
+        {/* ── Status ── */}
         <div style={CARD}>
-          <p style={CARD_TITLE}>Stats & Status</p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Field label="Rating (0–5)">
-              <input type="number" value={form.rating} min={0} max={5} step={0.1}
-                onChange={e => set('rating', e.target.value)}
-                placeholder="e.g. 4.3"
-                style={INPUT} />
-            </Field>
-            <Field label="Review Count">
-              <input type="number" value={form.review_count} min={0}
-                onChange={e => set('review_count', e.target.value)}
-                placeholder="e.g. 312"
-                style={INPUT} />
-            </Field>
-          </div>
-
+          <p style={CARD_TITLE}>Status</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <Field label="Authorized Dealer">
               <Toggle on={form.is_authorized} onChange={v => set('is_authorized', v)} label="Authorized" />
             </Field>
-            <Field label="Status">
+            <Field label="Active">
               <Toggle on={form.is_active} onChange={v => set('is_active', v)} label="Active" />
             </Field>
           </div>
