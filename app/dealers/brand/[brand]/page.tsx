@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const brandName = rows[0].brand_name
   return {
     title: `${brandName} Dealers in India | AutoPortal360`,
-    description: `Find authorized ${brandName} dealers across all cities in India.`,
+    description: `Find authorized ${brandName} dealers across all cities in India. Browse showrooms with contact details and directions.`,
     alternates: { canonical: `https://autoportal360.vercel.app/dealers/brand/${brand}/` },
   }
 }
@@ -41,14 +41,7 @@ export default async function BrandDealersPage({ params }: Props) {
 
   const brandName = rows[0].brand_name
 
-  // ── Build city map ──
-  type CityEntry = {
-    city: string
-    city_slug: string
-    state: string
-    count: number
-    types: Set<string>
-  }
+  type CityEntry = { city: string; city_slug: string; state: string; count: number; types: Set<string> }
   const cityMap = new Map<string, CityEntry>()
   for (const r of rows) {
     const k = r.city_slug
@@ -56,18 +49,11 @@ export default async function BrandDealersPage({ params }: Props) {
       cityMap.get(k)!.count++;
       (r.vehicle_types as string[]).forEach(v => cityMap.get(k)!.types.add(v))
     } else {
-      cityMap.set(k, {
-        city: r.city,
-        city_slug: r.city_slug,
-        state: r.state,
-        count: 1,
-        types: new Set(r.vehicle_types as string[]),
-      })
+      cityMap.set(k, { city: r.city, city_slug: r.city_slug, state: r.state, count: 1, types: new Set(r.vehicle_types as string[]) })
     }
   }
   const cities = Array.from(cityMap.values()).sort((a, b) => b.count - a.count)
 
-  // ── Build state map ──
   const stateMap = new Map<string, CityEntry[]>()
   for (const c of cities) {
     if (!stateMap.has(c.state)) stateMap.set(c.state, [])
@@ -82,9 +68,9 @@ export default async function BrandDealersPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#06142D]">
 
-      {/* ── Breadcrumb ── */}
+      {/* Breadcrumb */}
       <div className="bg-[#0A1F44] border-b border-[#1e3a6e]">
-        <div className="max-w-4xl mx-auto px-6 py-3">
+        <div className="max-w-5xl mx-auto px-6 py-3">
           <nav className="flex items-center gap-2 text-sm text-[#C0C0C0]">
             <Link href="/" className="hover:text-[#00D4FF] transition-colors">Home</Link>
             <span className="text-[#444]">›</span>
@@ -95,14 +81,12 @@ export default async function BrandDealersPage({ params }: Props) {
         </div>
       </div>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <section className="bg-[#0A1F44] py-12 px-6">
-        <div className="max-w-4xl mx-auto">
-
-          {/* Brand identity row */}
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-5 mb-8">
             <div className="w-16 h-16 rounded-2xl bg-[#00D4FF] flex items-center justify-center shrink-0">
-              <span className="text-[#06142D] font-bold text-2xl leading-none">
+              <span className="text-[#06142D] font-bold text-2xl leading-none select-none">
                 {brandName.charAt(0)}
               </span>
             </div>
@@ -111,56 +95,49 @@ export default async function BrandDealersPage({ params }: Props) {
                 {brandName} Dealers in India
               </h1>
               <p className="text-[#C0C0C0] text-sm mt-1">
-                {totalDealers} authorized showrooms across {totalCities} cities
+                {totalDealers} authorized showrooms across {totalCities} {totalCities === 1 ? 'city' : 'cities'}
               </p>
             </div>
           </div>
 
-          {/* ── Stats ── */}
+          {/* Stat boxes */}
           <div className="flex gap-3 flex-wrap">
-            <div className="bg-[#06142D] border border-[#1e3a6e] rounded-xl px-6 py-4 text-center min-w-[100px]">
-              <p className="text-3xl font-bold text-[#00D4FF]">{totalDealers}</p>
-              <p className="text-[#C0C0C0] text-xs mt-1">Total Dealers</p>
-            </div>
-            <div className="bg-[#06142D] border border-[#1e3a6e] rounded-xl px-6 py-4 text-center min-w-[100px]">
-              <p className="text-3xl font-bold text-[#00D4FF]">{totalCities}</p>
-              <p className="text-[#C0C0C0] text-xs mt-1">Cities</p>
-            </div>
-            <div className="bg-[#06142D] border border-[#1e3a6e] rounded-xl px-6 py-4 text-center min-w-[100px]">
-              <p className="text-3xl font-bold text-[#00D4FF]">{totalStates}</p>
-              <p className="text-[#C0C0C0] text-xs mt-1">States</p>
-            </div>
+            {[
+              { label: 'Total Dealers', value: totalDealers },
+              { label: 'Cities',        value: totalCities  },
+              { label: 'States',        value: totalStates  },
+            ].map(s => (
+              <div key={s.label} className="bg-[#06142D] border border-[#1e3a6e] rounded-xl px-6 py-4 text-center min-w-[100px]">
+                <p className="text-3xl font-bold text-[#00D4FF]">{s.value}</p>
+                <p className="text-[#C0C0C0] text-xs mt-1">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
 
-        {/* ── Select Your City ── */}
-        <section className="mb-12">
+        {/* Select Your City */}
+        <section>
           <h2 className="text-lg font-bold text-white mb-5">Select Your City</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {cities.map(city => (
+            {cities.map(c => (
               <Link
-                key={city.city_slug}
-                href={`/dealers/${city.city_slug}/${brand}/`}
-                className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4 hover:border-[#00D4FF] hover:bg-[#0d2a5a] transition-all block"
+                key={c.city_slug}
+                href={`/dealers/${c.city_slug}/${brand}/`}
+                className="block bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4 hover:border-[#00D4FF] hover:bg-[#0d2a5a] transition-all"
               >
-                {/* Top row: city name + count badge */}
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <p className="text-white font-semibold text-sm leading-tight">{city.city}</p>
+                  <p className="text-white font-semibold text-sm leading-tight">{c.city}</p>
                   <div className="w-8 h-8 rounded-full bg-[#06142D] border border-[#1e3a6e] flex items-center justify-center shrink-0">
-                    <span className="text-[#00D4FF] text-xs font-bold">{city.count}</span>
+                    <span className="text-[#00D4FF] text-xs font-bold">{c.count}</span>
                   </div>
                 </div>
-                <p className="text-[#666] text-xs mb-2">{city.state}</p>
-                {/* Vehicle type tags */}
+                <p className="text-[#666] text-xs mb-2">{c.state}</p>
                 <div className="flex gap-1 flex-wrap">
-                  {Array.from(city.types).map(vt => (
-                    <span
-                      key={vt}
-                      className="bg-[#06142D] border border-[#1e3a6e] text-[#C0C0C0] text-[10px] px-2 py-0.5 rounded-full capitalize"
-                    >
+                  {Array.from(c.types).map(vt => (
+                    <span key={vt} className="bg-[#06142D] border border-[#1e3a6e] text-[#C0C0C0] text-[10px] px-2 py-0.5 rounded-full capitalize">
                       {vt}
                     </span>
                   ))}
@@ -170,7 +147,7 @@ export default async function BrandDealersPage({ params }: Props) {
           </div>
         </section>
 
-        {/* ── Browse by State ── */}
+        {/* Browse by State */}
         {states.length > 1 && (
           <section>
             <h2 className="text-lg font-bold text-white mb-5">Browse by State</h2>
@@ -178,18 +155,18 @@ export default async function BrandDealersPage({ params }: Props) {
               {states.map(([state, stateCities]) => (
                 <div key={state} className="bg-[#0A1F44] border border-[#1e3a6e] rounded-xl p-4">
                   <p className="text-white font-semibold text-sm mb-3">{state}</p>
-                  <div className="space-y-1.5">
-                    {stateCities.map(c => (
+                  <div className="space-y-2">
+                    {stateCities.map(sc => (
                       <Link
-                        key={c.city_slug}
-                        href={`/dealers/${c.city_slug}/${brand}/`}
-                        className="flex items-center justify-between group"
+                        key={sc.city_slug}
+                        href={`/dealers/${sc.city_slug}/${brand}/`}
+                        className="flex items-center justify-between py-1 group"
                       >
                         <span className="text-[#C0C0C0] text-sm group-hover:text-[#00D4FF] transition-colors">
-                          {c.city}
+                          {sc.city}
                         </span>
                         <span className="text-[#666] text-xs group-hover:text-[#00D4FF] transition-colors">
-                          {c.count} dealer{c.count !== 1 ? 's' : ''}
+                          {sc.count} dealer{sc.count !== 1 ? 's' : ''}
                         </span>
                       </Link>
                     ))}
