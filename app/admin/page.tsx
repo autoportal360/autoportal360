@@ -91,6 +91,14 @@ export default async function AdminDashboard() {
           }}>
             + Add Brand
           </Link>
+          <Link href="/admin/dealers" style={{
+            background: 'rgba(0,212,255,0.08)', color: '#00D4FF',
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
+            fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
+            border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            🏪 Dealers
+          </Link>
           <Link href="/admin/models/new" style={{
             background: 'rgba(0,212,255,0.08)', color: '#00D4FF',
             fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
