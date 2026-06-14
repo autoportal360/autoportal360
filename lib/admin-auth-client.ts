@@ -2,7 +2,7 @@ export type AdminRole = 'super_admin' | 'catalogue' | 'editor' | 'seo'
 
 export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
   super_admin: ['*'],
-  catalogue:   ['brands', 'models', 'slider', 'cities', 'states'],
+  catalogue:   ['brands', 'models', 'slider', 'cities', 'states', 'dealers'],
   editor:      ['blog', 'pages'],
   seo:         ['seo', 'pages'],
 }

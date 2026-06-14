@@ -101,6 +101,32 @@ export interface Lead {
   source_url?: string
 }
 
+export interface Dealer {
+  id: string
+  name: string
+  slug: string
+  brand_slug: string
+  brand_name: string
+  city: string
+  city_slug: string
+  state: string
+  address: string | null
+  locality: string | null
+  pincode: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  google_maps_url: string | null
+  vehicle_types: string[]
+  is_authorized: boolean
+  is_active: boolean
+  working_hours: string | null
+  rating: number | null
+  review_count: number
+  created_at: string
+  updated_at: string
+}
+
 // Helper type for on-road price calculation
 export interface OnRoadPrice {
   ex_showroom: number

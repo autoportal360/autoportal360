@@ -8,19 +8,21 @@ const db = createClient(
 
 export default async function AdminDashboard() {
   // Parallel stat fetches — leads table may not exist yet, handled below
-  const [brands, models, variants, leads, leadsRows] = await Promise.all([
+  const [brands, models, variants, leads, dealers, leadsRows] = await Promise.all([
     db.from('brands').select('*', { count: 'exact', head: true }),
     db.from('models').select('*', { count: 'exact', head: true }),
     db.from('variants').select('*', { count: 'exact', head: true }),
     db.from('leads').select('*', { count: 'exact', head: true }),
+    db.from('dealers').select('*', { count: 'exact', head: true }),
     db.from('leads').select('*').order('created_at', { ascending: false }).limit(5),
   ])
 
   const stats = [
-    { label: 'Total Brands',   value: brands.count   ?? 0, href: '/admin/brands', color: '#00D4FF' },
-    { label: 'Total Models',   value: models.count   ?? 0, href: '/admin/models', color: '#00D4FF' },
-    { label: 'Total Variants', value: variants.count ?? 0, href: '/admin/models', color: '#00D4FF' },
-    { label: 'Total Leads',    value: leads.count    ?? 0, href: '/admin/leads',  color: '#FFB400' },
+    { label: 'Total Brands',   value: brands.count   ?? 0, href: '/admin/brands',  color: '#00D4FF' },
+    { label: 'Total Models',   value: models.count   ?? 0, href: '/admin/models',  color: '#00D4FF' },
+    { label: 'Total Variants', value: variants.count ?? 0, href: '/admin/models',  color: '#00D4FF' },
+    { label: 'Total Dealers',  value: dealers.count  ?? 0, href: '/admin/dealers', color: '#A855F7' },
+    { label: 'Total Leads',    value: leads.count    ?? 0, href: '/admin/leads',   color: '#FFB400' },
   ]
 
   const recentLeads = leadsRows.data ?? []

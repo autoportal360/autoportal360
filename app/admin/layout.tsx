@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/states',   label: 'States',    icon: '🗺️', section: 'states' },
   { href: '/admin/cities',   label: 'Cities',    icon: '🏙️', section: 'cities' },
   { href: '/admin/pages',    label: 'Pages SEO', icon: '📄',  section: 'pages' },
+  { href: '/admin/dealers',  label: 'Dealers',   icon: '🏪',  section: 'dealers' },
   { href: '/admin/ads',      label: 'Ads',       icon: '📢',  section: 'ads' },
   { href: '/admin/seo',      label: 'SEO',       icon: '🔍',  section: 'seo' },
   { href: '/admin/blog',     label: 'Blog',      icon: '✍',   section: 'blog' },
