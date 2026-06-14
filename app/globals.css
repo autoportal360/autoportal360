@@ -313,3 +313,32 @@ select option {
 @media(min-width:1024px){.ap-sidebar-wrap{display:block}}
 .ap-sidebar{position:sticky;top:1.5rem}
 .ap-sidebar>*+*{margin-top:1rem}
+
+/* ── About / Contact page additions ─────────────────────────────────────── */
+
+.ap-grid-3{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:768px){.ap-grid-3{grid-template-columns:repeat(3,1fr)}}
+
+.ap-grid-4{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+@media(min-width:1024px){.ap-grid-4{grid-template-columns:repeat(4,1fr)}}
+
+.ap-contact-layout{display:grid;grid-template-columns:1fr;gap:1.5rem}
+@media(min-width:768px){.ap-contact-layout{grid-template-columns:3fr 2fr}}
+
+.ap-label{display:block;font-size:.6875rem;font-weight:600;color:#C0C0C0;margin-bottom:.375rem;letter-spacing:.06em;text-transform:uppercase}
+.ap-input{width:100%;background:#06142D;border:1px solid #1e3a6e;border-radius:.5rem;padding:.625rem .875rem;color:#fff;font-size:.875rem;font-family:inherit;outline:none;transition:border-color .15s;box-sizing:border-box}
+.ap-input:focus{border-color:#00D4FF}
+.ap-textarea{width:100%;background:#06142D;border:1px solid #1e3a6e;border-radius:.5rem;padding:.625rem .875rem;color:#fff;font-size:.875rem;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical;min-height:7rem;box-sizing:border-box}
+.ap-textarea:focus{border-color:#00D4FF}
+.ap-select-field{width:100%;background:#06142D;border:1px solid #1e3a6e;border-radius:.5rem;padding:.625rem .875rem;color:#fff;font-size:.875rem;font-family:inherit;outline:none;cursor:pointer;appearance:none;transition:border-color .15s;box-sizing:border-box}
+.ap-select-field:focus{border-color:#00D4FF}
+.ap-form-group{margin-bottom:1.125rem}
+
+.ap-faq-item{padding:1rem 0;border-bottom:1px solid #1e3a6e}
+.ap-faq-item:last-child{border-bottom:none}
+.ap-faq-q{font-weight:700;color:#fff;font-size:.9375rem;margin-bottom:.5rem}
+.ap-faq-a{color:#C0C0C0;font-size:.875rem;line-height:1.65}
+
+.ap-info-row{display:flex;align-items:flex-start;gap:.875rem;padding:.875rem 0;border-bottom:1px solid #1e3a6e}
+.ap-info-row:last-child{border-bottom:none}
+.ap-info-icon{width:2.5rem;height:2.5rem;border-radius:.625rem;background:#06142D;border:1px solid #1e3a6e;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.125rem}
