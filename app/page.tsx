@@ -11,6 +11,8 @@ import SchemaMarkup from '@/components/SchemaMarkup'
 import { websiteSchema, organizationSchema } from '@/lib/schema'
 import HomeSearchBar from '@/components/HomeSearchBar'
 import RecentlyViewed from '@/components/RecentlyViewed'
+import FuelTypeCars from '@/components/FuelTypeCars'
+import HomeSeoContent from '@/components/HomeSeoContent'
 
 export const metadata: Metadata = {
   title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
@@ -398,6 +400,34 @@ export default async function HomePage() {
         ))}
       </div>
 
+      {/* ── RECENTLY VIEWED ── */}
+      <RecentlyViewed />
+
+      {/* ── TRENDING CARS RIGHT NOW ── */}
+      <section style={{ padding: '16px 24px', borderBottom: '1px solid rgba(0,212,255,0.07)', background: 'transparent' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '10px', fontFamily: 'Montserrat, sans-serif' }}>
+            🔥 Trending Right Now
+          </div>
+          <div className="ap-trending-row">
+            {[
+              { label: 'Tata Nexon',       slug: '/tata-cars/nexon/'            },
+              { label: 'Maruti Swift',      slug: '/maruti-suzuki-cars/swift/'   },
+              { label: 'Hyundai Creta',     slug: '/hyundai-cars/creta/'         },
+              { label: 'Mahindra Thar',     slug: '/mahindra-cars/thar/'         },
+              { label: 'Tata Punch',        slug: '/tata-cars/punch/'            },
+              { label: 'Kia Seltos',        slug: '/kia-cars/seltos/'            },
+              { label: 'Maruti Brezza',     slug: '/maruti-suzuki-cars/brezza/'  },
+              { label: 'Hyundai Venue',     slug: '/hyundai-cars/venue/'         },
+              { label: 'MG Hector',         slug: '/mg-cars/hector/'             },
+              { label: 'Toyota Fortuner',   slug: '/toyota-cars/fortuner/'       },
+            ].map(m => (
+              <Link key={m.slug} href={m.slug} className="ap-trending-pill">{m.label}</Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CARS HUB ── */}
       <Section>
         <HubDivider label="🚗 Cars" />
@@ -464,6 +494,11 @@ export default async function HomePage() {
             </Link>
           ))}
         </div>
+      </Section>
+
+      {/* ── CARS BY FUEL TYPE ── */}
+      <Section>
+        <FuelTypeCars />
       </Section>
 
       {/* ── UPCOMING CAR LAUNCHES ── */}
@@ -633,8 +668,43 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* ── RECENTLY VIEWED ── */}
-      <RecentlyViewed />
+      {/* ── FIND DEALERS NEAR YOU ── */}
+      <Section alt>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: '20px',
+        }}>
+          <div>
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏪</div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '20px', fontWeight: 800, color: '#fff', marginBottom: '6px' }}>
+              Find Authorized Dealers <span style={{ color: '#00D4FF' }}>Near You</span>
+            </h2>
+            <p style={{ fontSize: '13px', color: '#8E99A8' }}>
+              28+ verified showrooms across 8 cities. Cars, bikes and scooters.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link href="/dealers/" style={{
+              background: '#00D4FF', color: '#06142D', fontWeight: 800,
+              fontFamily: 'Montserrat, sans-serif', fontSize: '13px',
+              padding: '12px 24px', borderRadius: '10px', textDecoration: 'none', whiteSpace: 'nowrap',
+            }}>
+              Browse Dealers →
+            </Link>
+            <Link href="/dealers/list-your-showroom/" style={{
+              background: 'transparent', color: '#00D4FF', fontWeight: 700,
+              border: '1px solid rgba(0,212,255,0.4)', fontFamily: 'Montserrat, sans-serif',
+              fontSize: '13px', padding: '12px 24px', borderRadius: '10px',
+              textDecoration: 'none', whiteSpace: 'nowrap',
+            }}>
+              List Your Showroom
+            </Link>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── HOMEPAGE SEO CONTENT ── */}
+      <HomeSeoContent />
 
       </div>
     </>

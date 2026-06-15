@@ -363,8 +363,14 @@ select option {
 .ap-scroll-row::-webkit-scrollbar{height:4px}
 .ap-scroll-row::-webkit-scrollbar-track{background:#0A1F44;border-radius:2px}
 .ap-scroll-row::-webkit-scrollbar-thumb{background:#1e3a6e;border-radius:2px}
-.ap-scroll-card{flex:0 0 200px;scroll-snap-align:start}
+.ap-scroll-card{flex:0 0 220px;scroll-snap-align:start}
 @media(min-width:640px){.ap-scroll-card{flex:0 0 240px}}
+
+/* ── Trending pills ──────────────────────────────────────────────────────── */
+.ap-trending-row{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.25rem;-webkit-overflow-scrolling:touch}
+.ap-trending-row::-webkit-scrollbar{display:none}
+.ap-trending-pill{flex-shrink:0;padding:.5rem 1.25rem;border:1px solid #1e3a6e;border-radius:9999px;color:#C0C0C0;font-size:.875rem;white-space:nowrap;transition:all .2s;background:#0A1F44;text-decoration:none;display:block}
+.ap-trending-pill:hover{border-color:#00D4FF;color:#00D4FF;background:#0d2a5a}
 
 /* ── Dealer listing request form ─────────────────────────────────────────── */
 .ap-form-grid{display:grid;grid-template-columns:1fr;gap:1rem}
