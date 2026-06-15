@@ -307,6 +307,16 @@ export default async function BrandVehiclePage({
       {/* MAIN CONTENT */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
 
+        {/* ── BRAND PAGE SEO BLOCK ── */}
+        {brandPageSeo?.seo_text && (
+          <BrandPageSeoBlock
+            seoHeading={brandPageSeo.seo_heading ?? `About ${brand.name} ${vehicleLabel} in India`}
+            seoText={brandPageSeo.seo_text}
+            topModels={(brandPageSeo.top_models as { name: string; price: string }[]) ?? []}
+            brandName={brand.name}
+          />
+        )}
+
         {/* ── MODELS + FILTER ── */}
         <section style={{ marginBottom: '52px' }}>
           <h2 style={{
@@ -467,16 +477,6 @@ export default async function BrandVehiclePage({
             <BrandFaq brandName={brand.name} vehicleLabel={vehicleLabel} />
           )}
         </section>
-
-        {/* ── BRAND PAGE SEO BLOCK ── */}
-        {brandPageSeo?.seo_text && (
-          <BrandPageSeoBlock
-            seoHeading={brandPageSeo.seo_heading ?? `About ${brand.name} ${vehicleLabel} in India`}
-            seoText={brandPageSeo.seo_text}
-            topModels={(brandPageSeo.top_models as { name: string; price: string }[]) ?? []}
-            brandName={brand.name}
-          />
-        )}
 
       </div>
 
