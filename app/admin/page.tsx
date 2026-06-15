@@ -121,7 +121,7 @@ export default async function AdminDashboard() {
             fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
             border: '1px solid rgba(0,204,102,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
           }}>
-            📝 Brand SEO
+            📝 Dealer SEO Pages
           </Link>
           <Link href="/admin/brand-page-seo" style={{
             background: 'rgba(168,85,247,0.08)', color: '#A855F7',

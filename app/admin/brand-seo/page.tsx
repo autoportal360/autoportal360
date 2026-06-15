@@ -155,7 +155,7 @@ export default function BrandSeoPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '24px', fontWeight: 900, color: '#fff', margin: '0 0 4px' }}>
-            Brand SEO Content
+            Dealer SEO Pages
           </h1>
           <p style={{ fontSize: '13px', color: '#8E99A8', margin: 0 }}>
             {rows.length} brand{rows.length !== 1 ? 's' : ''} with SEO content
