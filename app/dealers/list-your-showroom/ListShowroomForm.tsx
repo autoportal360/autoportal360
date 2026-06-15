@@ -346,16 +346,19 @@ export default function ListShowroomForm() {
             Why List With Us?
           </h3>
           {[
-            { icon: '✓', text: 'Free listing — no charges ever' },
-            { icon: '🏅', text: 'Verified badge for authorized dealers' },
-            { icon: '📞', text: 'Direct phone calls from buyers' },
-            { icon: '🔍', text: 'Appear in city + brand search results' },
+            { icon: '✓', label: 'Free listing', detail: '— no charges ever' },
+            { icon: '🏅', label: 'Verified badge', detail: 'for authorized dealers' },
+            { icon: '📞', label: 'Direct phone calls', detail: 'from buyers' },
+            { icon: '🔍', label: 'Appear in city + brand', detail: 'search results' },
           ].map(item => (
-            <div key={item.text} className="ap-benefit-item">
-              <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '9999px', background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '.75rem', fontWeight: 700 }}>
+            <div key={item.label} className="ap-benefit-item">
+              <span className="ap-step-number" style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF' }}>
                 {item.icon}
+              </span>
+              <div>
+                <strong style={{ color: '#fff', fontSize: '.875rem' }}>{item.label}</strong>{' '}
+                <span style={{ color: '#8E99A8', fontSize: '.875rem' }}>{item.detail}</span>
               </div>
-              <p style={{ color: '#C0C0C0', fontSize: '.875rem', lineHeight: 1.6, margin: 0 }}>{item.text}</p>
             </div>
           ))}
         </div>
@@ -366,13 +369,16 @@ export default function ListShowroomForm() {
             What Happens Next?
           </h3>
           {[
-            'We review your submission (24-48 hours)',
-            'Our team verifies dealer details',
-            'Your showroom goes live on AutoPortal360',
+            { title: 'We review your submission', sub: 'Within 24-48 hours' },
+            { title: 'Our team verifies dealer details', sub: 'Address, phone, brand affiliation' },
+            { title: 'Your showroom goes live', sub: 'On AutoPortal360 city & brand pages' },
           ].map((step, i) => (
             <div key={i} className="ap-benefit-item">
-              <div className="ap-step-number">{i + 1}</div>
-              <p style={{ color: '#C0C0C0', fontSize: '.875rem', lineHeight: 1.6, margin: 0 }}>{step}</p>
+              <span className="ap-step-number">{i + 1}</span>
+              <div>
+                <strong style={{ color: '#fff', fontSize: '.875rem', display: 'block' }}>{step.title}</strong>
+                <span style={{ color: '#8E99A8', fontSize: '.8125rem' }}>{step.sub}</span>
+              </div>
             </div>
           ))}
         </div>

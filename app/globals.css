@@ -363,8 +363,8 @@ select option {
 .ap-form-grid-2{display:grid;grid-template-columns:1fr;gap:1rem}
 @media(min-width:640px){.ap-form-grid-2{grid-template-columns:1fr 1fr}}
 .ap-form-layout{display:grid;grid-template-columns:1fr;gap:2rem}
-@media(min-width:1024px){.ap-form-layout{grid-template-columns:2fr 1fr}}
+@media(min-width:1024px){.ap-form-layout{grid-template-columns:5fr 3fr}}
 .ap-success-msg{background:rgba(46,204,113,0.15);border:1px solid #2ECC71;color:#2ECC71;border-radius:.75rem;padding:1rem 1.25rem}
 .ap-error-msg{background:rgba(255,77,79,0.15);border:1px solid #FF4D4F;color:#FF4D4F;border-radius:.75rem;padding:1rem 1.25rem}
-.ap-benefit-item{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.75rem}
+.ap-benefit-item{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1rem}
 .ap-step-number{width:1.75rem;height:1.75rem;border-radius:9999px;background:#00D4FF;color:#06142D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0}
