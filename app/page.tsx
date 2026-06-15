@@ -355,23 +355,6 @@ export default async function HomePage() {
         borderBottom: '1px solid rgba(0,212,255,0.08)',
       }}>
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', flexWrap: 'wrap' }}>
-            {[
-              { label: '🚗 Cars',      active: true },
-              { label: '🏍️ Bikes',    active: false },
-              { label: '🛵 Scooters', active: false },
-              { label: '⚡ Compare',  active: false },
-            ].map(tab => (
-              <div key={tab.label} style={{
-                background: tab.active ? '#00D4FF' : 'transparent',
-                color: tab.active ? '#06142D' : '#8E99A8',
-                fontSize: '12px', fontWeight: 700, padding: '6px 14px',
-                borderRadius: '8px', cursor: 'pointer',
-                fontFamily: 'Montserrat, sans-serif',
-                border: tab.active ? 'none' : '1px solid rgba(0,212,255,0.1)',
-              }}>{tab.label}</div>
-            ))}
-          </div>
           <HomeSearchBar brands={carBrands} />
         </div>
       </section>
