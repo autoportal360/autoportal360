@@ -52,6 +52,11 @@ export default function FuelTypeCars() {
           </h2>
           <p style={{ fontSize: '13px', color: '#8E99A8', marginTop: '3px' }}>Find the right powertrain for your needs</p>
         </div>
+        {active === 'electric' && (
+          <Link href="/pages/electric-cars-in-india/" style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', textDecoration: 'none' }}>
+            All Electric Cars →
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}

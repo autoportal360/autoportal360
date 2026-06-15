@@ -139,6 +139,14 @@ export default async function AdminDashboard() {
           }}>
             📩 Dealer Requests
           </Link>
+          <Link href="/admin/static-pages" style={{
+            background: 'rgba(0,204,255,0.08)', color: '#00D4FF',
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
+            fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
+            border: '1px solid rgba(0,204,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            📃 Static Pages
+          </Link>
         </div>
       </div>
 

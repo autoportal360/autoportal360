@@ -447,9 +447,14 @@ export default async function HomePage() {
             </h2>
             <p style={{ fontSize: '13px', color: '#8E99A8', marginTop: '3px' }}>Find the perfect car in your price range</p>
           </div>
-          <Link href="/new-cars/" style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, fontFamily: 'Montserrat, sans-serif' }}>
-            All Cars →
-          </Link>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <Link href="/pages/popular-cars-in-india/" style={{ fontSize: '12px', color: '#8E99A8', fontWeight: 600, fontFamily: 'Montserrat, sans-serif' }}>
+              View All Popular Cars →
+            </Link>
+            <Link href="/new-cars/" style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, fontFamily: 'Montserrat, sans-serif' }}>
+              All Cars →
+            </Link>
+          </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: '10px' }}>
           {[

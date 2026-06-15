@@ -3,8 +3,8 @@ export type AdminRole = 'super_admin' | 'catalogue' | 'editor' | 'seo'
 export const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
   super_admin: ['*'],
   catalogue:   ['brands', 'models', 'slider', 'cities', 'states', 'dealers'],
-  editor:      ['blog', 'pages'],
-  seo:         ['seo', 'pages', 'brand-seo', 'brand-page-seo'],
+  editor:      ['blog', 'pages', 'static-pages'],
+  seo:         ['seo', 'pages', 'brand-seo', 'brand-page-seo', 'static-pages'],
 }
 
 export function hasPermission(role: AdminRole, section: string): boolean {

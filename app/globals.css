@@ -382,3 +382,11 @@ select option {
 .ap-error-msg{background:rgba(255,77,79,0.15);border:1px solid #FF4D4F;color:#FF4D4F;border-radius:.75rem;padding:1rem 1.25rem}
 .ap-benefit-item{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1rem}
 .ap-step-number{width:1.75rem;height:1.75rem;border-radius:9999px;background:#00D4FF;color:#06142D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0}
+
+/* ── Static Pages — vehicle grid + cards ─────────────────────────────────── */
+.ap-vehicle-grid{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:640px){.ap-vehicle-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1024px){.ap-vehicle-grid{grid-template-columns:1fr 1fr 1fr}}
+.ap-vehicle-card{background:#111111;border:1px solid rgba(0,212,255,0.12);border-radius:14px;padding:20px;position:relative;transition:border-color .2s}
+.ap-vehicle-card:hover{border-color:rgba(0,212,255,0.35)}
+.ap-tag-badge{position:absolute;top:.75rem;right:.75rem;background:#00D4FF;color:#06142D;font-size:.7rem;font-weight:700;padding:.25rem .75rem;border-radius:9999px;font-family:'Montserrat',sans-serif;white-space:nowrap}

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type BrandOption = { id: string; name: string; slug: string }
-type Tab = 'cars' | 'bikes' | 'scooters' | 'compare'
+type Tab = 'cars' | 'bikes' | 'scooters'
 
 const BIKE_BRANDS = [
   { label: 'Royal Enfield', slug: 'royal-enfield' },
@@ -28,26 +28,10 @@ const SCOOTER_BRANDS = [
   { label: 'Bajaj',        slug: 'bajaj'        },
 ]
 
-const COMPARE_MODELS = [
-  { label: 'Tata Nexon',         slug: 'tata-nexon'           },
-  { label: 'Hyundai Creta',      slug: 'hyundai-creta'        },
-  { label: 'Maruti Swift',       slug: 'maruti-suzuki-swift'  },
-  { label: 'Tata Punch',         slug: 'tata-punch'           },
-  { label: 'Kia Seltos',         slug: 'kia-seltos'           },
-  { label: 'Mahindra Thar',      slug: 'mahindra-thar'        },
-  { label: 'Maruti Brezza',      slug: 'maruti-suzuki-brezza' },
-  { label: 'Hyundai Venue',      slug: 'hyundai-venue'        },
-  { label: 'Hyundai i20',        slug: 'hyundai-i20'          },
-  { label: 'Toyota Fortuner',    slug: 'toyota-fortuner'      },
-  { label: 'Mahindra Scorpio N', slug: 'mahindra-scorpio-n'   },
-  { label: 'Tata Harrier',       slug: 'tata-harrier'         },
-]
-
 const TABS: { key: Tab; label: string }[] = [
   { key: 'cars',     label: '🚗 Cars'     },
   { key: 'bikes',    label: '🏍️ Bikes'   },
   { key: 'scooters', label: '🛵 Scooters' },
-  { key: 'compare',  label: '⚡ Compare'  },
 ]
 
 const selectBase: React.CSSProperties = {
@@ -63,14 +47,11 @@ export default function HomeSearchBar({ brands }: { brands: BrandOption[] }) {
   const [carBrand,     setCarBrand]     = useState('')
   const [bikeBrand,    setBikeBrand]    = useState('')
   const [scooterBrand, setScooterBrand] = useState('')
-  const [model1,       setModel1]       = useState('')
-  const [model2,       setModel2]       = useState('')
 
   function handleSearch() {
-    if (tab === 'cars')     router.push(carBrand     ? `/${carBrand}-cars/`     : '/new-cars/')
-    if (tab === 'bikes')    router.push(bikeBrand    ? `/${bikeBrand}-bikes/`   : '/new-bikes/')
+    if (tab === 'cars')     router.push(carBrand     ? `/${carBrand}-cars/`         : '/new-cars/')
+    if (tab === 'bikes')    router.push(bikeBrand    ? `/${bikeBrand}-bikes/`       : '/new-bikes/')
     if (tab === 'scooters') router.push(scooterBrand ? `/${scooterBrand}-scooters/` : '/new-scooters/')
-    if (tab === 'compare')  router.push(model1 && model2 ? `/compare/${model1}-vs-${model2}/` : '/compare/')
   }
 
   return (
@@ -143,25 +124,6 @@ export default function HomeSearchBar({ brands }: { brands: BrandOption[] }) {
           </select>
         )}
 
-        {tab === 'compare' && <>
-          <select
-            value={model1}
-            onChange={e => setModel1(e.target.value)}
-            style={{ ...selectBase, color: model1 ? '#FFFFFF' : '#C0C0C0' }}
-          >
-            <option value="">Select first car</option>
-            {COMPARE_MODELS.map(m => <option key={m.slug} value={m.slug}>{m.label}</option>)}
-          </select>
-          <select
-            value={model2}
-            onChange={e => setModel2(e.target.value)}
-            style={{ ...selectBase, color: model2 ? '#FFFFFF' : '#C0C0C0' }}
-          >
-            <option value="">Select second car</option>
-            {COMPARE_MODELS.map(m => <option key={m.slug} value={m.slug}>{m.label}</option>)}
-          </select>
-        </>}
-
         <button
           onClick={handleSearch}
           style={{
@@ -171,7 +133,7 @@ export default function HomeSearchBar({ brands }: { brands: BrandOption[] }) {
             whiteSpace: 'nowrap',
           }}
         >
-          {tab === 'compare' ? 'Compare Now →' : 'Search →'}
+          Search →
         </button>
       </div>
     </div>
