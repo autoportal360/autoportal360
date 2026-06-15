@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -8,21 +9,22 @@ import { hasPermission, ROLE_LABELS, ROLE_COLORS } from '@/lib/admin-auth-client
 import type { AdminRole } from '@/lib/admin-auth-client'
 
 const NAV = [
-  { href: '/admin',          label: 'Dashboard', icon: '◼',  section: null },
-  { href: '/admin/brands',   label: 'Brands',    icon: '🏷',  section: 'brands' },
-  { href: '/admin/models',   label: 'Models',    icon: '🚗',  section: 'models' },
-  { href: '/admin/slider',   label: 'Slider',    icon: '🎞️', section: 'slider' },
-  { href: '/admin/leads',    label: 'Leads',     icon: '📋',  section: 'leads' },
-  { href: '/admin/states',   label: 'States',    icon: '🗺️', section: 'states' },
-  { href: '/admin/cities',   label: 'Cities',    icon: '🏙️', section: 'cities' },
-  { href: '/admin/pages',    label: 'Pages SEO', icon: '📄',  section: 'pages' },
-  { href: '/admin/dealers',  label: 'Dealers',   icon: '🏪',  section: 'dealers' },
-  { href: '/admin/ads',      label: 'Ads',       icon: '📢',  section: 'ads' },
-  { href: '/admin/seo',       label: 'SEO',       icon: '🔍',  section: 'seo' },
-  { href: '/admin/brand-seo',      label: 'Dealer SEO Pages', icon: '📝',  section: 'brand-seo' },
-  { href: '/admin/brand-page-seo', label: 'Brand Page SEO', icon: '📄',  section: 'brand-page-seo' },
-  { href: '/admin/blog',      label: 'Blog',      icon: '✍',   section: 'blog' },
-  { href: '/admin/users',    label: 'Users',     icon: '👥',  section: 'users' },
+  { href: '/admin',                  label: 'Dashboard',       icon: '◼',  section: null },
+  { href: '/admin/brands',           label: 'Brands',          icon: '🏷',  section: 'brands' },
+  { href: '/admin/models',           label: 'Models',          icon: '🚗',  section: 'models' },
+  { href: '/admin/slider',           label: 'Slider',          icon: '🎞️', section: 'slider' },
+  { href: '/admin/leads',            label: 'Leads',           icon: '📋',  section: 'leads' },
+  { href: '/admin/states',           label: 'States',          icon: '🗺️', section: 'states' },
+  { href: '/admin/cities',           label: 'Cities',          icon: '🏙️', section: 'cities' },
+  { href: '/admin/pages',            label: 'Pages SEO',       icon: '📄',  section: 'pages' },
+  { href: '/admin/dealers',          label: 'Dealers',         icon: '🏪',  section: 'dealers' },
+  { href: '/admin/dealer-requests',  label: 'Dealer Requests', icon: '📩',  section: 'dealers' },
+  { href: '/admin/ads',              label: 'Ads',             icon: '📢',  section: 'ads' },
+  { href: '/admin/seo',              label: 'SEO',             icon: '🔍',  section: 'seo' },
+  { href: '/admin/brand-seo',        label: 'Dealer SEO Pages',icon: '📝',  section: 'brand-seo' },
+  { href: '/admin/brand-page-seo',   label: 'Brand Page SEO',  icon: '📄',  section: 'brand-page-seo' },
+  { href: '/admin/blog',             label: 'Blog',            icon: '✍',   section: 'blog' },
+  { href: '/admin/users',            label: 'Users',           icon: '👥',  section: 'users' },
 ]
 
 function navVisible(section: string | null, role: AdminRole): boolean {
@@ -58,6 +60,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const role = adminUser.role
   const visibleNav = NAV.filter(link => navVisible(link.section, role))
+
+  // Pending dealer requests badge
+  let pendingDealerRequests = 0
+  try {
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { count } = await serviceClient
+      .from('dealer_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    pendingDealerRequests = count ?? 0
+  } catch { /* table may not exist yet */ }
 
   return (
     <div style={{
@@ -107,7 +123,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 }}
               >
                 <span style={{ fontSize: '15px', lineHeight: 1 }}>{link.icon}</span>
-                {link.label}
+                <span style={{ flex: 1 }}>{link.label}</span>
+                {link.href === '/admin/dealer-requests' && pendingDealerRequests > 0 && (
+                  <span style={{
+                    background: '#FFB400', color: '#06142D', borderRadius: '9999px',
+                    fontSize: '10px', fontWeight: 800, padding: '1px 7px', lineHeight: 1.6,
+                  }}>
+                    {pendingDealerRequests}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

@@ -160,12 +160,13 @@ export default function Footer() {
               marginBottom: '12px',
             }}>More</h4>
             {[
-              { label: 'Compare',           href: '/compare/' },
-              { label: 'Find Dealers',      href: '/dealers/' },
-              { label: 'News & Reviews',    href: '/news/' },
-              { label: 'About Us',          href: '/about/' },
-              { label: 'Contact',           href: '/contact/' },
-              { label: 'Sitemap',           href: '/sitemap' },
+              { label: 'Compare',              href: '/compare/' },
+              { label: 'Find Dealers',         href: '/dealers/' },
+              { label: 'List Your Showroom',   href: '/dealers/list-your-showroom/' },
+              { label: 'News & Reviews',       href: '/news/' },
+              { label: 'About Us',             href: '/about/' },
+              { label: 'Contact',              href: '/contact/' },
+              { label: 'Sitemap',              href: '/sitemap' },
             ].map(link => (
               <Link key={link.href} href={link.href} style={{
                 display: 'block',

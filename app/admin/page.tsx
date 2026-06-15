@@ -131,6 +131,14 @@ export default async function AdminDashboard() {
           }}>
             📄 Brand Page SEO
           </Link>
+          <Link href="/admin/dealer-requests" style={{
+            background: 'rgba(255,180,0,0.08)', color: '#FFB400',
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 800,
+            fontSize: '13px', padding: '11px 22px', borderRadius: '10px',
+            border: '1px solid rgba(255,180,0,0.2)', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>
+            📩 Dealer Requests
+          </Link>
         </div>
       </div>
 

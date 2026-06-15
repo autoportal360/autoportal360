@@ -122,6 +122,26 @@ export default function DealersPage() {
         </div>
       </section>
 
+      {/* ── LIST YOUR SHOWROOM CTA ── */}
+      <div className="max-w-5xl mx-auto px-6 pt-8">
+        <div style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '1rem', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: '.9375rem', marginBottom: '.25rem' }}>
+              Are you a showroom owner?
+            </p>
+            <p style={{ color: '#8E99A8', fontSize: '.8125rem' }}>
+              Get your dealership listed for free on AutoPortal360.
+            </p>
+          </div>
+          <a
+            href="/dealers/list-your-showroom/"
+            style={{ background: '#00D4FF', color: '#06142D', fontWeight: 800, fontSize: '.875rem', padding: '.625rem 1.25rem', borderRadius: '.75rem', whiteSpace: 'nowrap', textDecoration: 'none' }}
+          >
+            List Your Showroom →
+          </a>
+        </div>
+      </div>
+
       {/* ── BODY ── */}
       <div className="max-w-5xl mx-auto px-6 py-12" style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
 

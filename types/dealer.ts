@@ -96,6 +96,14 @@ export const INDIAN_STATES = [
   'Uttarakhand', 'West Bengal',
 ] as const
 
+export const KNOWN_BRANDS = [
+  'Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Kia',
+  'MG Motor', 'Renault', 'Skoda', 'Volkswagen', 'Jeep', 'Nissan', 'Citroën',
+  'BYD', 'Force Motors', 'Royal Enfield', 'Bajaj', 'Hero', 'TVS', 'Yamaha',
+  'Suzuki', 'KTM', 'Kawasaki', 'Jawa', 'Triumph', 'Harley-Davidson',
+  'BMW Motorrad', 'Yezdi', 'Ather', 'Ola Electric', 'Piaggio', 'Vespa',
+] as const
+
 export function toSlug(str: string): string {
   return str
     .toLowerCase()
