@@ -10,6 +10,7 @@ import type { Brand } from '@/types'
 import SchemaMarkup from '@/components/SchemaMarkup'
 import { websiteSchema, organizationSchema } from '@/lib/schema'
 import HomeSearchBar from '@/components/HomeSearchBar'
+import RecentlyViewed from '@/components/RecentlyViewed'
 
 export const metadata: Metadata = {
   title: 'AutoPortal360 — New Cars, Bikes & Scooters in India 2026',
@@ -424,6 +425,96 @@ export default async function HomePage() {
         </div>
       </Section>
 
+      {/* ── POPULAR CARS BY BUDGET ── */}
+      <Section alt>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.4px' }}>
+              Popular Cars by <span style={{ color: '#00D4FF' }}>Budget</span>
+            </h2>
+            <p style={{ fontSize: '13px', color: '#8E99A8', marginTop: '3px' }}>Find the perfect car in your price range</p>
+          </div>
+          <Link href="/new-cars/" style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, fontFamily: 'Montserrat, sans-serif' }}>
+            All Cars →
+          </Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: '10px' }}>
+          {[
+            { label: 'Under ₹5 Lakh',    slug: 'under-5-lakh',    icon: '💰', description: 'Affordable hatchbacks & entry cars',   count: '15+ cars' },
+            { label: '₹5 – ₹10 Lakh',    slug: '5-to-10-lakh',    icon: '🚗', description: 'Popular hatchbacks & compact sedans',  count: '40+ cars' },
+            { label: '₹10 – ₹15 Lakh',   slug: '10-to-15-lakh',   icon: '🚙', description: 'Compact SUVs & premium hatchbacks',    count: '35+ cars' },
+            { label: '₹15 – ₹20 Lakh',   slug: '15-to-20-lakh',   icon: '🏎️', description: 'Mid-size SUVs & sedans',             count: '25+ cars' },
+            { label: '₹20 – ₹30 Lakh',   slug: '20-to-30-lakh',   icon: '✨', description: 'Premium SUVs & crossovers',           count: '20+ cars' },
+            { label: 'Above ₹30 Lakh',   slug: 'above-30-lakh',   icon: '👑', description: 'Luxury cars & flagship SUVs',         count: '30+ cars' },
+          ].map(b => (
+            <Link
+              key={b.slug}
+              href={`/new-cars/?budget=${b.slug}`}
+              style={{
+                background: '#111111', border: '1px solid rgba(0,212,255,0.12)',
+                borderRadius: '14px', padding: '16px 12px 14px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: '6px', textAlign: 'center', textDecoration: 'none',
+              }}
+            >
+              <span style={{ fontSize: '26px' }}>{b.icon}</span>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.3 }}>{b.label}</div>
+              <div style={{ fontSize: '11px', color: '#8E99A8', lineHeight: 1.4 }}>{b.description}</div>
+              <div style={{ fontSize: '11px', color: '#00D4FF', fontWeight: 700, marginTop: '2px' }}>{b.count}</div>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── UPCOMING CAR LAUNCHES ── */}
+      <Section>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.4px' }}>
+              Upcoming Car <span style={{ color: '#00D4FF' }}>Launches in India</span>
+            </h2>
+            <p style={{ fontSize: '13px', color: '#8E99A8', marginTop: '3px' }}>Most anticipated cars launching soon</p>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: '12px' }}>
+          {[
+            { brand: 'Tata',         model: 'Curvv',    price: '₹10 – ₹18 Lakh (Expected)', date: 'Available Now', type: 'SUV Coupe',      slug: '/tata-cars/curvv/',               status: 'launched' },
+            { brand: 'Mahindra',     model: 'BE 6',     price: '₹18.90 – ₹26.90 Lakh',      date: 'Q1 2026',       type: 'Electric SUV',   slug: '/mahindra-cars/be-6/',             status: 'upcoming' },
+            { brand: 'Hyundai',      model: 'Creta EV', price: '₹17 – ₹22 Lakh (Expected)', date: '2026',          type: 'Electric SUV',   slug: '/hyundai-cars/creta-ev/',          status: 'upcoming' },
+            { brand: 'Maruti Suzuki',model: 'eVX',      price: '₹15 – ₹20 Lakh (Expected)', date: 'Late 2026',     type: 'Electric SUV',   slug: '/maruti-suzuki-cars/evx/',         status: 'upcoming' },
+            { brand: 'Tata',         model: 'Sierra',   price: '₹12 – ₹18 Lakh (Expected)', date: '2026',          type: 'SUV',            slug: '/tata-cars/sierra/',               status: 'upcoming' },
+            { brand: 'Kia',          model: 'Syros',    price: '₹9 – ₹15 Lakh (Expected)',  date: 'Q2 2026',       type: 'Compact SUV',    slug: '/kia-cars/syros/',                 status: 'upcoming' },
+          ].map(car => (
+            <Link
+              key={car.slug}
+              href={car.slug}
+              style={{
+                background: '#111111', border: '1px solid rgba(0,212,255,0.12)',
+                borderRadius: '14px', padding: '16px', display: 'block', textDecoration: 'none',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, padding: '3px 9px', borderRadius: '20px',
+                  fontFamily: 'Montserrat, sans-serif', letterSpacing: '0.5px',
+                  ...(car.status === 'launched'
+                    ? { background: 'rgba(46,204,113,0.12)', color: '#2ECC71', border: '1px solid rgba(46,204,113,0.3)' }
+                    : { background: 'rgba(0,212,255,0.1)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.25)' }),
+                }}>
+                  {car.status === 'launched' ? 'Launched ✓' : 'Upcoming'}
+                </span>
+                <span style={{ fontSize: '11px', color: '#8E99A8' }}>{car.date}</span>
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '2px' }}>{car.brand}</div>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '16px', fontWeight: 800, color: '#FFFFFF', marginBottom: '3px' }}>{car.model}</div>
+              <div style={{ fontSize: '11px', color: '#8E99A8', marginBottom: '8px' }}>{car.type}</div>
+              <div style={{ fontSize: '13px', color: '#00D4FF', fontWeight: 700, marginBottom: '12px' }}>{car.price}</div>
+              <div style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 600 }}>View Details →</div>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
       {/* ── BIKES HUB ── */}
       <Section alt>
         <HubDivider label="🏍️ Bikes" />
@@ -541,6 +632,9 @@ export default async function HomePage() {
           </div>
         </div>
       </Section>
+
+      {/* ── RECENTLY VIEWED ── */}
+      <RecentlyViewed />
 
       </div>
     </>

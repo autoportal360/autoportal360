@@ -16,6 +16,7 @@ import { getPageSeo } from '@/lib/page-seo'
 import EditSeoButton from '@/components/EditSeoButton'
 import SchemaMarkup from '@/components/SchemaMarkup'
 import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
+import TrackRecentView from '@/components/TrackRecentView'
 
 export const dynamic = 'force-dynamic'
 
@@ -742,6 +743,12 @@ export default async function ModelPage({
 
       {/* bottom padding */}
       <div style={{ height: '48px' }} />
+      <TrackRecentView
+        brand={brand.name}
+        model={m.name}
+        price={priceLabel ?? ''}
+        slug={`/${brandSlug}/${modelSlug}/`}
+      />
       <EditSeoButton pageKey={pageKey} existingId={seo?.id} />
     </>
   )

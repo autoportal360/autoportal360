@@ -358,6 +358,14 @@ select option {
 .ap-seo-table-model{padding:.75rem 1rem;color:#fff;font-weight:500;font-size:.875rem}
 .ap-seo-table-price{padding:.75rem 1rem;color:#00D4FF;font-weight:600;font-size:.875rem}
 
+/* ── Recently Viewed horizontal scroll row ───────────────────────────────── */
+.ap-scroll-row{display:flex;gap:.75rem;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:.5rem}
+.ap-scroll-row::-webkit-scrollbar{height:4px}
+.ap-scroll-row::-webkit-scrollbar-track{background:#0A1F44;border-radius:2px}
+.ap-scroll-row::-webkit-scrollbar-thumb{background:#1e3a6e;border-radius:2px}
+.ap-scroll-card{flex:0 0 200px;scroll-snap-align:start}
+@media(min-width:640px){.ap-scroll-card{flex:0 0 240px}}
+
 /* ── Dealer listing request form ─────────────────────────────────────────── */
 .ap-form-grid{display:grid;grid-template-columns:1fr;gap:1rem}
 .ap-form-grid-2{display:grid;grid-template-columns:1fr;gap:1rem}
