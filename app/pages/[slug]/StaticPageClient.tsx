@@ -6,6 +6,7 @@ import Link from 'next/link'
 interface Vehicle {
   brand: string; model: string; price: string
   fuel: string; type: string; slug: string; tag: string
+  image_url?: string
 }
 interface Faq { question: string; answer: string }
 interface RelatedPage { title: string; slug: string; hero_subtext: string | null; page_type: string }
@@ -20,6 +21,7 @@ interface Props {
   seoText: string
   faqs: Faq[]
   relatedPages: RelatedPage[]
+  currentSlug: string
 }
 
 const MAX_CONTENT = '1024px'
@@ -78,7 +80,7 @@ function computeHighlights(vehicles: Vehicle[], pageType: string) {
 }
 
 export default function StaticPageClient({
-  title, heroHeading, heroSubtext, pageType, vehicles, seoHeading, seoText, faqs, relatedPages,
+  title, heroHeading, heroSubtext, pageType, vehicles, seoHeading, seoText, faqs, relatedPages, currentSlug,
 }: Props) {
   const [seoExpanded, setSeoExpanded] = useState(false)
   const [openFaq, setOpenFaq]         = useState<number | null>(null)
@@ -181,6 +183,12 @@ export default function StaticPageClient({
                   className="ap-card"
                   style={{ textDecoration: 'none', padding: '24px', position: 'relative', display: 'block' }}
                 >
+                  {v.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.image_url} alt={`${v.brand} ${v.model}`} className="ap-vehicle-img" />
+                  ) : (
+                    <div className="ap-vehicle-img-placeholder">{tEmoji}</div>
+                  )}
                   {v.tag && (
                     <div style={{ marginBottom: '12px' }}>
                       <span style={{
@@ -192,12 +200,6 @@ export default function StaticPageClient({
                       </span>
                     </div>
                   )}
-                  <div style={{
-                    fontSize: '3rem', marginBottom: '14px', lineHeight: 1,
-                    height: '52px', display: 'flex', alignItems: 'center',
-                  }}>
-                    {tEmoji}
-                  </div>
                   <div style={{ fontSize: '10px', color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>
                     {v.brand}
                   </div>
@@ -235,7 +237,12 @@ export default function StaticPageClient({
             <div className="ap-vehicle-list">
               {vehicles.map((v, i) => (
                 <div key={i} className="ap-vehicle-row">
-                  <div className="ap-vehicle-rank">{i + 1}</div>
+                  {v.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.image_url} alt={`${v.brand} ${v.model}`} className="ap-vehicle-thumb" />
+                  ) : (
+                    <div className="ap-vehicle-rank">{i + 1}</div>
+                  )}
                   <div className="ap-vehicle-info">
                     <div className="ap-vehicle-brand">{v.brand}</div>
                     <div className="ap-vehicle-name">{v.model}</div>
@@ -365,7 +372,7 @@ export default function StaticPageClient({
       )}
 
       {/* ── S9: RELATED PAGES ── */}
-      {relatedPages.length > 0 && (
+      {relatedPages.filter(p => p.slug !== currentSlug).length > 0 && (
         <section style={{ padding: '36px 24px 52px', background: '#060F22' }}>
           <div style={{ maxWidth: MAX_CONTENT, margin: '0 auto' }}>
             <h2 style={{
@@ -375,7 +382,7 @@ export default function StaticPageClient({
               Explore More
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '12px' }}>
-              {relatedPages.map(p => (
+              {relatedPages.filter(p => p.slug !== currentSlug).map(p => (
                 <Link
                   key={p.slug}
                   href={`/pages/${p.slug}/`}

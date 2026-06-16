@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 interface Vehicle {
   brand: string; model: string; price: string
-  fuel: string; type: string; slug: string; tag: string
+  fuel: string; type: string; slug: string; tag: string; image_url: string
 }
 interface Faq { question: string; answer: string }
 
@@ -102,7 +102,7 @@ export default function AdminStaticPages() {
   }
 
   const addVehicle = () => {
-    setForm(f => ({ ...f, vehicles: [...f.vehicles, { brand: '', model: '', price: '', fuel: '', type: '', slug: '', tag: '' }] }))
+    setForm(f => ({ ...f, vehicles: [...f.vehicles, { brand: '', model: '', price: '', fuel: '', type: '', slug: '', tag: '', image_url: '' }] }))
   }
   const removeVehicle = (i: number) => {
     setForm(f => ({ ...f, vehicles: f.vehicles.filter((_, idx) => idx !== i) }))
@@ -384,8 +384,11 @@ export default function AdminStaticPages() {
                     <input value={v.type}   onChange={e => updateVehicle(i, 'type',   e.target.value)} placeholder="Type"   style={{ ...inputStyle, fontSize: '12px', padding: '7px 10px' }} />
                     <input value={v.tag}    onChange={e => updateVehicle(i, 'tag',    e.target.value)} placeholder="Tag badge" style={{ ...inputStyle, fontSize: '12px', padding: '7px 10px' }} />
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                     <input value={v.slug}   onChange={e => updateVehicle(i, 'slug',   e.target.value)} placeholder="/brand-cars/model/" style={{ ...inputStyle, fontSize: '12px', padding: '7px 10px', flex: 1 }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input value={v.image_url} onChange={e => updateVehicle(i, 'image_url', e.target.value)} placeholder="/images/models/brand-model.webp or https://..." style={{ ...inputStyle, fontSize: '12px', padding: '7px 10px', flex: 1 }} />
                     <button onClick={() => removeVehicle(i)} style={{ fontSize: '11px', color: '#FF4D4F', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, fontWeight: 700 }}>
                       Remove
                     </button>

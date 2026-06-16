@@ -59,7 +59,7 @@ export default async function StaticPage({ params }: Props) {
 
   const vehicles = (page.vehicles ?? []) as {
     brand: string; model: string; price: string
-    fuel: string; type: string; slug: string; tag: string
+    fuel: string; type: string; slug: string; tag: string; image_url?: string
   }[]
 
   const faqs = (page.faqs ?? []) as { question: string; answer: string }[]
@@ -122,6 +122,7 @@ export default async function StaticPage({ params }: Props) {
         seoText={page.seo_text ?? ''}
         faqs={faqs}
         relatedPages={relatedPages}
+        currentSlug={slug}
       />
     </>
   )
