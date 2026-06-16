@@ -383,10 +383,35 @@ select option {
 .ap-benefit-item{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1rem}
 .ap-step-number{width:1.75rem;height:1.75rem;border-radius:9999px;background:#00D4FF;color:#06142D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0}
 
-/* ── Static Pages — vehicle grid + cards ─────────────────────────────────── */
+/* ── Static Pages — featured cards ──────────────────────────────────────── */
 .ap-vehicle-grid{display:grid;grid-template-columns:1fr;gap:1rem}
 @media(min-width:640px){.ap-vehicle-grid{grid-template-columns:1fr 1fr}}
 @media(min-width:1024px){.ap-vehicle-grid{grid-template-columns:1fr 1fr 1fr}}
 .ap-vehicle-card{background:#111111;border:1px solid rgba(0,212,255,0.12);border-radius:14px;padding:20px;position:relative;transition:border-color .2s}
 .ap-vehicle-card:hover{border-color:rgba(0,212,255,0.35)}
 .ap-tag-badge{position:absolute;top:.75rem;right:.75rem;background:#00D4FF;color:#06142D;font-size:.7rem;font-weight:700;padding:.25rem .75rem;border-radius:9999px;font-family:'Montserrat',sans-serif;white-space:nowrap}
+
+/* ── Static Pages — compact vehicle list ────────────────────────────────── */
+.ap-vehicle-list{border:1px solid #1e3a6e;border-radius:.75rem;overflow:hidden}
+.ap-vehicle-row{display:flex;align-items:center;padding:.875rem 1.25rem;border-bottom:1px solid rgba(30,58,110,0.5);gap:1rem;flex-wrap:wrap;transition:background .15s}
+.ap-vehicle-row:last-child{border-bottom:none}
+.ap-vehicle-row:nth-child(even){background:rgba(13,34,64,0.5)}
+.ap-vehicle-row:hover{background:rgba(16,42,85,0.6)}
+.ap-vehicle-rank{width:2rem;height:2rem;border-radius:9999px;background:#06142D;border:1px solid #1e3a6e;display:flex;align-items:center;justify-content:center;color:#C0C0C0;font-size:.75rem;font-weight:600;flex-shrink:0}
+.ap-vehicle-info{flex:1;min-width:0}
+.ap-vehicle-name{color:#FFFFFF;font-weight:600;font-size:.9375rem;line-height:1.3}
+.ap-vehicle-brand{color:#8E99A8;font-size:.75rem;margin-bottom:2px}
+.ap-vehicle-price{color:#00D4FF;font-weight:700;font-size:.9375rem;white-space:nowrap}
+.ap-vehicle-meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:4px}
+.ap-vehicle-type-pill{background:#06142D;border:1px solid #1e3a6e;color:#C0C0C0;font-size:.6875rem;padding:.125rem .5rem;border-radius:9999px}
+.ap-vehicle-link{color:#00D4FF;font-size:.8125rem;white-space:nowrap;text-decoration:none;font-weight:600}
+.ap-vehicle-link:hover{text-decoration:underline}
+
+/* ── Static Pages — FAQ accordion ───────────────────────────────────────── */
+.ap-faq-list{border:1px solid #1e3a6e;border-radius:.75rem;overflow:hidden}
+.ap-faq-item,.ap-faq-row{border-bottom:1px solid rgba(30,58,110,0.5)}
+.ap-faq-item:last-child,.ap-faq-row:last-child{border-bottom:none}
+.ap-faq-question{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1rem 1.25rem;cursor:pointer;color:#FFFFFF;font-weight:600;font-size:.9375rem;background:transparent;transition:background .15s;width:100%;border:none;text-align:left;line-height:1.4;font-family:inherit}
+.ap-faq-question:hover{background:rgba(13,34,64,0.5)}
+.ap-faq-answer{padding:0 1.25rem 1rem 1.25rem;color:#C0C0C0;font-size:.875rem;line-height:1.7}
+.ap-faq-icon{color:#00D4FF;font-size:1.25rem;flex-shrink:0;line-height:1}

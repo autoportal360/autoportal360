@@ -44,7 +44,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function StaticPage({ params }: Props) {
   const { slug } = await params
-  const page = await getPage(slug)
+
+  const [page, relatedResult] = await Promise.all([
+    getPage(slug),
+    db.from('static_pages')
+      .select('title,slug,hero_subtext,page_type')
+      .eq('is_published', true)
+      .neq('slug', slug)
+      .order('sort_order', { ascending: true })
+      .limit(4),
+  ])
+
   if (!page) notFound()
 
   const vehicles = (page.vehicles ?? []) as {
@@ -53,6 +63,10 @@ export default async function StaticPage({ params }: Props) {
   }[]
 
   const faqs = (page.faqs ?? []) as { question: string; answer: string }[]
+
+  const relatedPages = (relatedResult.data ?? []) as {
+    title: string; slug: string; hero_subtext: string | null; page_type: string
+  }[]
 
   // JSON-LD schemas
   const itemListSchema = {
@@ -99,6 +113,7 @@ export default async function StaticPage({ params }: Props) {
     <>
       <SchemaMarkup schemas={schemas} />
       <StaticPageClient
+        title={page.title}
         heroHeading={page.hero_heading}
         heroSubtext={page.hero_subtext}
         pageType={page.page_type}
@@ -106,6 +121,7 @@ export default async function StaticPage({ params }: Props) {
         seoHeading={page.seo_heading}
         seoText={page.seo_text ?? ''}
         faqs={faqs}
+        relatedPages={relatedPages}
       />
     </>
   )
