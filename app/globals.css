@@ -420,3 +420,118 @@ select option {
 .ap-faq-question:hover{background:rgba(13,34,64,0.5)}
 .ap-faq-answer{padding:0 1.25rem 1rem 1.25rem;color:#C0C0C0;font-size:.875rem;line-height:1.7}
 .ap-faq-icon{color:#00D4FF;font-size:1.25rem;flex-shrink:0;line-height:1}
+
+/* ── HOMEPAGE REDESIGN CLASSES ── */
+
+/* Hero search panel */
+.ap-hero-search{background:#0A1F44;border:1px solid #1e3a6e;border-radius:1rem;padding:1.5rem;margin-top:1.5rem}
+.ap-search-fields{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.ap-search-field{flex:1;min-width:140px;background:#06142D;border:1px solid #1e3a6e;border-radius:.5rem;padding:.625rem .875rem;color:#fff;font-size:.875rem;font-family:inherit;appearance:none;cursor:pointer}
+.ap-search-field:focus{outline:none;border-color:#00D4FF}
+.ap-search-btn{background:#00D4FF;color:#06142D;font-weight:700;padding:.625rem 1.5rem;border-radius:.5rem;border:none;cursor:pointer;font-size:.875rem;white-space:nowrap;transition:background .2s}
+.ap-search-btn:hover{background:#4DEBFF}
+.ap-search-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Stats row */
+.ap-stats-row{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:1rem}
+.ap-stat-item{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;color:#C0C0C0}
+.ap-stat-number{font-weight:700;color:#00D4FF;font-size:1.125rem}
+
+/* Section headers */
+.ap-section{padding:2.5rem 0}
+.ap-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
+.ap-section-title{color:#FFFFFF;font-weight:700;font-size:1.25rem}
+.ap-section-link{color:#00D4FF;font-size:.8125rem;text-decoration:none}
+.ap-section-link:hover{text-decoration:underline}
+.ap-section-subtitle{color:#C0C0C0;font-size:.875rem;margin-top:.25rem}
+
+/* Tab groups (homepage variant) */
+.ap-tabs{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.ap-tab-btn{padding:.4rem 1rem;border-radius:9999px;font-size:.8125rem;font-weight:500;border:1px solid #1e3a6e;background:#06142D;color:#C0C0C0;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ap-tab-btn:hover{border-color:#00D4FF;color:#fff}
+.ap-tab-btn.active{background:#00D4FF;color:#06142D;border-color:#00D4FF}
+
+/* Car cards grid */
+.ap-car-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.ap-car-grid-4{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+@media(min-width:768px){.ap-car-grid-4{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:767px){.ap-car-grid-3{grid-template-columns:1fr}}
+@media(min-width:640px) and (max-width:767px){.ap-car-grid-3{grid-template-columns:repeat(2,1fr)}}
+
+/* Featured car card */
+.ap-car-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1.25rem;transition:all .2s;position:relative;display:block;text-decoration:none}
+.ap-car-card:hover{border-color:#00D4FF;background:#0d2a5a;transform:translateY(-2px)}
+.ap-car-card-tag{position:absolute;top:.75rem;left:.75rem;background:#00D4FF;color:#06142D;font-size:.6875rem;font-weight:700;padding:.2rem .625rem;border-radius:9999px}
+.ap-car-card-img{width:100%;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:#06142D;border-radius:.5rem;margin-bottom:.75rem;border:1px solid #1e3a6e;overflow:hidden}
+.ap-car-card-img img{width:100%;height:100%;object-fit:cover}
+.ap-car-card-brand{color:#666;font-size:.6875rem;text-transform:uppercase;letter-spacing:.05em}
+.ap-car-card-name{color:#fff;font-weight:700;font-size:1rem;margin-top:.125rem}
+.ap-car-card-price{color:#00D4FF;font-weight:600;font-size:.875rem;margin-top:.375rem}
+.ap-car-card-meta{display:flex;gap:.375rem;margin-top:.5rem;flex-wrap:wrap}
+.ap-car-card-pill{background:#06142D;border:1px solid #1e3a6e;color:#C0C0C0;font-size:.625rem;padding:.125rem .5rem;border-radius:9999px}
+.ap-car-card-link{color:#00D4FF;font-size:.8125rem;margin-top:.625rem;display:inline-block;text-decoration:none}
+.ap-car-card-link:hover{text-decoration:underline}
+
+/* Body type icons grid */
+.ap-body-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+@media(min-width:640px){.ap-body-grid{grid-template-columns:repeat(6,1fr)}}
+.ap-body-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1rem .5rem;text-align:center;transition:all .2s;display:block;text-decoration:none;cursor:pointer}
+.ap-body-card:hover{border-color:#00D4FF;background:#0d2a5a}
+.ap-body-icon{font-size:1.75rem;margin-bottom:.375rem;display:block}
+.ap-body-label{color:#fff;font-weight:600;font-size:.8125rem}
+.ap-body-count{color:#666;font-size:.6875rem;margin-top:.125rem}
+
+/* Brand logo grid */
+.ap-brand-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+@media(min-width:640px){.ap-brand-grid{grid-template-columns:repeat(6,1fr)}}
+.ap-brand-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:.875rem .5rem;text-align:center;transition:all .2s;display:block;text-decoration:none}
+.ap-brand-card:hover{border-color:#00D4FF;background:#0d2a5a}
+.ap-brand-logo{width:2.5rem;height:2.5rem;border-radius:9999px;background:#00D4FF;display:flex;align-items:center;justify-content:center;margin:0 auto .375rem;color:#06142D;font-weight:700;font-size:1rem}
+.ap-brand-name{color:#fff;font-size:.75rem;font-weight:600}
+
+/* Compare cards */
+.ap-compare-grid{display:grid;grid-template-columns:1fr;gap:.75rem}
+@media(min-width:640px){.ap-compare-grid{grid-template-columns:repeat(3,1fr)}}
+.ap-compare-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1.25rem;text-align:center;transition:all .2s;display:block;text-decoration:none}
+.ap-compare-card:hover{border-color:#00D4FF;background:#0d2a5a}
+.ap-compare-vs{display:flex;align-items:center;justify-content:center;gap:.75rem;margin-bottom:.75rem}
+.ap-compare-model{color:#fff;font-weight:600;font-size:.875rem}
+.ap-compare-badge{background:#06142D;border:1px solid #1e3a6e;color:#00D4FF;font-size:.6875rem;font-weight:700;padding:.25rem .5rem;border-radius:9999px}
+.ap-compare-prices{color:#C0C0C0;font-size:.75rem;margin-bottom:.5rem}
+
+/* News cards */
+.ap-news-grid{display:grid;grid-template-columns:1fr;gap:.75rem}
+@media(min-width:640px){.ap-news-grid{grid-template-columns:repeat(3,1fr)}}
+.ap-news-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;overflow:hidden;transition:all .2s;display:block;text-decoration:none}
+.ap-news-card:hover{border-color:#00D4FF}
+.ap-news-img{width:100%;aspect-ratio:16/9;background:#06142D;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden}
+.ap-news-img img{width:100%;height:100%;object-fit:cover}
+.ap-news-body{padding:1rem}
+.ap-news-title{color:#fff;font-weight:600;font-size:.875rem;line-height:1.4}
+.ap-news-date{color:#666;font-size:.75rem;margin-top:.375rem}
+
+/* Dealer CTA */
+.ap-dealer-cta{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.ap-dealer-cta-text{flex:1;min-width:200px}
+.ap-dealer-cta-title{color:#fff;font-weight:700;font-size:1.125rem}
+.ap-dealer-cta-sub{color:#C0C0C0;font-size:.8125rem;margin-top:.25rem}
+.ap-dealer-cta-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+
+/* On-road price calculator */
+.ap-onroad-calc{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1.5rem}
+.ap-onroad-fields{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+
+/* Explore pages */
+.ap-explore-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem}
+@media(min-width:640px){.ap-explore-grid{grid-template-columns:repeat(5,1fr)}}
+.ap-explore-card{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:.875rem;text-align:center;transition:all .2s;display:block;text-decoration:none}
+.ap-explore-card:hover{border-color:#00D4FF;background:#0d2a5a}
+.ap-explore-icon{font-size:1.25rem;margin-bottom:.25rem;display:block}
+.ap-explore-label{color:#fff;font-size:.75rem;font-weight:600}
+
+/* Ad slot */
+.ap-ad-slot{background:#0A1F44;border:1px solid #1e3a6e;border-radius:.75rem;padding:1rem;text-align:center;color:#666;font-size:.75rem;margin:1rem 0}
+
+/* Two-wheel tabbed hub */
+.ap-twowheeler-brands{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.25rem;margin-bottom:1rem}
+.ap-twowheeler-brands::-webkit-scrollbar{display:none}
