@@ -11,6 +11,8 @@ type ModelRow = {
 }
 type CityRow = { slug: string }
 type BlogRow = { slug: string; published_at: string | null }
+type DealerRow = { city_slug: string; brand_slug: string }
+type StaticPageRow = { slug: string; updated_at: string | null }
 
 function brandPageSlug(dbSlug: string, type: 'car' | 'bike' | 'scooter'): string {
   if (type === 'car') return `${dbSlug}-cars`
@@ -22,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://autoportal360.vercel.app'
   const now = new Date()
 
-  const [brandsRes, modelsRes, citiesRes, blogsRes] = await Promise.all([
+  const [brandsRes, modelsRes, citiesRes, blogsRes, dealersRes, staticPagesRes] = await Promise.all([
     supabase.from('brands').select('slug, type, created_at').eq('is_active', true),
     supabase
       .from('models')
@@ -30,21 +32,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .neq('status', 'discontinued'),
     supabase.from('cities').select('slug').eq('is_featured', true),
     supabase.from('blog_posts').select('slug, published_at').eq('status', 'published'),
+    supabase.from('dealers').select('city_slug, brand_slug').eq('is_active', true),
+    supabase.from('static_pages').select('slug, updated_at').eq('is_published', true),
   ])
 
   const brands = (brandsRes.data ?? []) as BrandRow[]
   const models = (modelsRes.data ?? []) as unknown as ModelRow[]
   const cities = (citiesRes.data ?? []) as CityRow[]
   const blogs = (blogsRes.data ?? []) as BlogRow[]
+  const dealers = (dealersRes.data ?? []) as DealerRow[]
+  const staticPages = (staticPagesRes.data ?? []) as StaticPageRow[]
 
   const entries: MetadataRoute.Sitemap = []
 
   // Priority 1.0 — Homepage
   entries.push({ url: `${base}/`, lastModified: now, changeFrequency: 'daily', priority: 1.0 })
 
-  // Priority 0.9 — Listing pages
+  // Priority 0.9 — Vehicle listing pages
   for (const path of ['/new-cars/', '/new-bikes/', '/new-scooters/']) {
     entries.push({ url: `${base}${path}`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
+  }
+
+  // Priority 0.7 — Static utility pages
+  for (const path of [
+    '/compare/',
+    '/compare/cars/',
+    '/compare/bikes/',
+    '/compare/scooters/',
+    '/dealers/',
+    '/dealers/list-your-showroom/',
+    '/news/',
+  ]) {
+    entries.push({ url: `${base}${path}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
   }
 
   // Priority 0.8 — Brand pages
@@ -58,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Priority 0.7/0.6/0.5 — Model, price, specs, city pages
+  // Priority 0.7/0.6/0.5 — Model, price, specs, city-price pages
   for (const model of models) {
     const brand = model.brands as { slug: string; type: string } | null
     if (!brand) continue
@@ -78,6 +97,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.5,
       })
     }
+  }
+
+  // Priority 0.6 — Dealer city pages: /dealers/{city}/
+  const uniqueCitySlugs = [...new Set(dealers.map(d => d.city_slug).filter(Boolean))]
+  for (const city of uniqueCitySlugs) {
+    entries.push({ url: `${base}/dealers/${city}/`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 })
+  }
+
+  // Priority 0.6 — Dealer brand pages: /dealers/brand/{brand}/
+  const uniqueBrandSlugs = [...new Set(dealers.map(d => d.brand_slug).filter(Boolean))]
+  for (const brand of uniqueBrandSlugs) {
+    entries.push({ url: `${base}/dealers/brand/${brand}/`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 })
+  }
+
+  // Priority 0.6 — Dealer city+brand pages: /dealers/{city}/{brand}/
+  const cityBrandPairs = [
+    ...new Set(
+      dealers
+        .filter(d => d.city_slug && d.brand_slug)
+        .map(d => `${d.city_slug}/${d.brand_slug}`)
+    ),
+  ]
+  for (const pair of cityBrandPairs) {
+    entries.push({ url: `${base}/dealers/${pair}/`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 })
+  }
+
+  // Priority 0.7 — CMS static pages: /pages/{slug}
+  for (const page of staticPages) {
+    entries.push({
+      url: `${base}/pages/${page.slug}/`,
+      lastModified: page.updated_at ? new Date(page.updated_at) : now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    })
   }
 
   // Priority 0.4 — Blog posts
