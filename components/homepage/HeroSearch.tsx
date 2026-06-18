@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import HeroSlider from '@/components/HeroSlider'
+import type { HeroSlide } from '@/components/HeroSlider'
 
 type BrandOption = { id: string; name: string; slug: string }
 
@@ -60,59 +62,82 @@ const CAR_BODIES = [
 
 type Tab = 'cars' | 'bikes' | 'scooters'
 
-export default function HeroSearch({ carBrands }: { carBrands: BrandOption[] }) {
+export default function HeroSearch({
+  carBrands,
+  slides = [],
+}: {
+  carBrands: BrandOption[]
+  slides?: HeroSlide[]
+}) {
   const router = useRouter()
-  const [tab,          setTab]          = useState<Tab>('cars')
-  const [carBrand,     setCarBrand]     = useState('')
-  const [carBudget,    setCarBudget]    = useState('')
-  const [carBody,      setCarBody]      = useState('')
-  const [bikeBrand,    setBikeBrand]    = useState('')
-  const [bikeBudget,   setBikeBudget]   = useState('')
-  const [scooterBrand, setScooterBrand] = useState('')
-  const [scooterBudget,setScooterBudget]= useState('')
+  const [tab,           setTab]          = useState<Tab>('cars')
+  const [carBrand,      setCarBrand]     = useState('')
+  const [carBudget,     setCarBudget]    = useState('')
+  const [carBody,       setCarBody]      = useState('')
+  const [bikeBrand,     setBikeBrand]    = useState('')
+  const [bikeBudget,    setBikeBudget]   = useState('')
+  const [scooterBrand,  setScooterBrand] = useState('')
+  const [scooterBudget, setScooterBudget]= useState('')
 
   function handleSearch() {
     if (tab === 'cars') {
       if (carBrand && !carBudget && !carBody) {
         router.push(`/${carBrand}-cars/`)
       } else {
-        const params = new URLSearchParams()
-        if (carBrand)  params.set('brand',  carBrand)
-        if (carBudget) params.set('budget', carBudget)
-        if (carBody)   params.set('body',   carBody)
-        router.push(`/new-cars/${params.toString() ? '?' + params.toString() : ''}`)
+        const p = new URLSearchParams()
+        if (carBrand)  p.set('brand',  carBrand)
+        if (carBudget) p.set('budget', carBudget)
+        if (carBody)   p.set('body',   carBody)
+        router.push(`/new-cars/${p.size ? '?' + p.toString() : ''}`)
       }
-    }
-    if (tab === 'bikes') {
+    } else if (tab === 'bikes') {
       if (bikeBrand && !bikeBudget) {
         router.push(`/${bikeBrand}-bikes/`)
       } else {
-        const params = new URLSearchParams()
-        if (bikeBrand)  params.set('brand',  bikeBrand)
-        if (bikeBudget) params.set('budget', bikeBudget)
-        router.push(`/new-bikes/${params.toString() ? '?' + params.toString() : ''}`)
+        const p = new URLSearchParams()
+        if (bikeBrand)  p.set('brand',  bikeBrand)
+        if (bikeBudget) p.set('budget', bikeBudget)
+        router.push(`/new-bikes/${p.size ? '?' + p.toString() : ''}`)
       }
-    }
-    if (tab === 'scooters') {
+    } else {
       if (scooterBrand && !scooterBudget) {
         router.push(`/${scooterBrand}-scooters/`)
       } else {
-        const params = new URLSearchParams()
-        if (scooterBrand)  params.set('brand',  scooterBrand)
-        if (scooterBudget) params.set('budget', scooterBudget)
-        router.push(`/new-scooters/${params.toString() ? '?' + params.toString() : ''}`)
+        const p = new URLSearchParams()
+        if (scooterBrand)  p.set('brand',  scooterBrand)
+        if (scooterBudget) p.set('budget', scooterBudget)
+        router.push(`/new-scooters/${p.size ? '?' + p.toString() : ''}`)
       }
     }
   }
 
   return (
-    <section style={{ background: '#0A1F44', borderBottom: '1px solid #1e3a6e', padding: '1.5rem 1.5rem 2rem' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid #1e3a6e' }}>
+
+      {/* ── Slider background ── */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        {/* Wrap in a stacking context so overlay can sit above slider internals */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {slides.length > 0
+            ? <HeroSlider slides={slides} />
+            : <div style={{ height: '380px', background: 'linear-gradient(135deg,#06142D 0%,#0d2855 60%,#06142D 100%)' }} />
+          }
+        </div>
+        {/* Dark overlay — must be above slider (zIndex: 2 > slider wrapper zIndex: 1) */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 2,
+          background: 'rgba(6,20,45,0.82)',
+        }} />
+      </div>
+
+      {/* ── Search panel foreground ── */}
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: '860px', margin: '0 auto', padding: '2.5rem 1.5rem 2rem' }}>
+
         <h1 style={{ fontSize: '1.625rem', fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: '1.25rem' }}>
           Find your perfect <span style={{ color: '#00D4FF' }}>car, bike or scooter</span>
         </h1>
 
-        {/* Tabs */}
+        {/* Vehicle type tabs */}
         <div className="ap-tabs">
           {(['cars', 'bikes', 'scooters'] as Tab[]).map(t => (
             <button

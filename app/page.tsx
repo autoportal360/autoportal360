@@ -10,6 +10,7 @@ import RecentlyViewed from '@/components/RecentlyViewed'
 import FuelTypeCars from '@/components/FuelTypeCars'
 import HomeSeoContent from '@/components/HomeSeoContent'
 import HeroSearch from '@/components/homepage/HeroSearch'
+import type { HeroSlide } from '@/components/HeroSlider'
 import PopularCars from '@/components/homepage/PopularCars'
 import BudgetCars from '@/components/homepage/BudgetCars'
 import BodyTypeNav from '@/components/homepage/BodyTypeNav'
@@ -44,6 +45,98 @@ async function getCarBrands(): Promise<Brand[]> {
   return data || []
 }
 
+type SliderModelRow = {
+  name: string; slug: string; type: 'car' | 'bike' | 'scooter'
+  thumbnail_url: string | null; price_min: number | null; price_max: number | null
+  brands: { name: string; slug: string; type: string } | null
+  variants: { fuel_type: string | null }[]
+}
+
+type SliderSlideRow = {
+  type: 'auto' | 'oem'; is_active: boolean
+  start_date: string | null; end_date: string | null
+  oem_advertiser: string | null; oem_banner_url: string | null
+  oem_destination_url: string | null; oem_impression_pixel: string | null
+  oem_click_tracking_url: string | null; oem_headline: string | null
+  oem_subline: string | null; oem_cta_text: string | null
+  models: SliderModelRow | null
+}
+
+function modelRowToSlide(m: SliderModelRow): HeroSlide {
+  const brand = m.brands as { name: string; slug: string; type: string } | null
+  const cleanBrandSlug = (brand?.slug ?? '').replace(/-bike$/, '').replace(/-scooter$/, '')
+  return {
+    type: 'auto',
+    brandName:  brand?.name ?? '',
+    brandSlug:  cleanBrandSlug,
+    brandType:  m.type,
+    modelName:  m.name,
+    modelSlug:  m.slug,
+    priceMin:   m.price_min,
+    priceMax:   m.price_max,
+    fuelTypes:  [...new Set((m.variants ?? []).map(v => v.fuel_type).filter((f): f is string => !!f))],
+    thumbnail:  m.thumbnail_url,
+  }
+}
+
+async function getSlides(): Promise<HeroSlide[]> {
+  const today = new Date().toISOString().split('T')[0]
+
+  const { data: dbSlides, error } = await supabase
+    .from('slider_slides')
+    .select(`
+      type, is_active, start_date, end_date,
+      oem_advertiser, oem_banner_url, oem_destination_url,
+      oem_impression_pixel, oem_click_tracking_url,
+      oem_headline, oem_subline, oem_cta_text,
+      models(name, slug, type, thumbnail_url, price_min, price_max,
+        brands(name, slug, type),
+        variants(fuel_type)
+      )
+    `)
+    .eq('is_active', true)
+    .order('sort_order')
+
+  const active = error ? [] : ((dbSlides ?? []) as unknown as SliderSlideRow[]).filter(s => {
+    if (s.start_date && s.start_date > today) return false
+    if (s.end_date   && s.end_date   < today) return false
+    return true
+  })
+
+  if (active.length > 0) {
+    return active.map((s): HeroSlide => {
+      if (s.type === 'oem') {
+        return {
+          type: 'oem',
+          advertiser:        s.oem_advertiser,
+          bannerUrl:         s.oem_banner_url ?? '',
+          destinationUrl:    s.oem_destination_url,
+          impressionPixel:   s.oem_impression_pixel,
+          clickTrackingUrl:  s.oem_click_tracking_url,
+          headline:          s.oem_headline,
+          subline:           s.oem_subline,
+          ctaText:           s.oem_cta_text,
+        }
+      }
+      if (!s.models) {
+        return { type: 'oem', advertiser: null, bannerUrl: '', destinationUrl: null, impressionPixel: null, clickTrackingUrl: null, headline: null, subline: null, ctaText: null }
+      }
+      return modelRowToSlide(s.models as SliderModelRow)
+    })
+  }
+
+  // Fallback: top 5 active models by price
+  const { data: topModels } = await supabase
+    .from('models')
+    .select('name, slug, type, thumbnail_url, price_min, price_max, brands(name, slug, type), variants(fuel_type)')
+    .eq('status', 'active')
+    .not('price_min', 'is', null)
+    .order('price_min', { ascending: false })
+    .limit(5)
+
+  return ((topModels ?? []) as unknown as SliderModelRow[]).map(modelRowToSlide)
+}
+
 const TRENDING = [
   { label: 'Tata Nexon',     slug: '/tata-cars/nexon/'             },
   { label: 'Maruti Swift',   slug: '/maruti-suzuki-cars/swift/'    },
@@ -58,7 +151,7 @@ const TRENDING = [
 ]
 
 export default async function HomePage() {
-  const carBrands = await getCarBrands()
+  const [carBrands, slides] = await Promise.all([getCarBrands(), getSlides()])
 
   return (
     <>
@@ -67,8 +160,8 @@ export default async function HomePage() {
       {/* 1 — Top ad billboard */}
       <AdSlot zone="hero-billboard" />
 
-      {/* 2 — Hero search */}
-      <HeroSearch carBrands={carBrands} />
+      {/* 2 — Hero search (slider rotates as background) */}
+      <HeroSearch carBrands={carBrands} slides={slides} />
 
       {/* 3 — Recently viewed */}
       <RecentlyViewed />
@@ -99,10 +192,10 @@ export default async function HomePage() {
       {/* 8 — Popular brand grid */}
       <BrandGrid />
 
-      {/* 9 — Ad slot */}
+      {/* 9 — Ad slot (mid-feed-1) */}
       <section style={{ padding: '0.75rem 0' }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
-          <div className="ap-ad-slot">📢 Advertisement</div>
+          <AdSlot zone="mid-feed-1" />
         </div>
       </section>
 
@@ -119,10 +212,10 @@ export default async function HomePage() {
       {/* 12 — Two-wheeler hub (bikes + scooters) */}
       <TwoWheelerHub />
 
-      {/* 13 — Ad slot */}
+      {/* 13 — Ad slot (mid-feed-2) */}
       <section style={{ padding: '0.75rem 0' }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
-          <div className="ap-ad-slot">📢 Advertisement</div>
+          <AdSlot zone="mid-feed-2" />
         </div>
       </section>
 
