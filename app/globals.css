@@ -449,6 +449,17 @@ select option {
 .ap-hero-dot{width:.5rem;height:.5rem;border-radius:9999px;background:rgba(255,255,255,0.35);border:none;cursor:pointer;padding:0;transition:all .3s;flex-shrink:0}
 .ap-hero-dot.active{background:#00D4FF;width:1.5rem}
 
+/* OEM banner — bottom-only gradient, text pinned bottom-left, car image fully visible */
+.ap-hero-oem-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(6,20,45,0.95) 0%,rgba(6,20,45,0.7) 25%,rgba(6,20,45,0.15) 50%,transparent 70%)}
+.ap-hero-oem-content{position:absolute;bottom:0;left:0;right:0;z-index:2;padding:1.5rem}
+@media(min-width:768px){.ap-hero-oem-content{padding:2rem 2.5rem;max-width:50%}}
+.ap-hero-oem-brand{display:inline-block;background:rgba(0,212,255,0.2);border:1px solid rgba(0,212,255,0.4);color:#00D4FF;font-size:.6875rem;font-weight:600;padding:.2rem .75rem;border-radius:9999px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.ap-hero-oem-headline{color:#FFFFFF;font-weight:800;font-size:1.5rem;line-height:1.2;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.5)}
+@media(min-width:768px){.ap-hero-oem-headline{font-size:2.25rem}}
+.ap-hero-oem-subline{color:#C0C0C0;font-size:.875rem;margin:.25rem 0 0;text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+.ap-hero-oem-cta{display:inline-block;background:#00D4FF;color:#06142D;font-weight:700;padding:.5rem 1.5rem;border-radius:.5rem;font-size:.875rem;text-decoration:none;margin-top:.75rem;transition:background .2s}
+.ap-hero-oem-cta:hover{background:#4DEBFF}
+
 /* Search section (below slider) */
 .ap-search-section{background:#0A1F44;border-bottom:1px solid #1e3a6e;padding:1.125rem 0}
 .ap-search-container{max-width:72rem;margin:0 auto;padding:0 1.5rem}

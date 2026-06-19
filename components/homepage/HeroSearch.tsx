@@ -100,24 +100,27 @@ function AutoContent({ slide }: { slide: HeroAutoSlide }) {
 }
 
 function OemContent({ slide }: { slide: HeroOemSlide }) {
-  function fire() {
+  function firePixel() {
     if (slide.clickTrackingUrl) {
       const t = new window.Image(); t.src = slide.clickTrackingUrl
-    }
-    if (slide.destinationUrl) {
-      window.open(slide.destinationUrl, '_blank', 'noopener,noreferrer')
     }
   }
 
   return (
     <>
-      {slide.advertiser && <span className="ap-hero-slide-brand">{slide.advertiser}</span>}
-      {slide.headline && <h2 className="ap-hero-slide-title">{slide.headline}</h2>}
-      {slide.subline && <p className="ap-hero-slide-subtitle">{slide.subline}</p>}
+      {slide.advertiser && <span className="ap-hero-oem-brand">{slide.advertiser}</span>}
+      {slide.headline && <h2 className="ap-hero-oem-headline">{slide.headline}</h2>}
+      {slide.subline && <p className="ap-hero-oem-subline">{slide.subline}</p>}
       {slide.ctaText && (
-        <div className="ap-hero-slide-ctas">
-          <button onClick={fire} className="ap-hero-cta-primary">{slide.ctaText}</button>
-        </div>
+        <a
+          href={slide.destinationUrl || '/new-cars'}
+          className="ap-hero-oem-cta"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={firePixel}
+        >
+          {slide.ctaText} →
+        </a>
       )}
     </>
   )
@@ -238,16 +241,23 @@ export default function HeroSearch({
                 )}
               </div>
 
-              {/* Gradient overlay */}
-              <div className="ap-hero-slide-overlay" />
-
-              {/* Text content — left-aligned */}
-              <div className="ap-hero-slide-content">
-                {isAuto
-                  ? <AutoContent slide={slide as HeroAutoSlide} />
-                  : <OemContent  slide={slide as HeroOemSlide}  />
-                }
-              </div>
+              {isAuto ? (
+                <>
+                  {/* Auto slide: left-to-right gradient, text on left */}
+                  <div className="ap-hero-slide-overlay" />
+                  <div className="ap-hero-slide-content">
+                    <AutoContent slide={slide as HeroAutoSlide} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* OEM slide: bottom-only gradient, text pinned bottom-left */}
+                  <div className="ap-hero-oem-overlay" />
+                  <div className="ap-hero-oem-content">
+                    <OemContent slide={slide as HeroOemSlide} />
+                  </div>
+                </>
+              )}
             </div>
           )
         })}
