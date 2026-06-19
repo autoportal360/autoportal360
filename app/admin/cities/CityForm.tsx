@@ -4,6 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toSlug } from '@/lib/utils'
+import { dbInsert, dbUpdate, dbDelete } from '@/lib/admin-db'
 
 // ─── style tokens ──────────────────────────────────────────────────────────────
 
@@ -186,11 +187,9 @@ export default function CityForm({ cityId }: { cityId?: string }) {
       }
 
       if (isEdit) {
-        const { error: uErr } = await sb.from('cities').update(payload).eq('id', cityId!)
-        if (uErr) throw new Error(uErr.message)
+        await dbUpdate('cities', cityId!, payload)
       } else {
-        const { error: iErr } = await sb.from('cities').insert(payload)
-        if (iErr) throw new Error(iErr.message)
+        await dbInsert('cities', payload)
       }
 
       await triggerRedeploy()
@@ -211,8 +210,7 @@ export default function CityForm({ cityId }: { cityId?: string }) {
     if (!cityId || !window.confirm(`Delete "${form.name}"? This cannot be undone.`)) return
     setSaving(true)
     try {
-      const { error: dErr } = await sb.from('cities').delete().eq('id', cityId)
-      if (dErr) throw new Error(dErr.message)
+      await dbDelete('cities', cityId)
       router.push('/admin/cities')
       router.refresh()
     } catch (err: unknown) {

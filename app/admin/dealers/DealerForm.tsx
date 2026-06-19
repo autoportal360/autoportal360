@@ -4,6 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toSlug } from '@/lib/utils'
+import { dbInsert, dbUpdate, dbDelete } from '@/lib/admin-db'
 import {
   type DealerFormData,
   type VehicleType,
@@ -197,11 +198,9 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
       }
 
       if (isEdit) {
-        const { error: uErr } = await sb.from('dealers').update(payload).eq('id', dealerId!)
-        if (uErr) throw new Error(uErr.message)
+        await dbUpdate('dealers', dealerId!, payload)
       } else {
-        const { error: iErr } = await sb.from('dealers').insert(payload)
-        if (iErr) throw new Error(iErr.message)
+        await dbInsert('dealers', payload)
       }
 
       showToast(isEdit ? 'Dealer saved!' : 'Dealer created!', true)
@@ -218,8 +217,7 @@ export default function DealerForm({ dealerId }: { dealerId?: string }) {
     if (!dealerId || !window.confirm(`Delete "${form.name}"?`)) return
     setSaving(true)
     try {
-      const { error: dErr } = await sb.from('dealers').delete().eq('id', dealerId)
-      if (dErr) throw new Error(dErr.message)
+      await dbDelete('dealers', dealerId)
       router.push('/admin/dealers')
       router.refresh()
     } catch (err: unknown) {

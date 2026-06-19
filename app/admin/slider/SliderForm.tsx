@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { dbInsert, dbUpdate, dbDelete } from '@/lib/admin-db'
 
 // ─── Style tokens ─────────────────────────────────────────────────────────────
 
@@ -186,12 +187,10 @@ export default function SliderForm({ slideId }: { slideId?: string }) {
         sort_order: parseInt(form.sort_order) || 0,
       }
       if (isEdit) {
-        const { error } = await sb.from('slider_slides').update(payload).eq('id', slideId!)
-        if (error) throw new Error(error.message)
+        await dbUpdate('slider_slides', slideId!, payload)
         showToast('Slide updated!', true)
       } else {
-        const { error } = await sb.from('slider_slides').insert(payload)
-        if (error) throw new Error(error.message)
+        await dbInsert('slider_slides', payload)
         showToast('Slide created!', true)
         setTimeout(() => router.push('/admin/slider'), 1200)
       }
@@ -203,10 +202,13 @@ export default function SliderForm({ slideId }: { slideId?: string }) {
 
   async function handleDelete() {
     if (!slideId || !confirm('Delete this slide?')) return
-    const { error } = await sb.from('slider_slides').delete().eq('id', slideId)
-    if (error) { showToast(error.message, false); return }
-    router.push('/admin/slider')
-    router.refresh()
+    try {
+      await dbDelete('slider_slides', slideId)
+      router.push('/admin/slider')
+      router.refresh()
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Delete failed', false)
+    }
   }
 
   if (loading) return (

@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { dbInsert, dbUpdate, dbDelete, dbDeleteWhere, dbDeleteIn } from '@/lib/admin-db'
 import { toSlug } from '@/lib/utils'
 import type { Brand } from '@/types'
 
@@ -491,16 +492,12 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
         thumbnail_url,
       }
       if (currentModelId) {
-        const { data: updated, error: uErr } = await sb
-          .from('models').update(payload).eq('id', currentModelId).select('id')
-        if (uErr) throw new Error(uErr.message)
-        if (!updated?.length) throw new Error('Save failed — run the RLS migration in Supabase SQL Editor (supabase/20260613_disable_rls_core_tables.sql)')
-        // Sync local state so re-saves don't re-upload the file
+        await dbUpdate('models', currentModelId, payload)
         if (thumbnail_url) { setThumbExisting(thumbnail_url); setThumbFile(null) }
       } else {
-        const { data, error: iErr } = await sb.from('models').insert(payload).select('id').single()
-        if (iErr) throw new Error(iErr.message)
-        setCurrentModelId(data.id as string)
+        const { data: rows } = await dbInsert('models', payload)
+        const newId = (rows?.[0] as { id?: string } | undefined)?.id ?? ''
+        setCurrentModelId(newId)
         if (thumbnail_url) { setThumbExisting(thumbnail_url); setThumbFile(null) }
       }
       showToast('Basic info saved!', true)
@@ -517,13 +514,12 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
     setSaving(true)
     try {
       if (deletedVariantIds.length) {
-        const { error } = await sb.from('variants').delete().in('id', deletedVariantIds)
-        if (error) throw new Error(error.message)
+        await dbDeleteIn('variants', 'id', deletedVariantIds)
         setDeletedVariantIds([])
       }
       const valid = variants.filter(v => v.name.trim())
       for (const v of valid.filter(v => v.id)) {
-        const { error } = await sb.from('variants').update({
+        await dbUpdate('variants', v.id!, {
           name:               v.name.trim(),
           slug:               v.slug.trim()  || toSlug(v.name),
           fuel_type:          v.fuel_type.trim()     || null,
@@ -531,24 +527,20 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
           ex_showroom_price:  Number(v.ex_showroom_price) || 0,
           is_popular:         v.is_popular,
           sort_order:         Number(v.sort_order)   || 0,
-        }).eq('id', v.id!)
-        if (error) throw new Error(error.message)
+        })
       }
       const newOnes = valid.filter(v => !v.id)
       if (newOnes.length) {
-        const { error } = await sb.from('variants').insert(
-          newOnes.map((v, i) => ({
-            model_id:           currentModelId,
-            name:               v.name.trim(),
-            slug:               v.slug.trim()  || toSlug(v.name),
-            fuel_type:          v.fuel_type.trim()    || null,
-            transmission:       v.transmission.trim() || null,
-            ex_showroom_price:  Number(v.ex_showroom_price) || 0,
-            is_popular:         v.is_popular,
-            sort_order:         Number(v.sort_order) || i,
-          }))
-        )
-        if (error) throw new Error(error.message)
+        await dbInsert('variants', newOnes.map((v, i) => ({
+          model_id:           currentModelId,
+          name:               v.name.trim(),
+          slug:               v.slug.trim()  || toSlug(v.name),
+          fuel_type:          v.fuel_type.trim()    || null,
+          transmission:       v.transmission.trim() || null,
+          ex_showroom_price:  Number(v.ex_showroom_price) || 0,
+          is_popular:         v.is_popular,
+          sort_order:         Number(v.sort_order) || i,
+        })))
       }
       const { data: refreshed } = await sb.from('variants').select('*')
         .eq('model_id', currentModelId).order('sort_order')
@@ -591,12 +583,10 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
         ncap_rating:         spec.ncap_rating.trim()  || null,
       }
       if (specId) {
-        const { error } = await sb.from('specs').update(payload).eq('id', specId)
-        if (error) throw new Error(error.message)
+        await dbUpdate('specs', specId, payload)
       } else {
-        const { data, error } = await sb.from('specs').insert(payload).select('id').single()
-        if (error) throw new Error(error.message)
-        setSpecId(data.id as string)
+        const { data: rows } = await dbInsert('specs', payload)
+        setSpecId((rows?.[0] as { id?: string } | undefined)?.id ?? '')
       }
       showToast('Specs saved!', true)
     } catch (err: unknown) {
@@ -624,18 +614,15 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
         return { ...img, url, file: undefined, preview: url }
       }))
 
-      await sb.from('model_images').delete().eq('model_id', currentModelId)
+      await dbDeleteWhere('model_images', 'model_id', currentModelId)
       const valid = uploaded.filter(img => img.url)
       if (valid.length) {
-        const { error } = await sb.from('model_images').insert(
-          valid.map((img, i) => ({
-            model_id:  currentModelId, url: img.url,
-            alt_text:  img.alt_text.trim() || null,
-            type:      img.type,
-            sort_order: Number(img.sort_order) || i,
-          }))
-        )
-        if (error) throw new Error(error.message)
+        await dbInsert('model_images', valid.map((img, i) => ({
+          model_id:  currentModelId, url: img.url,
+          alt_text:  img.alt_text.trim() || null,
+          type:      img.type,
+          sort_order: Number(img.sort_order) || i,
+        })))
       }
       const { data: refreshed } = await sb.from('model_images').select('*')
         .eq('model_id', currentModelId).order('sort_order')
@@ -672,19 +659,16 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
         return { ...col, image_url: url, file: undefined, preview: url }
       }))
 
-      await sb.from('model_colours').delete().eq('model_id', currentModelId)
+      await dbDeleteWhere('model_colours', 'model_id', currentModelId)
       const valid = uploaded.filter(c => c.name.trim())
       if (valid.length) {
-        const { error } = await sb.from('model_colours').insert(
-          valid.map((c, i) => ({
-            model_id:    currentModelId, name: c.name.trim(),
-            hex_code:    c.hex_code.trim()  || null,
-            image_url:   c.image_url        || null,
-            is_available: c.is_available,
-            sort_order:  Number(c.sort_order) || i,
-          }))
-        )
-        if (error) throw new Error(error.message)
+        await dbInsert('model_colours', valid.map((c, i) => ({
+          model_id:    currentModelId, name: c.name.trim(),
+          hex_code:    c.hex_code.trim()  || null,
+          image_url:   c.image_url        || null,
+          is_available: c.is_available,
+          sort_order:  Number(c.sort_order) || i,
+        })))
       }
       const { data: refreshed } = await sb.from('model_colours').select('*')
         .eq('model_id', currentModelId).order('sort_order')
@@ -708,16 +692,13 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
     if (!currentModelId) return
     setSaving(true)
     try {
-      await sb.from('model_faqs').delete().eq('model_id', currentModelId)
+      await dbDeleteWhere('model_faqs', 'model_id', currentModelId)
       const valid = faqs.filter(f => f.question.trim() && f.answer.trim())
       if (valid.length) {
-        const { error } = await sb.from('model_faqs').insert(
-          valid.map((f, i) => ({
-            model_id: currentModelId, question: f.question.trim(),
-            answer: f.answer.trim(), sort_order: i,
-          }))
-        )
-        if (error) throw new Error(error.message)
+        await dbInsert('model_faqs', valid.map((f, i) => ({
+          model_id: currentModelId, question: f.question.trim(),
+          answer: f.answer.trim(), sort_order: i,
+        })))
       }
       showToast('FAQs saved!', true)
     } catch (err: unknown) {
@@ -735,13 +716,12 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
     }
     setSaving(true)
     try {
-      const { error } = await sb.from('models').update({
+      await dbUpdate('models', currentModelId!, {
         meta_title:       seo.meta_title.trim()       || null,
         meta_description: seo.meta_description.trim() || null,
         overview_html:    seo.overview_html.trim()    || null,
         schema_json:      seo.schema_json.trim()      || null,
-      }).eq('id', currentModelId)
-      if (error) throw new Error(error.message)
+      })
       showToast('SEO saved!', true)
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Save failed', false)
@@ -754,8 +734,7 @@ export default function ModelForm({ modelId }: { modelId?: string }) {
     if (!currentModelId || !window.confirm(`Delete "${form.name}"? This cannot be undone.`)) return
     setSaving(true)
     try {
-      const { error } = await sb.from('models').delete().eq('id', currentModelId)
-      if (error) throw new Error(error.message)
+      await dbDelete('models', currentModelId!)
       router.push('/admin/models')
       router.refresh()
     } catch (err: unknown) {

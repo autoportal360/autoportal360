@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { dbUpdate, dbBatch } from '@/lib/admin-db'
 import Image from 'next/image'
 
 type SlideRow = {
@@ -68,12 +69,20 @@ export default function SliderClient() {
 
   async function saveOrder(reordered: SlideRow[]) {
     setSaving(true)
-    const updates = reordered.map((s, i) => ({ id: s.id, sort_order: i }))
-    for (const u of updates) {
-      await sb.from('slider_slides').update({ sort_order: u.sort_order }).eq('id', u.id)
+    try {
+      await dbBatch(
+        reordered.map((s, i) => ({
+          op: 'update' as const,
+          table: 'slider_slides',
+          payload: { sort_order: i },
+          filter: { col: 'id', val: s.id },
+        }))
+      )
+      showToast('Order saved', true)
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Save failed', false)
     }
     setSaving(false)
-    showToast('Order saved', true)
   }
 
   function handleDragStart(i: number) { dragIdx.current = i }
@@ -93,8 +102,12 @@ export default function SliderClient() {
   }
 
   async function toggleActive(id: string, current: boolean) {
-    await sb.from('slider_slides').update({ is_active: !current }).eq('id', id)
-    setSlides(s => s.map(r => r.id === id ? { ...r, is_active: !current } : r))
+    try {
+      await dbUpdate('slider_slides', id, { is_active: !current })
+      setSlides(s => s.map(r => r.id === id ? { ...r, is_active: !current } : r))
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Update failed', false)
+    }
   }
 
   if (loading) return (

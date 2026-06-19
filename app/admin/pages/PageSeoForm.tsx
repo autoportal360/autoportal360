@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
+import { dbUpdate, dbUpsert } from '@/lib/admin-db'
 
 type FaqRow = { q: string; a: string }
 type PageType = 'city' | 'model' | 'brand' | 'specs' | 'new-cars' | 'new-bikes' | 'new-scooters' | 'home' | 'compare-cars' | 'compare-bikes' | 'compare-scooters' | 'custom'
@@ -140,19 +141,25 @@ export default function PageSeoForm({
       updated_at:       new Date().toISOString(),
     }
 
-    const { data, error } = existingId
-      ? await sb.from('page_seo').update(payload).eq('id', existingId).select().single()
-      : await sb.from('page_seo').upsert(payload, { onConflict: 'page_key' }).select().single()
-
-    setSaving(false)
-    if (error) {
-      setToast(`❌ ${error.message}`)
+    let newId: string | undefined
+    try {
+      if (existingId) {
+        await dbUpdate('page_seo', existingId, payload)
+      } else {
+        const { data: rows } = await dbUpsert('page_seo', payload, 'page_key')
+        newId = (rows?.[0] as { id?: string } | undefined)?.id
+      }
+    } catch (err: unknown) {
+      setSaving(false)
+      const msg = err instanceof Error ? err.message : 'Save failed'
+      setToast(`❌ ${msg}`)
       setTimeout(() => setToast(null), 5000)
       return
     }
-    if (data && !existingId) {
-      setExistingId((data as { id: string }).id)
-      router.replace(`/admin/pages/${(data as { id: string }).id}`)
+    setSaving(false)
+    if (newId && !existingId) {
+      setExistingId(newId)
+      router.replace(`/admin/pages/${newId}`)
     }
     setToast('✅ Saved successfully')
     setTimeout(() => setToast(null), 4000)

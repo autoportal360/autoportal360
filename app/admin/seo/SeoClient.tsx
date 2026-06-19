@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { dbUpsert } from '@/lib/admin-db'
 
 const INPUT: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
@@ -97,9 +98,7 @@ export default function SeoClient() {
       const rows = Object.entries(settings).map(([key, value]) => ({
         key, value: value ?? '', updated_at: new Date().toISOString(),
       }))
-      const { error } = await sb.from('seo_settings')
-        .upsert(rows, { onConflict: 'key' })
-      if (error) throw new Error(error.message)
+      await dbUpsert('seo_settings', rows, 'key')
       showToast('SEO settings saved!', true)
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Save failed', false)

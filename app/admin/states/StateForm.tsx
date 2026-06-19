@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { dbInsert, dbUpdate, dbDelete } from '@/lib/admin-db'
 import { toSlug } from '@/lib/utils'
 
 // ─── style tokens ──────────────────────────────────────────────────────────────
@@ -162,11 +163,9 @@ export default function StateForm({ stateId }: { stateId?: string }) {
       }
 
       if (isEdit) {
-        const { error: uErr } = await sb.from('states').update(payload).eq('id', stateId!)
-        if (uErr) throw new Error(uErr.message)
+        await dbUpdate('states', stateId!, payload)
       } else {
-        const { error: iErr } = await sb.from('states').insert(payload)
-        if (iErr) throw new Error(iErr.message)
+        await dbInsert('states', payload)
       }
 
       await triggerRedeploy()
@@ -187,8 +186,7 @@ export default function StateForm({ stateId }: { stateId?: string }) {
     if (!stateId || !window.confirm(`Delete "${form.name}"? Cities in this state will lose their RTO data.`)) return
     setSaving(true)
     try {
-      const { error: dErr } = await sb.from('states').delete().eq('id', stateId)
-      if (dErr) throw new Error(dErr.message)
+      await dbDelete('states', stateId)
       router.push('/admin/states')
       router.refresh()
     } catch (err: unknown) {

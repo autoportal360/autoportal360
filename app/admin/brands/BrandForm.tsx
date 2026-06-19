@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Brand } from '@/types'
 import { toSlug } from '@/lib/utils'
+import { dbInsert, dbUpdate, dbDelete, dbDeleteWhere } from '@/lib/admin-db'
 
 // ─── style tokens ─────────────────────────────────────────────────────────────
 
@@ -216,16 +217,13 @@ export default function BrandForm({ brandId }: { brandId?: string }) {
   // ── FAQ save (delete-then-insert) ─────────────────────────────────────────────
 
   async function saveFaqs(bId: string) {
-    await sb.from('brand_faqs').delete().eq('brand_id', bId)
+    await dbDeleteWhere('brand_faqs', 'brand_id', bId)
     const valid = faqs.filter(f => f.question.trim() && f.answer.trim())
     if (!valid.length) return
-    const { error: fErr } = await sb.from('brand_faqs').insert(
-      valid.map((f, i) => ({
-        brand_id: bId, question: f.question.trim(),
-        answer: f.answer.trim(), sort_order: i,
-      }))
-    )
-    if (fErr) throw new Error(`FAQ save: ${fErr.message}`)
+    await dbInsert('brand_faqs', valid.map((f, i) => ({
+      brand_id: bId, question: f.question.trim(),
+      answer: f.answer.trim(), sort_order: i,
+    })))
   }
 
   // ── validation ────────────────────────────────────────────────────────────────
@@ -283,14 +281,10 @@ export default function BrandForm({ brandId }: { brandId?: string }) {
       let savedId = brandId
 
       if (isEdit) {
-        const { data: updated, error: uErr } = await sb
-          .from('brands').update(payload).eq('id', brandId!).select('id')
-        if (uErr) throw new Error(uErr.message)
-        if (!updated?.length) throw new Error('Save failed — run the RLS migration in Supabase SQL Editor (supabase/20260613_disable_rls_core_tables.sql)')
+        await dbUpdate('brands', brandId!, payload)
       } else {
-        const { data, error: iErr } = await sb.from('brands').insert(payload).select('id').single()
-        if (iErr) throw new Error(iErr.message)
-        savedId = data?.id
+        const { data: rows } = await dbInsert('brands', payload)
+        savedId = (rows?.[0] as { id?: string } | undefined)?.id
       }
 
       if (savedId) await saveFaqs(savedId)
@@ -323,8 +317,7 @@ export default function BrandForm({ brandId }: { brandId?: string }) {
         setSaving(false)
         return
       }
-      const { error: dErr } = await sb.from('brands').delete().eq('id', brandId)
-      if (dErr) throw new Error(dErr.message)
+      await dbDelete('brands', brandId)
       router.push('/admin/brands')
       router.refresh()
     } catch (err: unknown) {

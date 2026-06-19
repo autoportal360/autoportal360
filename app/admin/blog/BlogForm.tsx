@@ -4,6 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toSlug } from '@/lib/utils'
+import { dbInsert, dbUpdate, dbDelete } from '@/lib/admin-db'
 
 // ─── style tokens ──────────────────────────────────────────────────────────────
 
@@ -210,13 +211,11 @@ export default function BlogForm({ postId }: { postId?: string }) {
       }
 
       if (isEdit) {
-        const { error: uErr } = await sb.from('blog_posts').update(payload).eq('id', postId!)
-        if (uErr) throw new Error(uErr.message)
+        await dbUpdate('blog_posts', postId!, payload)
         showToast('Post saved!', true)
         setSaving(false)
       } else {
-        const { error: iErr } = await sb.from('blog_posts').insert(payload)
-        if (iErr) throw new Error(iErr.message)
+        await dbInsert('blog_posts', payload)
         showToast('Post created!', true)
         setTimeout(() => { router.push('/admin/blog'); router.refresh() }, 1200)
       }
@@ -233,8 +232,7 @@ export default function BlogForm({ postId }: { postId?: string }) {
     if (!postId || !window.confirm(`Delete "${form.title}"? This cannot be undone.`)) return
     setSaving(true)
     try {
-      const { error: dErr } = await sb.from('blog_posts').delete().eq('id', postId)
-      if (dErr) throw new Error(dErr.message)
+      await dbDelete('blog_posts', postId)
       router.push('/admin/blog')
       router.refresh()
     } catch (err: unknown) {

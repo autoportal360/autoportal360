@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { dbUpdate } from '@/lib/admin-db'
 
 const TH: React.CSSProperties = {
   padding: '12px 14px', textAlign: 'left',
@@ -80,10 +81,13 @@ export default function LeadsClient() {
     : leads
 
   async function updateStatus(id: string, status: Status) {
-    const { error } = await sb.from('leads').update({ status }).eq('id', id)
-    if (error) { showToast(error.message, false); return }
-    setLeads(ls => ls.map(l => l.id === id ? { ...l, status } : l))
-    showToast(`Marked as ${status}`, true)
+    try {
+      await dbUpdate('leads', id, { status })
+      setLeads(ls => ls.map(l => l.id === id ? { ...l, status } : l))
+      showToast(`Marked as ${status}`, true)
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Update failed', false)
+    }
   }
 
   function exportCsv() {

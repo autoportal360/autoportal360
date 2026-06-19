@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { dbUpsert } from '@/lib/admin-db'
 
 // ─── style tokens ──────────────────────────────────────────────────────────────
 
@@ -161,9 +162,7 @@ export default function AdZonePage() {
         end_date:           form.end_date                   || null,
         updated_at:         new Date().toISOString(),
       }
-      const { error } = await sb.from('ad_campaigns')
-        .upsert(payload, { onConflict: 'zone' })
-      if (error) throw new Error(error.message)
+      await dbUpsert('ad_campaigns', payload, 'zone')
       showToast('Ad zone saved!', true)
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Save failed', false)

@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { useState, useRef } from 'react'
+import { dbUpdate, dbDelete } from '@/lib/admin-db'
 import type { AdminRole } from '@/lib/admin-auth-client'
 import { ROLE_LABELS } from '@/lib/admin-auth-client'
 
@@ -87,11 +88,7 @@ export default function UserForm({ userId, initial }: Props) {
 
     setSaving(true)
     try {
-      const { error } = await sb
-        .from('admin_users')
-        .update({ name: name || null, role, is_active: active })
-        .eq('id', userId)
-      if (error) throw new Error(error.message)
+      await dbUpdate('admin_users', userId!, { name: name || null, role, is_active: active })
       showToast('User updated', true)
       setTimeout(() => router.push('/admin/users'), 1000)
     } catch (err: unknown) {
@@ -104,9 +101,13 @@ export default function UserForm({ userId, initial }: Props) {
     if (!userId) return
     if (!confirm('Delete this user? They will lose admin access immediately.')) return
     setDeleting(true)
-    const { error } = await sb.from('admin_users').delete().eq('id', userId)
-    if (error) { showToast(error.message, false); setDeleting(false); return }
-    router.push('/admin/users')
+    try {
+      await dbDelete('admin_users', userId!)
+      router.push('/admin/users')
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Delete failed', false)
+      setDeleting(false)
+    }
   }
 
   async function handleResetPassword() {
