@@ -228,10 +228,7 @@ export default function HeroSearch({
                   <img
                     src={imgUrl}
                     alt={imgAlt}
-                    style={isAuto
-                      ? { objectFit: 'contain', objectPosition: 'right bottom', paddingRight: '2%', paddingTop: '4%' }
-                      : { objectFit: 'cover', objectPosition: 'center center' }
-                    }
+                    style={{ objectFit: 'cover', objectPosition: 'center center' }}
                   />
                 ) : (
                   <div className="ap-hero-slide-bg-placeholder">{typeEmoji}</div>
