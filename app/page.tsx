@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import AdSlot from '@/components/AdSlot'
@@ -97,6 +99,7 @@ async function getSlides(): Promise<HeroSlide[]> {
     .eq('is_active', true)
     .order('sort_order')
 
+  if (error) console.error('[getSlides] Supabase error:', error.message)
   const active = error ? [] : ((dbSlides ?? []) as unknown as SliderSlideRow[]).filter(s => {
     if (s.start_date && s.start_date > today) return false
     if (s.end_date   && s.end_date   < today) return false

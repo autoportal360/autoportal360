@@ -1,6 +1,5 @@
 'use client'
 
-import { createBrowserClient } from '@supabase/ssr'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { dbUpdate, dbBatch } from '@/lib/admin-db'
@@ -34,12 +33,6 @@ const TH: React.CSSProperties = {
 }
 
 export default function SliderClient() {
-  const sbRef = useRef(createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ))
-  const sb = sbRef.current
-
   const [slides, setSlides] = useState<SlideRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,15 +46,9 @@ export default function SliderClient() {
   }, [])
 
   async function load() {
-    const { data } = await sb
-      .from('slider_slides')
-      .select(`
-        id, type, is_active, sort_order, start_date, end_date,
-        oem_advertiser, oem_banner_url, oem_headline,
-        models(name, slug, thumbnail_url, brands(name))
-      `)
-      .order('sort_order')
-    setSlides((data ?? []) as unknown as SlideRow[])
+    const res = await fetch('/api/admin/slider')
+    const json = await res.json()
+    setSlides((json.data ?? []) as SlideRow[])
     setLoading(false)
   }
 
