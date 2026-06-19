@@ -88,13 +88,10 @@ function AutoContent({ slide }: { slide: HeroAutoSlide }) {
 
   return (
     <>
-      <span className="ap-hero-slide-brand">{slide.brandName}</span>
-      <h2 className="ap-hero-slide-title">{slide.modelName}</h2>
-      {priceLabel && <p className="ap-hero-slide-price">{priceLabel}</p>}
-      <div className="ap-hero-slide-ctas">
-        <Link href={modelHref} className="ap-hero-cta-primary">Get Offers →</Link>
-        <Link href={modelHref} className="ap-hero-cta-secondary">View Details</Link>
-      </div>
+      <span className="ap-hero-oem-brand">{slide.brandName}</span>
+      <h2 className="ap-hero-oem-headline">{slide.modelName}</h2>
+      {priceLabel && <p className="ap-hero-oem-subline">{priceLabel}</p>}
+      <Link href={modelHref} className="ap-hero-oem-cta">View Details →</Link>
     </>
   )
 }
@@ -241,23 +238,14 @@ export default function HeroSearch({
                 )}
               </div>
 
-              {isAuto ? (
-                <>
-                  {/* Auto slide: left-to-right gradient, text on left */}
-                  <div className="ap-hero-slide-overlay" />
-                  <div className="ap-hero-slide-content">
-                    <AutoContent slide={slide as HeroAutoSlide} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* OEM slide: bottom-only gradient, text pinned bottom-left */}
-                  <div className="ap-hero-oem-overlay" />
-                  <div className="ap-hero-oem-content">
-                    <OemContent slide={slide as HeroOemSlide} />
-                  </div>
-                </>
-              )}
+              {/* Bottom-only gradient + text pinned bottom-left (both slide types) */}
+              <div className="ap-hero-oem-overlay" />
+              <div className="ap-hero-oem-content">
+                {isAuto
+                  ? <AutoContent slide={slide as HeroAutoSlide} />
+                  : <OemContent  slide={slide as HeroOemSlide}  />
+                }
+              </div>
             </div>
           )
         })}
