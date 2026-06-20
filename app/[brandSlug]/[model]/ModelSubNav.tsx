@@ -4,14 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TABS = [
-  { label: 'Overview', key: 'overview', path: ''         },
-  { label: 'Price',    key: 'price',    path: '/price'   },
-  { label: 'Specs',    key: 'specs',    path: '/specs'   },
-  { label: 'Variants', key: 'variants', path: '/variants' },
-  { label: 'Mileage',  key: 'mileage',  path: '/mileage' },
-  { label: 'Images',   key: 'images',   path: '/images'  },
-  { label: 'Colours',  key: 'colours',  path: '/colours' },
-  { label: 'FAQs',     key: 'faqs',     path: '/faqs'    },
+  { label: 'Overview', key: 'overview', path: '',           type: 'page'   },
+  { label: 'Price',    key: 'price',    path: '/price',     type: 'page'   },
+  { label: 'Specs',    key: 'specs',    path: '/specs',     type: 'page'   },
+  { label: 'Variants', key: 'variants', path: '/#variants', type: 'scroll' },
+  { label: 'Mileage',  key: 'mileage',  path: '/#mileage',  type: 'scroll' },
+  { label: 'Images',   key: 'images',   path: '/images',    type: 'page'   },
+  { label: 'Colours',  key: 'colours',  path: '/colours',   type: 'page'   },
+  { label: 'FAQs',     key: 'faqs',     path: '/#faqs',     type: 'scroll' },
 ]
 
 export default function ModelSubNav({
@@ -34,10 +34,15 @@ export default function ModelSubNav({
     }}>
       <div style={{ display: 'flex', minWidth: 'max-content' }}>
         {TABS.map(tab => {
-          const href = `${base}${tab.path}/`
-          const isActive = tab.path === ''
-            ? pathname === base || pathname === base + '/'
-            : pathname.startsWith(`${base}${tab.path}`)
+          const href = tab.type === 'scroll'
+            ? `${base}${tab.path}`   // /tata-cars/tiago/#variants — no trailing slash
+            : `${base}${tab.path}/`  // /tata-cars/tiago/price/
+
+          const isActive = tab.type === 'scroll'
+            ? false
+            : tab.path === ''
+              ? pathname === base || pathname === base + '/'
+              : pathname.startsWith(`${base}${tab.path}`)
 
           return (
             <Link
