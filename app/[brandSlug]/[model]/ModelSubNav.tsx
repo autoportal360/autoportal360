@@ -1,10 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
-const ANCHOR_IDS = ['overview', 'variants', 'mileage', 'faqs'] as const
+const TABS = [
+  { label: 'Overview', key: 'overview', path: ''         },
+  { label: 'Price',    key: 'price',    path: '/price'   },
+  { label: 'Specs',    key: 'specs',    path: '/specs'   },
+  { label: 'Variants', key: 'variants', path: '/variants' },
+  { label: 'Mileage',  key: 'mileage',  path: '/mileage' },
+  { label: 'Images',   key: 'images',   path: '/images'  },
+  { label: 'Colours',  key: 'colours',  path: '/colours' },
+  { label: 'FAQs',     key: 'faqs',     path: '/faqs'    },
+]
 
 export default function ModelSubNav({
   brandSlug,
@@ -13,36 +21,8 @@ export default function ModelSubNav({
   brandSlug: string
   modelSlug: string
 }) {
-  const [active, setActive] = useState('overview')
   const pathname = usePathname()
   const base = `/${brandSlug}/${modelSlug}`
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id)
-        }
-      },
-      { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
-    )
-    ANCHOR_IDS.forEach(id => {
-      const el = document.getElementById(id)
-      if (el) obs.observe(el)
-    })
-    return () => obs.disconnect()
-  }, [])
-
-  const tabs = [
-    { label: 'Overview', key: 'overview', href: '#overview',         external: false },
-    { label: 'Price',    key: 'price',    href: `${base}/price/`,    external: true  },
-    { label: 'Specs',   key: 'specs',    href: `${base}/specs/`,    external: true  },
-    { label: 'Variants', key: 'variants', href: '#variants',         external: false },
-    { label: 'Mileage',  key: 'mileage',  href: '#mileage',          external: false },
-    { label: 'Images',   key: 'images',   href: `${base}/images/`,   external: true  },
-    { label: 'Colours',  key: 'colours',  href: `${base}/colours/`,  external: true  },
-    { label: 'FAQs',     key: 'faqs',     href: '#faqs',             external: false },
-  ]
 
   return (
     <nav style={{
@@ -53,16 +33,16 @@ export default function ModelSubNav({
       WebkitOverflowScrolling: 'touch',
     }}>
       <div style={{ display: 'flex', minWidth: 'max-content' }}>
-        {tabs.map(tab => {
-          // External sub-pages use pathname; anchors use IntersectionObserver state
-          const isActive = tab.external
-            ? pathname.startsWith(`${base}/${tab.key}`)
-            : active === tab.key
+        {TABS.map(tab => {
+          const href = `${base}${tab.path}/`
+          const isActive = tab.path === ''
+            ? pathname === base || pathname === base + '/'
+            : pathname.startsWith(`${base}${tab.path}`)
+
           return (
             <Link
               key={tab.key}
-              href={tab.href}
-              onClick={!tab.external ? () => setActive(tab.key) : undefined}
+              href={href}
               style={{
                 display: 'block',
                 padding: '14px 18px',
