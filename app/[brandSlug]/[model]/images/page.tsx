@@ -5,11 +5,12 @@ import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
 import AdSlot from '@/components/AdSlot'
 import SchemaMarkup from '@/components/SchemaMarkup'
-import ImageGallery from '@/components/ImageGallery'
+import ImageCarousel from '@/components/ImageCarousel'
 import FaqAccordion from '@/components/FaqAccordion'
 import type { GalleryImage } from '@/components/ImageGallery'
 import type { Faq } from '@/components/FaqAccordion'
 import { getCanonicalUrl } from '@/lib/seo'
+import { formatPrice } from '@/lib/utils'
 import type { Brand } from '@/types'
 import ModelSubNav from '../ModelSubNav'
 
@@ -30,6 +31,11 @@ type ModelPageSeo = {
   seo_heading: string | null
   seo_text: string
   faqs: Faq[]
+}
+
+type RelatedModel = {
+  id: string; name: string; slug: string
+  thumbnail_url: string | null; price_min: number | null
 }
 
 // ─── Slug parsing ─────────────────────────────────────────────────────────────
@@ -107,15 +113,21 @@ export default async function ImagesPage({
   if (!modelRaw) notFound()
   const m = modelRaw as unknown as ModelRow
 
-  const [{ data: imagesRaw }, { data: seoRaw }] = await Promise.all([
+  const [{ data: imagesRaw }, { data: seoRaw }, { data: relatedRaw }] = await Promise.all([
     supabase.from('model_images').select('*').eq('model_id', m.id).order('sort_order'),
     supabase.from('model_page_seo').select('seo_heading,seo_text,faqs')
       .eq('model_id', m.id).eq('page_type', 'images').eq('is_published', true).maybeSingle(),
+    supabase.from('models')
+      .select('id, name, slug, thumbnail_url, price_min')
+      .eq('brand_id', brand.id)
+      .neq('id', m.id)
+      .neq('status', 'discontinued')
+      .limit(8),
   ])
 
-  const dbImages = (imagesRaw ?? []) as ModelImageRow[]
+  const dbImages     = (imagesRaw   ?? []) as ModelImageRow[]
+  const relatedModels = (relatedRaw ?? []) as RelatedModel[]
 
-  // Map DB rows to GalleryImage format
   const galleryImages: GalleryImage[] = dbImages.map(img => ({
     url:      img.url,
     alt:      img.alt_text ?? `${brand.name} ${m.name} ${img.type ?? 'exterior'} photo`,
@@ -147,7 +159,6 @@ export default async function ImagesPage({
     },
   ]
 
-  // Schema markup
   const imageGallerySchema = {
     '@context': 'https://schema.org',
     '@type': 'ImageGallery',
@@ -157,10 +168,10 @@ export default async function ImagesPage({
     numberOfItems: galleryImages.length,
     ...(galleryImages.length > 0 && {
       image: galleryImages.slice(0, 10).map(img => ({
-        '@type':       'ImageObject',
-        url:           img.url,
-        name:          img.alt,
-        description:   img.alt,
+        '@type':     'ImageObject',
+        url:         img.url,
+        name:        img.alt,
+        description: img.alt,
       })),
     }),
   }
@@ -204,8 +215,8 @@ export default async function ImagesPage({
           {dbImages.length > 0 ? `${dbImages.length} photos · Exterior, interior and colour` : 'Exterior, interior and detail photos'}
         </p>
 
-        {/* Gallery */}
-        <ImageGallery images={galleryImages} />
+        {/* Carousel gallery */}
+        <ImageCarousel images={galleryImages} />
 
         {/* SEO text */}
         {(seoText || !seoContent) && (
@@ -224,11 +235,41 @@ export default async function ImagesPage({
                     Interior photos reveal the dashboard layout, seat quality, infotainment system, instrument cluster and cabin storage options. Whether you are evaluating materials and fit-finish or checking head room and legroom, the interior images help you make a more informed buying decision without visiting a showroom.
                   </p>
                   <p className="ap-seo-para">
-                    Colour and detail shots highlight paint finish quality and exterior accents. All images are updated regularly as new variants and special editions are launched. Click any photo to open the full-screen lightbox carousel and navigate using arrow keys or swipe gestures on mobile.
+                    Colour and detail shots highlight paint finish quality and exterior accents. All images are updated regularly as new variants and special editions are launched. Click any photo to open the full-screen lightbox and navigate using arrow keys or swipe gestures on mobile.
                   </p>
                 </>
               )
             }
+          </div>
+        )}
+
+        {/* Related cars */}
+        {relatedModels.length > 0 && (
+          <div style={{ marginTop: '3rem' }}>
+            <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 0 1rem' }}>
+              More {brand.name} {vehicleLabel}
+            </h2>
+            <div className="ap-related-cars">
+              {relatedModels.map(rel => (
+                <Link key={rel.id} href={`/${brandSlug}/${rel.slug}/`} className="ap-related-car-card">
+                  <div className="ap-related-car-card-img">
+                    {rel.thumbnail_url
+                      ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={rel.thumbnail_url} alt={`${brand.name} ${rel.name}`} loading="lazy" />
+                      )
+                      : <div className="ap-related-car-card-no-img">🚗</div>
+                    }
+                  </div>
+                  <div className="ap-related-car-card-info">
+                    <div className="ap-related-car-card-name">{rel.name}</div>
+                    {rel.price_min && (
+                      <div className="ap-related-car-card-price">From {formatPrice(rel.price_min)}</div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
