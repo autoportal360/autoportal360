@@ -24,6 +24,7 @@ const NAV = [
   { href: '/admin/brand-seo',        label: 'Dealer SEO Pages',icon: '📝',  section: 'brand-seo' },
   { href: '/admin/brand-page-seo',   label: 'Brand Page SEO',  icon: '📄',  section: 'brand-page-seo' },
   { href: '/admin/static-pages',     label: 'Static Pages',    icon: '📃',  section: 'static-pages' },
+  { href: '/admin/model-seo',        label: 'Model Page SEO',  icon: '📝',  section: 'seo' },
   { href: '/admin/blog',             label: 'Blog',            icon: '✍',   section: 'blog' },
   { href: '/admin/users',            label: 'Users',           icon: '👥',  section: 'users' },
 ]
