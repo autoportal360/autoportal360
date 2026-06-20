@@ -22,7 +22,10 @@ export default async function LatestNews() {
     .order('published_at', { ascending: false })
     .limit(3)
 
-  const posts: Post[] = (data && data.length >= 3) ? (data as Post[]) : PLACEHOLDERS
+  const real = (data ?? []) as Post[]
+  const posts: Post[] = real.length > 0
+    ? [...real, ...PLACEHOLDERS].slice(0, 3)
+    : PLACEHOLDERS
 
   return (
     <section style={{ padding: '2.5rem 1.5rem', borderBottom: '1px solid #1e3a6e' }}>

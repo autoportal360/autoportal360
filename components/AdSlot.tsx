@@ -8,67 +8,73 @@ interface AdSlotProps {
 }
 
 interface AdData {
-  headline:   string
-  subline:    string
-  cta:        string
-  href:       string
-  advertiser: string
-  bg:         string
-  customHtml: string | null
-  adType:     string
+  headline:       string
+  subline:        string
+  cta:            string
+  href:           string
+  advertiser:     string
+  bg:             string
+  customHtml:     string | null
+  adType:         string
+  bannerImageUrl: string | null
 }
 
 // Hardcoded fallbacks — used until DB loads, and if zone is inactive/missing
 const FALLBACK: Record<string, AdData> = {
   'hero-billboard': {
-    headline:   '🛡️ Car Insurance from ₹2,094/year',
-    subline:    'Zero depreciation · Instant policy · Cashless garages across India',
-    cta:        'Get Free Quote →',
-    href:       'https://www.acko.com/?utm_source=autoportal360&utm_medium=hero_banner&utm_campaign=car_insurance',
-    advertiser: 'Acko Insurance',
-    bg:         'linear-gradient(135deg,#0A1F44 0%,#0d3a6e 60%,rgba(0,212,255,0.1) 100%)',
-    customHtml: null,
-    adType:     'affiliate',
+    headline:       '🛡️ Car Insurance from ₹2,094/year',
+    subline:        'Zero depreciation · Instant policy · Cashless garages across India',
+    cta:            'Get Free Quote →',
+    href:           'https://www.acko.com/?utm_source=autoportal360&utm_medium=hero_banner&utm_campaign=car_insurance',
+    advertiser:     'Acko Insurance',
+    bg:             'linear-gradient(135deg,#0A1F44 0%,#0d3a6e 60%,rgba(0,212,255,0.1) 100%)',
+    customHtml:     null,
+    adType:         'affiliate',
+    bannerImageUrl: null,
   },
   'mid-feed-1': {
-    headline:   '💰 Compare Car Loans — EMI from ₹1,499/Lakh',
-    subline:    'SBI · HDFC · ICICI · Axis — Best rates in 2 minutes',
-    cta:        'Check EMI →',
-    href:       'https://www.policybazaar.com/motor-insurance/?utm_source=autoportal360&utm_medium=mid_banner_1',
-    advertiser: 'Policybazaar',
-    bg:         'linear-gradient(90deg,#06142D,#0A2A5E)',
-    customHtml: null,
-    adType:     'affiliate',
+    headline:       '💰 Compare Car Loans — EMI from ₹1,499/Lakh',
+    subline:        'SBI · HDFC · ICICI · Axis — Best rates in 2 minutes',
+    cta:            'Check EMI →',
+    href:           'https://www.policybazaar.com/motor-insurance/?utm_source=autoportal360&utm_medium=mid_banner_1',
+    advertiser:     'Policybazaar',
+    bg:             'linear-gradient(90deg,#06142D,#0A2A5E)',
+    customHtml:     null,
+    adType:         'affiliate',
+    bannerImageUrl: null,
   },
   'mid-feed-2': {
-    headline:   '🏍️ Two-Wheeler Loan — No Processing Fee',
-    subline:    'Get bike loan approved in 24 hours · 100+ lender network',
-    cta:        'Apply Now →',
-    href:       'https://www.bankbazaar.com/two-wheeler-loan.html?utm_source=autoportal360&utm_medium=mid_banner_2',
-    advertiser: 'BankBazaar',
-    bg:         'linear-gradient(90deg,#06142D,#0d2550)',
-    customHtml: null,
-    adType:     'affiliate',
+    headline:       '🏍️ Two-Wheeler Loan — No Processing Fee',
+    subline:        'Get bike loan approved in 24 hours · 100+ lender network',
+    cta:            'Apply Now →',
+    href:           'https://www.bankbazaar.com/two-wheeler-loan.html?utm_source=autoportal360&utm_medium=mid_banner_2',
+    advertiser:     'BankBazaar',
+    bg:             'linear-gradient(90deg,#06142D,#0d2550)',
+    customHtml:     null,
+    adType:         'affiliate',
+    bannerImageUrl: null,
   },
   'in-feed-native': {
-    headline:   '⚡ EV Insurance — Designed for Electric',
-    subline:    'Covers battery · Charging damage · Roadside assist',
-    cta:        'Explore →',
-    href:       'https://www.acko.com/electric-car-insurance/?utm_source=autoportal360&utm_medium=in_feed_native',
-    advertiser: 'Acko',
-    bg:         'linear-gradient(135deg,#111111,#1a1f2e)',
-    customHtml: null,
-    adType:     'affiliate',
+    headline:       '⚡ EV Insurance — Designed for Electric',
+    subline:        'Covers battery · Charging damage · Roadside assist',
+    cta:            'Explore →',
+    href:           'https://www.acko.com/electric-car-insurance/?utm_source=autoportal360&utm_medium=in_feed_native',
+    advertiser:     'Acko',
+    bg:             'linear-gradient(135deg,#111111,#1a1f2e)',
+    customHtml:     null,
+    adType:         'affiliate',
+    bannerImageUrl: null,
   },
   'pre-footer': {
-    headline:   '🚗 Get Pre-Approved Car Loan in 2 Minutes',
-    subline:    'No documents needed · Starting 7.9% p.a.',
-    cta:        'Check Eligibility →',
-    href:       'https://www.bankbazaar.com/car-loan.html?utm_source=autoportal360&utm_medium=pre_footer',
-    advertiser: 'BankBazaar',
-    bg:         'linear-gradient(90deg,#0A1F44,#06142D)',
-    customHtml: null,
-    adType:     'affiliate',
+    headline:       '🚗 Get Pre-Approved Car Loan in 2 Minutes',
+    subline:        'No documents needed · Starting 7.9% p.a.',
+    cta:            'Check Eligibility →',
+    href:           'https://www.bankbazaar.com/car-loan.html?utm_source=autoportal360&utm_medium=pre_footer',
+    advertiser:     'BankBazaar',
+    bg:             'linear-gradient(90deg,#0A1F44,#06142D)',
+    customHtml:     null,
+    adType:         'affiliate',
+    bannerImageUrl: null,
   },
 }
 
@@ -83,26 +89,31 @@ export default function AdSlot({ zone }: AdSlotProps) {
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         )
+        const today = new Date().toISOString().split('T')[0]
         const { data } = await sb
           .from('ad_campaigns')
-          .select('headline,subline,cta_text,destination_url,advertiser,custom_html,ad_type,is_active')
+          .select('headline,subline,cta_text,destination_url,advertiser,banner_image_url,custom_html,ad_type,is_active,start_date,end_date')
           .eq('zone', zone)
           .maybeSingle()
         if (cancelled || !data || !data.is_active) return
         const r = data as Record<string, unknown>
+        // Respect date range if set
+        if (r.start_date && (r.start_date as string) > today) return
+        if (r.end_date   && (r.end_date   as string) < today) return
         if (r.ad_type === 'adsense' || r.ad_type === 'custom') {
           setAd(prev => ({ ...prev, adType: r.ad_type as string, customHtml: (r.custom_html as string) ?? null }))
           return
         }
         setAd(prev => ({
           ...prev,
-          headline:   (r.headline         as string) || prev.headline,
-          subline:    (r.subline          as string) || prev.subline,
-          cta:        (r.cta_text         as string) || prev.cta,
-          href:       (r.destination_url  as string) || prev.href,
-          advertiser: (r.advertiser       as string) || prev.advertiser,
-          adType:     (r.ad_type          as string) || prev.adType,
-          customHtml: null,
+          headline:       (r.headline           as string) || prev.headline,
+          subline:        (r.subline            as string) || prev.subline,
+          cta:            (r.cta_text           as string) || prev.cta,
+          href:           (r.destination_url    as string) || prev.href,
+          advertiser:     (r.advertiser         as string) || prev.advertiser,
+          adType:         (r.ad_type            as string) || prev.adType,
+          customHtml:     null,
+          bannerImageUrl: (r.banner_image_url   as string) || null,
         }))
       } catch {
         // silently keep fallback
@@ -114,6 +125,24 @@ export default function AdSlot({ zone }: AdSlotProps) {
   }, [zone])
 
   if (!ad) return null
+
+  // ── OEM banner image ──────────────────────────────────────────────────────────
+  if (ad.bannerImageUrl) {
+    return (
+      <div style={{ position: 'relative', borderRadius: '0.75rem', overflow: 'hidden' }}>
+        <a href={ad.href} target="_blank" rel="sponsored noopener noreferrer" style={{ display: 'block' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={ad.bannerImageUrl} alt={ad.headline} style={{ width: '100%', height: 'auto', display: 'block' }} />
+        </a>
+        <span style={{
+          position: 'absolute', top: '6px', right: '8px',
+          fontSize: '9px', color: '#8E99A8',
+          background: 'rgba(0,0,0,0.5)',
+          padding: '1px 6px', borderRadius: '4px',
+        }}>Ad · {ad.advertiser}</span>
+      </div>
+    )
+  }
 
   // ── Custom / AdSense HTML ─────────────────────────────────────────────────────
   if ((ad.adType === 'adsense' || ad.adType === 'custom') && ad.customHtml) {
