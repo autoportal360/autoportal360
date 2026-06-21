@@ -73,7 +73,7 @@ type ModelColourRow = {
   sort_order: number
 }
 
-// ─── Slug parsing (mirrors brand page) ───────────────────────────────────────
+// ─── Slug parsing ─────────────────────────────────────────────────────────────
 
 interface ParsedSlug {
   brandName: string
@@ -97,8 +97,6 @@ const getBrand = cache(async (slug: string, type: VehicleType): Promise<Brand | 
     .from('brands').select('*')
     .eq('slug', slug).eq('type', type).eq('is_active', true).single()
   if (data) return data
-
-  // Bikes/scooters may carry a type suffix in the DB slug to avoid unique constraint collisions
   if (type === 'bike' || type === 'scooter') {
     const { data: data2 } = await supabase
       .from('brands').select('*')
@@ -151,7 +149,6 @@ export async function generateMetadata({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-
 const RIVALS: Record<VehicleType, { name: string; href: string }[]> = {
   car: [
     { name: 'Maruti Suzuki Swift',   href: '/maruti-suzuki-cars/swift/'   },
@@ -170,17 +167,7 @@ const RIVALS: Record<VehicleType, { name: string; href: string }[]> = {
   ],
 }
 
-const SECTION_TITLE: React.CSSProperties = {
-  fontFamily: 'Montserrat, sans-serif',
-  fontSize: '20px', fontWeight: 800,
-  letterSpacing: '-0.4px', margin: '0 0 6px',
-}
-
-const SECTION_SUB: React.CSSProperties = {
-  fontSize: '13px', color: '#8E99A8', margin: '0 0 20px',
-}
-
-// ─── Page ──────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ModelPage({
   params,
@@ -204,7 +191,6 @@ export default async function ModelPage({
 
   const pageKey = `model-${brandSlug}-${modelSlug}`
 
-  // Parallel: variants, featured cities, page SEO, images, colours
   const [{ data: variantsRaw }, { data: citiesRaw }, seo, { data: imagesRaw }, { data: coloursRaw }] = await Promise.all([
     supabase.from('variants').select('*').eq('model_id', m.id).order('sort_order'),
     supabase.from('cities').select('id, name, states(rto_percentage, handling_charge)').eq('is_featured', true).order('name'),
@@ -213,14 +199,13 @@ export default async function ModelPage({
     supabase.from('model_colours').select('*').eq('model_id', m.id).order('sort_order'),
   ])
 
-  const variants      = (variantsRaw  ?? []) as unknown as VariantRow[]
-  const cities        = (citiesRaw    ?? []) as unknown as CityRow[]
-  const modelImages   = (imagesRaw    ?? []) as ModelImageRow[]
-  const modelColours  = (coloursRaw   ?? []) as ModelColourRow[]
+  const variants     = (variantsRaw  ?? []) as unknown as VariantRow[]
+  const cities       = (citiesRaw    ?? []) as unknown as CityRow[]
+  const modelImages  = (imagesRaw    ?? []) as ModelImageRow[]
+  const modelColours = (coloursRaw   ?? []) as ModelColourRow[]
 
   const primaryVariant = variants.find(v => v.is_popular) ?? variants[0] ?? null
 
-  // Direct specs fetch — more reliable than PostgREST embedded join without FK
   let specsByVariantId: Record<string, Spec> = {}
   if (variants.length > 0) {
     const { data: allSpecsRaw } = await supabase
@@ -231,7 +216,6 @@ export default async function ModelPage({
   }
   const specsData = primaryVariant ? (specsByVariantId[primaryVariant.id] ?? null) : null
 
-  // Hero on-road estimate for Chandigarh (or first featured city)
   const heroCity   = cities.find(c => c.name === 'Chandigarh') ?? cities[0] ?? null
   const heroOnRoad = primaryVariant && heroCity?.states
     ? calculateOnRoad(
@@ -247,7 +231,6 @@ export default async function ModelPage({
 
   const fuelTypes = [...new Set(variants.map(v => v.fuel_type).filter((t): t is string => t !== null))]
 
-  // Props for client components
   const calcVariants: CalcVariant[] = variants.map(v => ({
     id: v.id, name: v.name, ex_showroom_price: v.ex_showroom_price,
   }))
@@ -312,7 +295,7 @@ export default async function ModelPage({
         <main style={{ minWidth: 0 }}>
 
           {/* BREADCRUMB */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8E99A8', marginBottom: '28px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8E99A8', marginBottom: '20px', flexWrap: 'wrap' }}>
             <Link href="/" style={{ color: '#8E99A8', textDecoration: 'none' }}>Home</Link>
             <span>›</span>
             <Link href={listingHref} style={{ color: '#8E99A8', textDecoration: 'none' }}>New {vehicleLabel}</Link>
@@ -323,132 +306,123 @@ export default async function ModelPage({
           </div>
 
           {/* ── MODEL HERO ── */}
-          <section style={{
-            background: 'linear-gradient(180deg,rgba(0,212,255,0.05) 0%,transparent 80%)',
-            border: '1px solid rgba(0,212,255,0.08)',
-            borderRadius: '20px', padding: '28px', marginBottom: '36px',
-          }}>
-            {/* Two-column: text left, image right */}
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', marginBottom: '24px' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {/* Badges row */}
-                <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '3px 10px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif' }}>
+          <section className="ap-m-hero">
+            <div className="ap-m-hero-grid">
+
+              {/* Text info */}
+              <div className="ap-m-hero-info">
+                {/* Tags */}
+                <div className="ap-m-tags">
+                  <span className="ap-m-tag" style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}>
                     {brand.name}
                   </span>
-                  {m.body_type && (
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#8E99A8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 10px', borderRadius: '20px' }}>
-                      {m.body_type}
-                    </span>
-                  )}
+                  {m.body_type && <span className="ap-m-tag">{m.body_type}</span>}
                   {fuelTypes.map(ft => (
-                    <span key={ft} style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', background: ft === 'Electric' ? 'rgba(0,255,128,0.08)' : 'rgba(0,212,255,0.06)', border: `1px solid ${ft === 'Electric' ? 'rgba(0,255,128,0.2)' : 'rgba(0,212,255,0.15)'}`, color: ft === 'Electric' ? '#00FF80' : '#8E99A8' }}>
-                      {ft}
-                    </span>
+                    <span key={ft} className="ap-m-tag" style={
+                      ft === 'Electric'
+                        ? { background: 'rgba(0,255,128,0.08)', border: '1px solid rgba(0,255,128,0.2)', color: '#00FF80' }
+                        : undefined
+                    }>{ft}</span>
                   ))}
                   {specsData?.ncap_rating && (
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)', padding: '3px 10px', borderRadius: '20px' }}>
+                    <span className="ap-m-tag" style={{ color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)' }}>
                       {specsData.ncap_rating} NCAP
                     </span>
                   )}
                 </div>
 
                 {/* H1 */}
-                <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: '#FFFFFF', margin: '0 0 10px', lineHeight: 1.1 }}>
-                  {seo?.h1 ? seo.h1 : <>{brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span></>}
+                <h1 className="ap-m-name">
+                  {seo?.h1 ? seo.h1 : <>{brand.name} <span>{m.name}</span></>}
                 </h1>
                 {seo?.intro_text && (
-                  <p style={{ fontSize: '14px', color: '#C0C0C0', margin: '0 0 10px', lineHeight: 1.7 }}>{seo.intro_text}</p>
+                  <p style={{ fontSize: '13px', color: '#C0C0C0', margin: '6px 0', lineHeight: 1.7 }}>{seo.intro_text}</p>
                 )}
 
                 {/* Price */}
                 {priceLabel && (
-                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '22px', fontWeight: 900, color: '#00D4FF', marginBottom: '6px' }}>
+                  <div className="ap-m-price">
                     {priceLabel}
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#8E99A8', marginLeft: '8px' }}>ex-showroom</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#8E99A8', marginLeft: '6px' }}>ex-showroom</span>
                   </div>
                 )}
 
                 {/* On-road estimate */}
                 {heroOnRoad && heroCity && (
-                  <div style={{ fontSize: '13px', color: '#C0C0C0', marginBottom: '20px' }}>
-                    On-road in {heroCity.name}: <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{formatPrice(heroOnRoad.total)}</span>
-                    <span style={{ color: '#8E99A8', marginLeft: '6px' }}>(est. for base variant)</span>
+                  <div className="ap-m-onroad">
+                    On-road in {heroCity.name}:{' '}
+                    <strong style={{ color: '#fff' }}>{formatPrice(heroOnRoad.total)}</strong>
+                    <span style={{ color: '#8E99A8' }}> (est. base variant)</span>
                   </div>
                 )}
 
                 {/* CTAs */}
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div className="ap-m-ctas">
                   <GetOffersButton
                     modelId={m.id}
                     modelName={m.name}
                     brandName={brand.name}
                     modelSlug={modelSlug}
                     variants={calcVariants}
-                    style={{ background: '#00D4FF', color: '#06142D', fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    className="ap-m-cta ap-m-cta-primary"
                   >
                     Get Offers
                   </GetOffersButton>
-                  <a href="#on-road" style={{ background: 'rgba(0,212,255,0.08)', color: '#00D4FF', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(0,212,255,0.2)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    On-Road Price
-                  </a>
-                  <Link href={`/compare/${vehicleType}s/?v1=${brand.slug}-${modelSlug}`} style={{ background: 'rgba(255,255,255,0.04)', color: '#C0C0C0', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: '13px', padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  <a href="#on-road" className="ap-m-cta ap-m-cta-secondary">On-Road Price</a>
+                  <Link href={`/compare/${vehicleType}s/?v1=${brand.slug}-${modelSlug}`} className="ap-m-cta ap-m-cta-secondary">
                     Compare
                   </Link>
                 </div>
               </div>
 
               {/* Hero image */}
-              <div style={{ width: '280px', flexShrink: 0 }}>
+              <div className="ap-m-hero-img">
                 {m.thumbnail_url ? (
                   <div style={{
-                    position: 'relative', width: '100%', height: '220px',
-                    borderRadius: '16px', overflow: 'hidden',
+                    position: 'relative', width: '100%', paddingTop: '62%',
+                    borderRadius: '14px', overflow: 'hidden',
                     background: 'rgba(0,212,255,0.04)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Image
                       src={m.thumbnail_url}
                       alt={`${brand.name} ${m.name}`}
                       fill
-                      sizes="(max-width: 768px) 100vw, 300px"
+                      sizes="(max-width: 768px) 90vw, 45vw"
                       style={{ objectFit: 'contain', padding: '12px' }}
                       priority
                     />
                   </div>
                 ) : (
-                  <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '90px' }}>
+                  <div style={{ textAlign: 'center', fontSize: '80px', padding: '16px' }}>
                     {vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Quick stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
+            {/* Quick specs — always 2×2 on mobile */}
+            <div className="ap-m-specs">
               {[
-                { label: 'Mileage',   value: specsData?.mileage_arai ? `${specsData.mileage_arai} km/l` : '—' },
-                { label: 'Power',     value: specsData?.power_bhp ? `${specsData.power_bhp} bhp` : '—' },
-                { label: 'Engine',    value: specsData?.engine_cc ? `${specsData.engine_cc} cc` : '—' },
-                { label: 'NCAP',      value: specsData?.ncap_rating ?? '—' },
-              ].map(stat => (
-                <div key={stat.label} style={{ background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '16px', fontWeight: 900, color: '#00D4FF', marginBottom: '4px' }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#8E99A8', fontWeight: 600 }}>{stat.label}</div>
+                { label: 'Mileage', value: specsData?.mileage_arai ? `${specsData.mileage_arai} km/l` : '—' },
+                { label: 'Power',   value: specsData?.power_bhp   ? `${specsData.power_bhp} bhp`     : '—' },
+                { label: 'Engine',  value: specsData?.engine_cc   ? `${specsData.engine_cc} cc`       : '—' },
+                { label: 'NCAP',    value: specsData?.ncap_rating ?? '—' },
+              ].map(s => (
+                <div key={s.label} className="ap-m-spec">
+                  <div className="ap-m-spec-val">{s.value}</div>
+                  <div className="ap-m-spec-label">{s.label}</div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* ── OVERVIEW ── */}
+          {/* ── KEY SPECIFICATIONS ── */}
           <section id="overview" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
-            <h2 style={SECTION_TITLE}>Key <span style={{ color: '#00D4FF' }}>Specifications</span></h2>
-            <p style={SECTION_SUB}>{primaryVariant ? `${primaryVariant.name} · popular variant` : 'Specifications'}</p>
+            <h2 className="ap-m-section-title">Key <span>Specifications</span></h2>
+            <p className="ap-m-section-sub">{primaryVariant ? `${primaryVariant.name} · popular variant` : 'Specifications'}</p>
 
             {specsData ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '12px' }}>
+              <div className="ap-m-keyspecs">
                 {([
                   { icon: '⚙️', label: 'Engine',           value: specsData.engine_cc ? `${specsData.engine_cc} cc` : null },
                   { icon: '⚡', label: 'Power',             value: specsData.power_bhp ? `${specsData.power_bhp} bhp` : null },
@@ -466,15 +440,10 @@ export default async function ModelPage({
                 ] as { icon: string; label: string; value: string | null }[])
                   .filter(item => item.value !== null)
                   .map(item => (
-                    <div key={item.label} style={{
-                      background: '#0A1F44',
-                      border: '1px solid rgba(0,212,255,0.1)',
-                      borderRadius: '14px',
-                      padding: '16px 18px',
-                    }}>
-                      <div style={{ fontSize: '22px', marginBottom: '8px' }}>{item.icon}</div>
-                      <div style={{ fontSize: '11px', color: '#8E99A8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{item.label}</div>
-                      <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 800, color: '#FFFFFF' }}>{item.value}</div>
+                    <div key={item.label} className="ap-m-keyspec">
+                      <div className="ap-m-keyspec-icon">{item.icon}</div>
+                      <div className="ap-m-keyspec-label">{item.label}</div>
+                      <div className="ap-m-keyspec-val">{item.value}</div>
                     </div>
                   ))}
               </div>
@@ -487,71 +456,65 @@ export default async function ModelPage({
 
           {/* ── VARIANTS ── */}
           <section id="variants" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
-            <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Variants</span></h2>
-            <p style={SECTION_SUB}>{variants.length} variant{variants.length !== 1 ? 's' : ''} · ex-showroom prices</p>
+            <h2 className="ap-m-section-title">{m.name} <span>Variants</span></h2>
+            <p className="ap-m-section-sub">{variants.length} variant{variants.length !== 1 ? 's' : ''} · ex-showroom prices</p>
 
             {variants.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: '#8E99A8', fontSize: '14px', background: '#0A1F44', borderRadius: '16px', border: '1px solid rgba(0,212,255,0.08)' }}>
                 Variant details coming soon
               </div>
             ) : (
-              <div style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '16px', overflow: 'hidden' }}>
-                {/* Header */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '0', padding: '12px 20px', background: 'rgba(0,212,255,0.06)', borderBottom: '1px solid rgba(0,212,255,0.12)' }}>
-                  {['Variant', 'Fuel', 'Trans.', 'Ex-showroom'].map(h => (
-                    <span key={h} style={{ fontSize: '11px', fontWeight: 700, color: '#8E99A8', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: h === 'Ex-showroom' ? 'right' : 'left', paddingRight: h !== 'Ex-showroom' ? '16px' : '0' }}>
-                      {h}
-                    </span>
-                  ))}
-                </div>
-                {/* Rows */}
-                {variants.map((v, i) => (
-                  <div key={v.id} style={{
-                    display: 'grid', gridTemplateColumns: '1fr auto auto auto',
-                    padding: '14px 20px', alignItems: 'center',
-                    background: i % 2 === 0 ? 'transparent' : 'rgba(0,212,255,0.02)',
-                    borderBottom: i < variants.length - 1 ? '1px solid rgba(0,212,255,0.06)' : 'none',
-                  }}>
-                    <div style={{ paddingRight: '16px' }}>
-                      <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>{v.name}</span>
-                      {v.is_popular && (
-                        <span style={{ marginLeft: '8px', fontSize: '9px', fontWeight: 800, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '1px 7px', borderRadius: '20px', fontFamily: 'Montserrat, sans-serif', verticalAlign: 'middle' }}>
-                          POPULAR
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '12px', color: '#8E99A8', paddingRight: '16px' }}>{v.fuel_type ?? '—'}</span>
-                    <span style={{ fontSize: '12px', color: '#8E99A8', paddingRight: '16px' }}>{v.transmission ?? '—'}</span>
-                    <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', fontWeight: 700, color: '#00D4FF', textAlign: 'right' }}>
-                      {formatPrice(v.ex_showroom_price)}
-                    </span>
-                  </div>
-                ))}
+              <div className="ap-m-table-wrap">
+                <table className="ap-m-table">
+                  <thead>
+                    <tr>
+                      <th>Variant</th>
+                      <th>Fuel</th>
+                      <th>Trans.</th>
+                      <th>Ex-showroom</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {variants.map(v => (
+                      <tr key={v.id}>
+                        <td>
+                          {v.name}
+                          {v.is_popular && (
+                            <span style={{ marginLeft: '8px', fontSize: '9px', fontWeight: 800, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '1px 7px', borderRadius: '20px', verticalAlign: 'middle' }}>
+                              POPULAR
+                            </span>
+                          )}
+                        </td>
+                        <td>{v.fuel_type ?? '—'}</td>
+                        <td>{v.transmission ?? '—'}</td>
+                        <td>{formatPrice(v.ex_showroom_price)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </section>
 
           {/* ── MILEAGE ── */}
           <section id="mileage" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
-            <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Mileage</span></h2>
-            <p style={SECTION_SUB}>ARAI-certified fuel efficiency · variant wise</p>
+            <h2 className="ap-m-section-title">{m.name} <span>Mileage</span></h2>
+            <p className="ap-m-section-sub">ARAI-certified fuel efficiency · variant wise</p>
 
             {variants.filter(v => specsByVariantId[v.id]?.mileage_arai).length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: '#8E99A8', fontSize: '14px', background: '#0A1F44', borderRadius: '16px', border: '1px solid rgba(0,212,255,0.08)' }}>
                 Mileage data not yet available
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
                 {variants.filter(v => specsByVariantId[v.id]?.mileage_arai).map(v => (
-                  <div key={v.id} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '14px', padding: '18px 20px' }}>
-                    <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '28px', fontWeight: 900, color: '#00D4FF', marginBottom: '4px' }}>
+                  <div key={v.id} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', padding: '14px 16px' }}>
+                    <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '24px', fontWeight: 900, color: '#00D4FF' }}>
                       {specsByVariantId[v.id].mileage_arai}
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#8E99A8', marginLeft: '4px' }}>km/l</span>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#8E99A8', marginLeft: '3px' }}>km/l</span>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 600, marginBottom: '2px' }}>{v.name}</div>
-                    {v.fuel_type && (
-                      <div style={{ fontSize: '11px', color: '#8E99A8' }}>{v.fuel_type}</div>
-                    )}
+                    <div style={{ fontSize: '11px', color: '#fff', fontWeight: 600, marginTop: '4px' }}>{v.name}</div>
+                    {v.fuel_type && <div style={{ fontSize: '10px', color: '#8E99A8' }}>{v.fuel_type}</div>}
                   </div>
                 ))}
               </div>
@@ -562,23 +525,21 @@ export default async function ModelPage({
           {modelImages.length > 0 && (
             <section id="images" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Images</span></h2>
+                <h2 className="ap-m-section-title">{m.name} <span>Images</span></h2>
                 <Link href={`/${brandSlug}/${modelSlug}/images/`} style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, textDecoration: 'none' }}>
                   View All {modelImages.length} →
                 </Link>
               </div>
-              <p style={SECTION_SUB}>Exterior, interior and detail photos</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-                {modelImages.slice(0, 4).map(img => (
-                  <Link key={img.id} href={`/${brandSlug}/${modelSlug}/images/`} style={{ textDecoration: 'none', display: 'block' }}>
-                    <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#111', border: '1px solid rgba(0,212,255,0.1)', height: '140px' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img.url}
-                        alt={img.alt_text ?? `${brand.name} ${m.name} ${img.type}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
+              <p className="ap-m-section-sub">Exterior, interior and detail photos</p>
+              <div className="ap-m-img-scroll">
+                {modelImages.slice(0, 6).map(img => (
+                  <Link key={img.id} href={`/${brandSlug}/${modelSlug}/images/`} className="ap-m-img-thumb" style={{ textDecoration: 'none' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.alt_text ?? `${brand.name} ${m.name} ${img.type}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   </Link>
                 ))}
               </div>
@@ -588,32 +549,25 @@ export default async function ModelPage({
           {/* ── COLOURS ── */}
           <section id="colours" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <h2 style={SECTION_TITLE}>{m.name} <span style={{ color: '#00D4FF' }}>Colours</span></h2>
+              <h2 className="ap-m-section-title">{m.name} <span>Colours</span></h2>
               {modelColours.length > 0 && (
                 <Link href={`/${brandSlug}/${modelSlug}/colours/`} style={{ fontSize: '12px', color: '#00D4FF', fontWeight: 700, textDecoration: 'none' }}>
                   View All →
                 </Link>
               )}
             </div>
-            <p style={SECTION_SUB}>
+            <p className="ap-m-section-sub">
               {modelColours.length > 0
                 ? `${modelColours.length} colour option${modelColours.length !== 1 ? 's' : ''} available`
                 : 'Available colour options'}
             </p>
 
             {modelColours.length > 0 ? (
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div className="ap-m-colours">
                 {modelColours.map(colour => (
-                  <div key={colour.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '76px' }}>
-                    <div style={{
-                      width: '52px', height: '52px', borderRadius: '50%',
-                      background: colour.hex_code ?? '#555',
-                      border: '3px solid rgba(255,255,255,0.12)',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                    }} />
-                    <span style={{ fontSize: '11px', color: '#C0C0C0', textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>
-                      {colour.name}
-                    </span>
+                  <div key={colour.id} className="ap-m-colour">
+                    <div className="ap-m-colour-swatch" style={{ background: colour.hex_code ?? '#555' }} />
+                    <span className="ap-m-colour-name">{colour.name}</span>
                   </div>
                 ))}
               </div>
@@ -629,7 +583,7 @@ export default async function ModelPage({
             <AdSlot zone="mid-feed-1" />
           </div>
 
-          {/* ── SEO CONTENT ── */}
+          {/* SEO CONTENT */}
           {seo?.seo_content && (
             <section
               style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.9, marginBottom: '48px' }}
@@ -639,17 +593,17 @@ export default async function ModelPage({
 
           {/* ── FAQs ── */}
           <section id="faqs" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
-            <h2 style={SECTION_TITLE}>Frequently Asked <span style={{ color: '#00D4FF' }}>Questions</span></h2>
-            <p style={SECTION_SUB}>Common questions about {brand.name} {m.name}</p>
+            <h2 className="ap-m-section-title">Frequently Asked <span>Questions</span></h2>
+            <p className="ap-m-section-sub">Common questions about {brand.name} {m.name}</p>
             {seo?.faqs && seo.faqs.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="ap-m-faq">
                 {seo.faqs.map((faq, i) => (
-                  <details key={i} style={{ background: '#0A1F44', border: '1px solid rgba(0,212,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <summary style={{ padding: '16px 20px', fontSize: '14px', fontWeight: 700, color: '#FFFFFF', fontFamily: 'Montserrat, sans-serif', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <details key={i} className="ap-m-faq-item">
+                    <summary>
                       {faq.q}
-                      <span style={{ color: '#00D4FF', fontSize: '18px', flexShrink: 0, marginLeft: '12px' }}>+</span>
+                      <span style={{ color: '#00D4FF', fontSize: '1rem', flexShrink: 0 }}>+</span>
                     </summary>
-                    <div style={{ padding: '0 20px 16px', fontSize: '13px', color: '#C0C0C0', lineHeight: 1.7 }}>{faq.a}</div>
+                    <div className="ap-m-faq-a">{faq.a}</div>
                   </details>
                 ))}
               </div>
@@ -741,7 +695,6 @@ export default async function ModelPage({
         </aside>
       </div>
 
-      {/* bottom padding */}
       <div style={{ height: '48px' }} />
       <TrackRecentView
         brand={brand.name}

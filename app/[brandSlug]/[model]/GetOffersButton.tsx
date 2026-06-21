@@ -11,6 +11,7 @@ export default function GetOffersButton({
   modelSlug,
   variants,
   style,
+  className,
   children,
 }: {
   modelId: string
@@ -19,12 +20,13 @@ export default function GetOffersButton({
   modelSlug: string
   variants: CalcVariant[]
   style?: React.CSSProperties
+  className?: string
   children?: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button onClick={() => setOpen(true)} style={style}>
+      <button onClick={() => setOpen(true)} style={style} className={className}>
         {children ?? 'Get Offers'}
       </button>
       <GetOffersModal
