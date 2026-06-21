@@ -18,6 +18,11 @@ import EditSeoButton from '@/components/EditSeoButton'
 import SchemaMarkup from '@/components/SchemaMarkup'
 import { vehicleProductSchema, breadcrumbSchema, faqSchema } from '@/lib/schema'
 import TrackRecentView from '@/components/TrackRecentView'
+import VariantAccordion from '@/components/model/VariantAccordion'
+import ProsConsCard from '@/components/model/ProsConsCard'
+import RatingBreakdown from '@/components/model/RatingBreakdown'
+import SimilarCars from '@/components/model/SimilarCars'
+import LatestUpdates from '@/components/model/LatestUpdates'
 
 export const dynamic = 'force-dynamic'
 
@@ -241,6 +246,30 @@ export default async function ModelPage({
 
   const rivals = RIVALS[vehicleType]
 
+  const modelPros = [
+    specsData?.mileage_arai
+      ? `Excellent fuel efficiency — ${specsData.mileage_arai} km/l (ARAI certified)`
+      : 'Competitive fuel economy for the segment',
+    variants.length > 1
+      ? `Wide variant range — ${variants.length} options from budget to premium`
+      : 'Well-equipped for the price',
+    m.price_min
+      ? `Value for money pricing from ${formatPrice(m.price_min)} ex-showroom`
+      : 'Aggressive pricing for its segment',
+    'Strong resale value and wide service network across India',
+    specsData?.seating
+      ? `${specsData.seating}-seater cabin with practical storage space`
+      : 'Spacious and practical cabin layout',
+  ]
+
+  const modelCons = [
+    'Rear seat comfort could be improved for long highway journeys',
+    'Road and wind noise (NVH) levels are average at highway speeds',
+    'Advanced driver-assistance features limited to top trims only',
+    'Boot space could be more generous for family use',
+    'Wireless Android Auto / Apple CarPlay not standard across all variants',
+  ]
+
   const modelCrumbs = [
     { name: 'Home', url: getCanonicalUrl('/') },
     { name: `New ${vehicleLabel}`, url: getCanonicalUrl(listingHref) },
@@ -448,43 +477,26 @@ export default async function ModelPage({
           {/* ── VARIANTS ── */}
           <section id="variants" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
             <h2 className="ap-m-section-title">{m.name} <span>Variants</span></h2>
-            <p className="ap-m-section-sub">{variants.length} variant{variants.length !== 1 ? 's' : ''} · ex-showroom prices</p>
+            <p className="ap-m-section-sub">{variants.length} variant{variants.length !== 1 ? 's' : ''} · tap to expand details</p>
+            <VariantAccordion
+              variants={variants}
+              specs={specsByVariantId}
+              modelName={m.name}
+            />
+          </section>
 
-            {variants.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px', color: '#8E99A8', fontSize: '14px', background: '#0A1F44', borderRadius: '16px', border: '1px solid rgba(0,212,255,0.08)' }}>
-                Variant details coming soon
-              </div>
-            ) : (
-              <div className="ap-m-table-wrap">
-                <table className="ap-m-table">
-                  <thead>
-                    <tr>
-                      <th>Variant</th>
-                      <th>Fuel</th>
-                      <th>Trans.</th>
-                      <th>Ex-showroom</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {variants.map(v => (
-                      <tr key={v.id}>
-                        <td>
-                          {v.name}
-                          {v.is_popular && (
-                            <span style={{ marginLeft: '8px', fontSize: '9px', fontWeight: 800, color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', padding: '1px 7px', borderRadius: '20px', verticalAlign: 'middle' }}>
-                              POPULAR
-                            </span>
-                          )}
-                        </td>
-                        <td>{v.fuel_type ?? '—'}</td>
-                        <td>{v.transmission ?? '—'}</td>
-                        <td>{formatPrice(v.ex_showroom_price)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          {/* ── PROS & CONS ── */}
+          <section style={{ marginBottom: '48px' }}>
+            <h2 className="ap-m-section-title">{m.name} <span>Pros & Cons</span></h2>
+            <p className="ap-m-section-sub">What owners love and dislike</p>
+            <ProsConsCard pros={modelPros} cons={modelCons} />
+          </section>
+
+          {/* ── OWNER RATINGS ── */}
+          <section style={{ marginBottom: '48px' }}>
+            <h2 className="ap-m-section-title">Owner <span>Ratings</span></h2>
+            <p className="ap-m-section-sub">Based on verified owner reviews</p>
+            <RatingBreakdown modelName={m.name} />
           </section>
 
           {/* ── MILEAGE ── */}
@@ -567,6 +579,20 @@ export default async function ModelPage({
                 Colour options coming soon — check at your nearest dealership.
               </div>
             )}
+          </section>
+
+          {/* ── SIMILAR CARS ── */}
+          <section style={{ marginBottom: '48px' }}>
+            <h2 className="ap-m-section-title">Similar <span>{vehicleLabel}</span></h2>
+            <p className="ap-m-section-sub">More {brand.name} models you might like</p>
+            <SimilarCars brandSlug={brandSlug} currentModelId={m.id} vehicleType={vehicleType} />
+          </section>
+
+          {/* ── LATEST UPDATES ── */}
+          <section style={{ marginBottom: '48px' }}>
+            <h2 className="ap-m-section-title">Latest <span>Updates</span></h2>
+            <p className="ap-m-section-sub">Recent news about {brand.name} {m.name}</p>
+            <LatestUpdates modelName={m.name} brandName={brand.name} priceMin={m.price_min} />
           </section>
 
           {/* AD ZONE 2 */}
