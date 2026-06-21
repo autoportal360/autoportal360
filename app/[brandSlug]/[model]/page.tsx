@@ -11,7 +11,8 @@ import ModelSubNav from './ModelSubNav'
 import OnRoadCalculator, { type CalcVariant, type CalcCity } from './OnRoadCalculator'
 import GetOffersButton from './GetOffersButton'
 import ModelFaq from './ModelFaq'
-import Image from 'next/image'
+import ModelHeroImage from '@/components/ModelHeroImage'
+import ModelStickyBar from '@/components/ModelStickyBar'
 import { getPageSeo } from '@/lib/page-seo'
 import EditSeoButton from '@/components/EditSeoButton'
 import SchemaMarkup from '@/components/SchemaMarkup'
@@ -289,6 +290,7 @@ export default async function ModelPage({
       <AdSlot zone="hero-billboard" />
       <ModelSubNav brandSlug={brandSlug} modelSlug={modelSlug} />
 
+      <div className="ap-model-page-content">
       <div className="model-layout" style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 24px 0' }}>
 
         {/* ── MAIN COLUMN ── */}
@@ -306,115 +308,104 @@ export default async function ModelPage({
           </div>
 
           {/* ── MODEL HERO ── */}
-          <section className="ap-m-hero">
-            <div className="ap-m-hero-grid">
+          <div className="ap-model-hero-wrap">
 
-              {/* Text info */}
-              <div className="ap-m-hero-info">
-                {/* Tags */}
-                <div className="ap-m-tags">
-                  <span className="ap-m-tag" style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}>
-                    {brand.name}
+            {/* Image carousel — first in DOM so it's on top on mobile */}
+            <ModelHeroImage
+              images={modelImages.map(img => img.url)}
+              alt={`${brand.name} ${m.name}`}
+              fallback={vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'}
+            />
+
+            {/* Quick links */}
+            <div className="ap-model-hero-links">
+              <Link href={`/${brandSlug}/${modelSlug}/colours/`} className="ap-model-hero-link">
+                🎨 {modelColours.length > 0 ? `${modelColours.length} Colours` : 'Colours'}
+              </Link>
+              <Link href={`/${brandSlug}/${modelSlug}/images/`} className="ap-model-hero-link">
+                📸 {modelImages.length > 0 ? `${modelImages.length} Images` : 'Images'}
+              </Link>
+            </div>
+
+            {/* Text info */}
+            <div className="ap-model-info">
+              <div className="ap-m-tags">
+                <span className="ap-m-tag" style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                  {brand.name}
+                </span>
+                {m.body_type && <span className="ap-m-tag">{m.body_type}</span>}
+                {fuelTypes.map(ft => (
+                  <span key={ft} className="ap-m-tag" style={
+                    ft === 'Electric'
+                      ? { background: 'rgba(0,255,128,0.08)', border: '1px solid rgba(0,255,128,0.2)', color: '#00FF80' }
+                      : undefined
+                  }>{ft}</span>
+                ))}
+                {specsData?.ncap_rating && (
+                  <span className="ap-m-tag" style={{ color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)' }}>
+                    {specsData.ncap_rating} NCAP
                   </span>
-                  {m.body_type && <span className="ap-m-tag">{m.body_type}</span>}
-                  {fuelTypes.map(ft => (
-                    <span key={ft} className="ap-m-tag" style={
-                      ft === 'Electric'
-                        ? { background: 'rgba(0,255,128,0.08)', border: '1px solid rgba(0,255,128,0.2)', color: '#00FF80' }
-                        : undefined
-                    }>{ft}</span>
-                  ))}
-                  {specsData?.ncap_rating && (
-                    <span className="ap-m-tag" style={{ color: '#FFB400', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)' }}>
-                      {specsData.ncap_rating} NCAP
-                    </span>
-                  )}
-                </div>
-
-                {/* H1 */}
-                <h1 className="ap-m-name">
-                  {seo?.h1 ? seo.h1 : <>{brand.name} <span>{m.name}</span></>}
-                </h1>
-                {seo?.intro_text && (
-                  <p style={{ fontSize: '13px', color: '#C0C0C0', margin: '6px 0', lineHeight: 1.7 }}>{seo.intro_text}</p>
-                )}
-
-                {/* Price */}
-                {priceLabel && (
-                  <div className="ap-m-price">
-                    {priceLabel}
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#8E99A8', marginLeft: '6px' }}>ex-showroom</span>
-                  </div>
-                )}
-
-                {/* On-road estimate */}
-                {heroOnRoad && heroCity && (
-                  <div className="ap-m-onroad">
-                    On-road in {heroCity.name}:{' '}
-                    <strong style={{ color: '#fff' }}>{formatPrice(heroOnRoad.total)}</strong>
-                    <span style={{ color: '#8E99A8' }}> (est. base variant)</span>
-                  </div>
-                )}
-
-                {/* CTAs */}
-                <div className="ap-m-ctas">
-                  <GetOffersButton
-                    modelId={m.id}
-                    modelName={m.name}
-                    brandName={brand.name}
-                    modelSlug={modelSlug}
-                    variants={calcVariants}
-                    className="ap-m-cta ap-m-cta-primary"
-                  >
-                    Get Offers
-                  </GetOffersButton>
-                  <a href="#on-road" className="ap-m-cta ap-m-cta-secondary">On-Road Price</a>
-                  <Link href={`/compare/${vehicleType}s/?v1=${brand.slug}-${modelSlug}`} className="ap-m-cta ap-m-cta-secondary">
-                    Compare
-                  </Link>
-                </div>
-              </div>
-
-              {/* Hero image */}
-              <div className="ap-m-hero-img">
-                {m.thumbnail_url ? (
-                  <div style={{
-                    position: 'relative', width: '100%', paddingTop: '62%',
-                    borderRadius: '14px', overflow: 'hidden',
-                    background: 'rgba(0,212,255,0.04)',
-                  }}>
-                    <Image
-                      src={m.thumbnail_url}
-                      alt={`${brand.name} ${m.name}`}
-                      fill
-                      sizes="(max-width: 768px) 90vw, 45vw"
-                      style={{ objectFit: 'contain', padding: '12px' }}
-                      priority
-                    />
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', fontSize: '80px', padding: '16px' }}>
-                    {vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🛵'}
-                  </div>
                 )}
               </div>
-            </div>
 
-            {/* Quick specs — always 2×2 on mobile */}
-            <div className="ap-m-specs">
-              {[
-                { label: 'Mileage', value: specsData?.mileage_arai ? `${specsData.mileage_arai} km/l` : '—' },
-                { label: 'Power',   value: specsData?.power_bhp   ? `${specsData.power_bhp} bhp`     : '—' },
-                { label: 'Engine',  value: specsData?.engine_cc   ? `${specsData.engine_cc} cc`       : '—' },
-                { label: 'NCAP',    value: specsData?.ncap_rating ?? '—' },
-              ].map(s => (
-                <div key={s.label} className="ap-m-spec">
-                  <div className="ap-m-spec-val">{s.value}</div>
-                  <div className="ap-m-spec-label">{s.label}</div>
+              <h1 className="ap-model-info-name">
+                {seo?.h1 ? seo.h1 : <>{brand.name} <span style={{ color: '#00D4FF' }}>{m.name}</span></>}
+              </h1>
+              {seo?.intro_text && (
+                <p style={{ fontSize: '13px', color: '#C0C0C0', margin: '6px 0', lineHeight: 1.7 }}>{seo.intro_text}</p>
+              )}
+
+              {priceLabel && (
+                <div className="ap-model-info-price">
+                  {priceLabel}
+                  <span className="ap-model-info-price-label">ex-showroom</span>
                 </div>
-              ))}
+              )}
+
+              {heroOnRoad && heroCity && (
+                <div className="ap-m-onroad">
+                  On-road in {heroCity.name}:{' '}
+                  <strong style={{ color: '#fff' }}>{formatPrice(heroOnRoad.total)}</strong>
+                  <span style={{ color: '#8E99A8' }}> (est. base variant)</span>
+                </div>
+              )}
+
+              <div className="ap-model-actions">
+                <GetOffersButton
+                  modelId={m.id}
+                  modelName={m.name}
+                  brandName={brand.name}
+                  modelSlug={modelSlug}
+                  variants={calcVariants}
+                  className="ap-model-action-btn ap-model-action-primary"
+                >
+                  Get Offers
+                </GetOffersButton>
+                <a href="#on-road" className="ap-model-action-btn">On-Road Price</a>
+                <Link href={`/compare/${vehicleType}s/?v1=${brand.slug}-${modelSlug}`} className="ap-model-action-btn">
+                  Compare
+                </Link>
+                <Link href={`/dealers/?brand=${brandSlug}`} className="ap-model-action-btn">
+                  Dealers
+                </Link>
+              </div>
             </div>
-          </section>
+          </div>
+
+          {/* Quick specs */}
+          <div className="ap-m-specs" style={{ marginBottom: '36px' }}>
+            {[
+              { label: 'Mileage', value: specsData?.mileage_arai ? `${specsData.mileage_arai} km/l` : '—' },
+              { label: 'Power',   value: specsData?.power_bhp   ? `${specsData.power_bhp} bhp`     : '—' },
+              { label: 'Engine',  value: specsData?.engine_cc   ? `${specsData.engine_cc} cc`       : '—' },
+              { label: 'NCAP',    value: specsData?.ncap_rating ?? '—' },
+            ].map(s => (
+              <div key={s.label} className="ap-m-spec">
+                <div className="ap-m-spec-val">{s.value}</div>
+                <div className="ap-m-spec-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
 
           {/* ── KEY SPECIFICATIONS ── */}
           <section id="overview" style={{ marginBottom: '48px', scrollMarginTop: '60px' }}>
@@ -694,8 +685,16 @@ export default async function ModelPage({
 
         </aside>
       </div>
+      </div>
 
-      <div style={{ height: '48px' }} />
+      <ModelStickyBar
+        brandSlug={brandSlug}
+        modelSlug={modelSlug}
+        modelId={m.id}
+        modelName={m.name}
+        brandName={brand.name}
+        variants={calcVariants}
+      />
       <TrackRecentView
         brand={brand.name}
         model={m.name}

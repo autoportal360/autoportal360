@@ -25,18 +25,12 @@ export default function ModelSubNav({
   const base = `/${brandSlug}/${modelSlug}`
 
   return (
-    <nav style={{
-      position: 'sticky', top: 0, zIndex: 20,
-      background: '#06142D',
-      borderBottom: '1px solid rgba(0,212,255,0.15)',
-      overflowX: 'auto',
-      WebkitOverflowScrolling: 'touch',
-    }}>
-      <div style={{ display: 'flex', minWidth: 'max-content' }}>
+    <nav className="ap-model-nav">
+      <div className="ap-model-nav-inner">
         {TABS.map(tab => {
           const href = tab.type === 'scroll'
-            ? `${base}${tab.path}`   // /tata-cars/tiago/#variants — no trailing slash
-            : `${base}${tab.path}/`  // /tata-cars/tiago/price/
+            ? `${base}${tab.path}`
+            : `${base}${tab.path}/`
 
           const isActive = tab.type === 'scroll'
             ? false
@@ -48,18 +42,7 @@ export default function ModelSubNav({
             <Link
               key={tab.key}
               href={href}
-              style={{
-                display: 'block',
-                padding: '14px 18px',
-                fontSize: '12px',
-                fontWeight: 700,
-                fontFamily: 'Montserrat, sans-serif',
-                color: isActive ? '#00D4FF' : '#8E99A8',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                borderBottom: isActive ? '2px solid #00D4FF' : '2px solid transparent',
-                transition: 'color 0.15s',
-              }}
+              className={`ap-model-nav-tab${isActive ? ' active' : ''}`}
             >
               {tab.label}
             </Link>
