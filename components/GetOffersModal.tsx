@@ -36,6 +36,7 @@ export default function GetOffersModal({
   brandName,
   modelSlug,
   variants,
+  formTitle,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -44,17 +45,21 @@ export default function GetOffersModal({
   brandName: string
   modelSlug: string
   variants: Variant[]
+  formTitle?: string
 }) {
-  const [name,      setName]      = useState('')
-  const [phone,     setPhone]     = useState('')
-  const [email,     setEmail]     = useState('')
-  const [variantId, setVariantId] = useState(variants[0]?.id ?? '')
-  const [cityName,  setCityName]  = useState('')
-  const [message,   setMessage]   = useState('')
-  const [cities,    setCities]    = useState<City[]>([])
+  const defaultCarModel = `${brandName} ${modelName}`
+
+  const [name,       setName]       = useState('')
+  const [phone,      setPhone]      = useState('')
+  const [email,      setEmail]      = useState('')
+  const [carModel,   setCarModel]   = useState(defaultCarModel)
+  const [variantId,  setVariantId]  = useState(variants[0]?.id ?? '')
+  const [cityName,   setCityName]   = useState('')
+  const [message,    setMessage]    = useState('')
+  const [cities,     setCities]     = useState<City[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const [success,   setSuccess]   = useState(false)
-  const [error,     setError]     = useState('')
+  const [success,    setSuccess]    = useState(false)
+  const [error,      setError]      = useState('')
 
   // Fetch cities once when modal opens
   useEffect(() => {
@@ -68,14 +73,21 @@ export default function GetOffersModal({
     })
   }, [isOpen, cities.length])
 
-  // Auto-close 3 s after success
+  // Reset carModel when modal opens (in case title changed between openings)
+  useEffect(() => {
+    if (isOpen) setCarModel(defaultCarModel)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
+
   const handleClose = useCallback(() => {
-    setName(''); setPhone(''); setEmail(''); setMessage('')
-    setVariantId(variants[0]?.id ?? ''); setCityName('')
+    setName(''); setPhone(''); setEmail(''); setCarModel(defaultCarModel)
+    setMessage(''); setVariantId(variants[0]?.id ?? ''); setCityName('')
     setSuccess(false); setError('')
     onClose()
-  }, [onClose, variants])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, variants, defaultCarModel])
 
+  // Auto-close 3 s after success
   useEffect(() => {
     if (!success) return
     const t = setTimeout(handleClose, 3000)
@@ -93,6 +105,7 @@ export default function GetOffersModal({
   if (!isOpen) return null
 
   const selectedVariant = variants.find(v => v.id === variantId)
+  const title = formTitle ?? `Get Best Offers on ${brandName} ${modelName}`
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -116,7 +129,7 @@ export default function GetOffersModal({
           model_id:     modelId,
           model_slug:   modelSlug,
           brand_name:   brandName,
-          model_name:   modelName,
+          model_name:   carModel || modelName,
           variant_name: selectedVariant?.name ?? '',
           message:      message || undefined,
           source_page:  window.location.pathname,
@@ -186,7 +199,7 @@ export default function GetOffersModal({
             </h2>
             <p style={{ color: '#C0C0C0', fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
               We&apos;ll connect you with the best dealer offers for{' '}
-              <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{brandName} {modelName}</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{carModel || `${brandName} ${modelName}`}</span>
               {' '}shortly.
             </p>
             <p style={{ color: '#8E99A8', fontSize: '12px', marginTop: '16px' }}>
@@ -203,8 +216,15 @@ export default function GetOffersModal({
                 fontWeight: 900, color: '#FFFFFF', margin: '0 0 6px',
                 lineHeight: 1.3,
               }}>
-                Get Best Offers on{' '}
-                <span style={{ color: '#00D4FF' }}>{brandName} {modelName}</span>
+                {title.split(brandName + ' ' + modelName).length > 1 ? (
+                  <>
+                    {title.split(brandName + ' ' + modelName)[0]}
+                    <span style={{ color: '#00D4FF' }}>{brandName} {modelName}</span>
+                    {title.split(brandName + ' ' + modelName)[1]}
+                  </>
+                ) : (
+                  <span style={{ color: '#00D4FF' }}>{title}</span>
+                )}
               </h2>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 {['Free', 'No spam', 'Dealer contacts you'].map(tag => (
@@ -257,6 +277,18 @@ export default function GetOffersModal({
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="your@email.com"
+                  style={INPUT}
+                />
+              </div>
+
+              {/* Car Model — pre-filled, editable */}
+              <div>
+                <label style={LABEL}>Car Model</label>
+                <input
+                  type="text"
+                  value={carModel}
+                  onChange={e => setCarModel(e.target.value)}
+                  placeholder="e.g. Tata Tiago"
                   style={INPUT}
                 />
               </div>
@@ -338,7 +370,7 @@ export default function GetOffersModal({
                   marginTop: '2px',
                 }}
               >
-                {submitting ? 'Submitting…' : 'Get Best Price →'}
+                {submitting ? 'Submitting…' : 'Submit Request →'}
               </button>
 
               {/* Safety note */}

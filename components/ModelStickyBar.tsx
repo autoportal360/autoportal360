@@ -1,11 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import GetOffersButton from '@/app/[brandSlug]/[model]/GetOffersButton'
 import type { CalcVariant } from '@/app/[brandSlug]/[model]/OnRoadCalculator'
 
 export default function ModelStickyBar({
-  brandSlug,
+  brandSlug: _,
   modelSlug,
   modelId,
   modelName,
@@ -21,9 +20,17 @@ export default function ModelStickyBar({
 }) {
   return (
     <div className="ap-sticky-cta">
-      <Link href={`/dealers/?brand=${brandSlug}`} className="ap-sticky-cta-btn ap-sticky-cta-secondary">
+      <GetOffersButton
+        modelId={modelId}
+        modelName={modelName}
+        brandName={brandName}
+        modelSlug={modelSlug}
+        variants={variants}
+        className="ap-sticky-cta-btn ap-sticky-cta-secondary"
+        formTitle={`Contact ${brandName} Dealer for ${modelName}`}
+      >
         Contact Dealer
-      </Link>
+      </GetOffersButton>
       <GetOffersButton
         modelId={modelId}
         modelName={modelName}

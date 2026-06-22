@@ -414,9 +414,17 @@ export default async function ModelPage({
                 <Link href={`/compare/${vehicleType}s/?v1=${brand.slug}-${modelSlug}`} className="ap-model-action-btn">
                   Compare
                 </Link>
-                <Link href={`/dealers/?brand=${brandSlug}`} className="ap-model-action-btn">
-                  Dealers
-                </Link>
+                <GetOffersButton
+                  modelId={m.id}
+                  modelName={m.name}
+                  brandName={brand.name}
+                  modelSlug={modelSlug}
+                  variants={calcVariants}
+                  className="ap-model-action-btn"
+                  formTitle={`Contact ${brand.name} Dealer for ${m.name}`}
+                >
+                  Contact Dealer
+                </GetOffersButton>
               </div>
             </div>
           </div>

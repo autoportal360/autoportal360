@@ -12,6 +12,7 @@ export default function GetOffersButton({
   variants,
   style,
   className,
+  formTitle,
   children,
 }: {
   modelId: string
@@ -21,6 +22,7 @@ export default function GetOffersButton({
   variants: CalcVariant[]
   style?: React.CSSProperties
   className?: string
+  formTitle?: string
   children?: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -37,6 +39,7 @@ export default function GetOffersButton({
         brandName={brandName}
         modelSlug={modelSlug}
         variants={variants}
+        formTitle={formTitle}
       />
     </>
   )
